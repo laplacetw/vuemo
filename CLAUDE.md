@@ -1,0 +1,175 @@
+# CLAUDE.md — Vuemo
+
+## Overview
+
+**Vuemo** (Vue + memo) is a lightweight blog framework built on VitePress. Like Hexo, it should make it easy to apply a theme, build a theme and use plugins.
+
+- It evolved from [vitepress-theme-trigger](https://github.com/laplacetw/vitepress-theme-trigger). That project was a "clone and modify" blog theme where theme, features and content lived in one repo.
+- **VitePress is the engine**: Markdown, routing, build and HMR are left to VitePress. Vuemo only adds what VitePress lacks: a post model, a theme contract and a plugin interface.
+- Do not reinvent a static site generator. If a VitePress mechanism solves the problem, use it.
+
+## Design principles
+
+1. **Thin**: Vuemo is a layer on top of VitePress, not a replacement for it.
+2. **Simple first**: do not copy Hexo's whole generator / filter / helper / injector system. Open as few hooks as possible and add more only when there is a real need.
+3. **Easy to understand and use**: a user's project should only have `posts/`, `public/`, one config file and a one-line theme entry (`.vitepress/theme/index.ts`).
+4. **Separation of concerns**: core owns data and logic (no UI), a theme only renders (it never touches the file system), plugins extend through a fixed interface.
+5. **Do not redo what VitePress already does**: for example, footnotes are a built-in VitePress Markdown extension, so they are not wrapped as a plugin.
+6. **Every stage works**: while refactoring, the maintainer's own blog must keep building and deploying.
+
+## Target architecture (pnpm monorepo)
+
+```
+packages/
+  core/                 @vuemo/core            blog logic, no UI
+  create-vuemo/         create-vuemo           project scaffolding (npm create vuemo)
+themes/
+  default/              @vuemo/theme-default   minimal default theme (Tailwind CSS, like the default theme Hexo ships)
+    plugins/            theme-specific plugins (only for the default theme)
+plugins/
+  comments/             @vuemo/plugin-comments   framework plugin (works with any theme)
+  ai-summary/           @vuemo/plugin-ai-summary
+examples/
+  blog/                 example blog used for development and verification
+```
+
+### Two kinds of plugins
+
+| | Framework plugin | Theme plugin |
+| --- | --- | --- |
+| Location | `plugins/<name>/` | `themes/<theme>/plugins/<name>/` |
+| Scope | any theme that follows the theme contract | only the theme it belongs to |
+| Dependencies | only `@vuemo/core` and the theme contract (slots, composables) | may depend on the theme's components and styles |
+| Package name | `@vuemo/plugin-<name>` | `@vuemo/theme-<theme>-plugin-<name>`, or not published separately |
+
+Rule of thumb: if a feature still makes sense after switching themes, it is a framework plugin; if it exists only for one theme's UI or interaction, it is a theme plugin. Both kinds use the same `VuemoPlugin` interface.
+
+### Default theme
+
+- `@vuemo/theme-default` is a brand-new, minimal theme. It works out of the box and is the reference implementation of the theme contract.
+- It should implement every required layout and standard slot, but it does not chase rich visuals. Stylistic needs are left to other themes.
+- The original Trigger theme is **not** the default theme. The maintainer will rewrite it separately as an independent Vuemo theme.
+
+### @vuemo/core
+
+Responsible for:
+- the posts data loader (based on VitePress `createContentLoader`)
+- tags, categories, archives, pagination, previous/next links
+- JSON-LD, sitemap, RSS
+- frontmatter schema definition and validation
+- `defineBlogConfig()`: wraps VitePress `defineConfig` and merges plugin settings
+- CLI: `vuemo new <filename>` (replaces the old `npm run new`)
+
+Composables provided to themes: `usePosts()`, `useTags()`, `useCategories()`, `useArchives()`, `usePagination()`, `usePrevNext()`.
+
+### Theme contract
+
+- A theme is a VitePress theme that only consumes data provided by core.
+- A theme must implement these layouts: `home`, `post`, `archive`, `tag`, `category`, `page`.
+- A theme must provide these standard slots in the `post` layout, so framework plugins can inject content without knowing the theme's internals:
+  - `post-before-content`: before the post content (for example an AI summary)
+  - `post-after-content`: after the post content
+  - `post-comments`: the comments area
+- A theme must put the class `vuemo-content` on the post body element in the `post` layout, so plugins (for example the AI summary) can read the article text without knowing the theme's internals.
+- A theme must render the components registered by plugins with `useSlots(name)` from `@vuemo/core/client`, and call `runEnhanceApps(ctx)` in its `enhanceApp`.
+- A theme must reflect dark mode through VitePress `isDark`, so plugins (for example comments) can sync their appearance.
+- To customize a theme, use VitePress's native `extends` plus slots. Do not invent a custom inheritance mechanism.
+
+### Plugin interface
+
+A plugin is a function that returns an object with these fields:
+
+```ts
+interface VuemoPlugin {
+  name: string
+  markdown?: (md: MarkdownIt) => void          // → VitePress markdown.config
+  vite?: UserConfig['vite']                    // → merged into the vite config
+  head?: HeadConfig[]                          // → site head
+  transformPost?: (post: Post) => Post | void  // → posts data loader
+  enhanceApp?: string                          // path of a client-side enhanceApp module
+  slots?: Record<string, string>               // component paths injected into the theme's standard slots
+}
+```
+
+`defineBlogConfig` merges these fields into existing VitePress hooks: `markdown.config`, `head`, `vite`, and the theme's `enhanceApp`.
+
+Example user config:
+
+```ts
+// .vitepress/theme/index.ts (one line, generated by create-vuemo; VitePress's native theme entry)
+export { default } from '@vuemo/theme-default'
+
+// .vitepress/config.ts
+import { defineBlogConfig } from '@vuemo/core'
+import comments from '@vuemo/plugin-comments'
+import aiSummary from '@vuemo/plugin-ai-summary'
+
+export default defineBlogConfig({
+  plugins: [
+    comments({ provider: 'giscus', options: { repo: 'user/repo', repoId: '...', category: '...', categoryId: '...' } }),
+    aiSummary({ api: 'https://...' }),
+  ],
+})
+```
+
+### Frontmatter schema (defined by core)
+
+`title`, `date`, `tags`, `category`, `description`, `draft`. Themes and plugins depend only on this schema.
+
+## Official framework plugins
+
+### @vuemo/plugin-comments
+
+- The original Trigger theme only supported Utterances. At the framework level, **one plugin supports several comment systems**, selected with `provider`.
+- **Giscus** and **Utterances** are supported out of the box.
+- Each provider is an adapter that implements the same interface (mount, unmount, switch light/dark theme, reload on page change).
+- The old "Utterances follows dark mode" behavior is now shared by all providers (it relies on the theme contract's `isDark`).
+- Injected into the `post-comments` slot.
+
+### @vuemo/plugin-ai-summary
+
+- It was meant to be exclusive to the Trigger theme; it is now an official framework plugin that works with any theme, and a showcase feature for the framework.
+- It uses Cloudflare Workers AI with AI Gateway. Users create their own Worker and put its API URL in the config.
+- Injected into the `post-before-content` slot.
+- The docs must include an example Worker and CORS setup instructions.
+
+## Where the original Trigger features went
+
+| Original Trigger feature | Destination |
+| --- | --- |
+| CLI for new posts | core |
+| JSON-LD | core |
+| sitemap | core (reuse the VitePress sitemap) |
+| Pagination (History API) | core provides the data, the theme renders the UI |
+| Previous/next links | core |
+| Tailwind styles, layout UI | not part of the framework; the Trigger theme will be rewritten separately as an independent theme |
+| Utterances comments (with dark mode sync) | merged into plugin-comments as one provider |
+| AI instant summary | plugin-ai-summary (official framework plugin) |
+| MathJax mobile optimization | **removed**: VitePress improved this in later versions |
+| markdown-it-footnote | **removed**: VitePress has built-in footnote syntax |
+
+**Validation principle**: if every existing feature can be rewritten as an official plugin without friction, the plugin interface is right. When a rewrite is awkward, revisit the interface first instead of working around it inside the plugin.
+
+## Migration stages
+
+1. **Core and default theme** (done): create the monorepo, extract Trigger's data logic (post loading, tags, pagination, previous/next, JSON-LD) into `@vuemo/core`, and build a minimal `@vuemo/theme-default` so that `examples/blog` works.
+2. **Plugins** (done): implement `defineBlogConfig`, the plugin interface and the theme's standard slots; finish plugin-comments (Giscus, Utterances) and plugin-ai-summary.
+3. **Scaffolding** (done): build `create-vuemo`, which generates a clean project with only `posts/`, `public/` and the config.
+4. **Documentation**: write guides for building themes, framework plugins and theme plugins.
+
+Do one stage at a time, and verify that build and deployment still work at the end of each stage.
+
+## Tech stack
+
+- Node.js >= 18, pnpm
+- VitePress, Vue 3, TypeScript
+- Default theme styling: Tailwind CSS v4 (compiled to CSS when the theme is built)
+- Deployment: GitHub Pages (workflow in `.github/workflows`), AWS Amplify
+
+## Conventions
+
+- Before adding a feature, check whether VitePress already has a native mechanism for it.
+- Do not add plugin hooks or theme slots unless there is a concrete use case the existing ones cannot cover.
+- Core must not import any theme component; a theme must not read the file system directly.
+- Framework plugins must not depend on a specific theme; anything that needs theme cooperation goes through the theme contract.
+- Update CHANGELOG.md for public API changes.

@@ -1,0 +1,21 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* shiki dual themes emitted by VitePress */
+.dark .shiki,
+.dark .shiki span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+}
+.shiki { padding: 1rem; border-radius: 0.5rem; overflow-x: auto; }
+.prose pre { background: transparent; padding: 0; }
+.prose .line-numbers-mode .line-numbers-wrapper { display: none; }
+/* VitePress adds a language label and a copy button that rely on its default theme CSS */
+.prose [class*='language-'] > .lang,
+.prose [class*='language-'] > .copy { display: none; }
+
+/* keep wide content inside the viewport on small screens */
+.prose img, .prose video { max-width: 100%; height: auto; }
+.prose table { display: block; overflow-x: auto; }
+.prose { overflow-wrap: anywhere; }

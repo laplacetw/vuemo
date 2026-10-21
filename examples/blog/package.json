@@ -1,0 +1,19 @@
+{
+  "name": "blog",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview",
+    "new": "vuemo new"
+  },
+  "devDependencies": {
+    "@vuemo/core": "workspace:^",
+    "@vuemo/theme-default": "workspace:^",
+    "vitepress": "^1.6.4",
+    "vue": "^3.5.0",
+    "@vuemo/plugin-comments": "workspace:^",
+    "@vuemo/plugin-ai-summary": "workspace:^"
+  }
+}

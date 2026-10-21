@@ -1,0 +1,28 @@
+{
+  "name": "@vuemo/core",
+  "version": "0.0.0",
+  "description": "Blog logic for Vuemo: posts loader, composables, config helpers, CLI",
+  "type": "module",
+  "license": "MIT",
+  "bin": { "vuemo": "./dist/cli.js" },
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
+    "./client": "./src/client/index.ts",
+    "./posts.data": "./src/posts.data.ts"
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "vitepress": ">=1.6.0",
+    "vue": "^3.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsup": "^8.3.0",
+    "vitepress": "^1.6.4",
+    "vue": "^3.5.0"
+  }
+}
