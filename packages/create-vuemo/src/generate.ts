@@ -18,14 +18,15 @@ export const VERSIONS = {
 }
 
 export function packageJson(a: Answers): string {
+  // Official plugins are always installed, so turning a feature on only takes a config edit.
   const dependencies: Record<string, string> = {
     '@vuemo/core': VERSIONS.core,
-    '@vuemo/theme-default': VERSIONS.theme
+    '@vuemo/theme-default': VERSIONS.theme,
+    '@vuemo/plugin-comments': VERSIONS.comments,
+    '@vuemo/plugin-ai-summary': VERSIONS.aiSummary,
+    vitepress: VERSIONS.vitepress,
+    vue: VERSIONS.vue
   }
-  if (a.comments !== 'none') dependencies['@vuemo/plugin-comments'] = VERSIONS.comments
-  if (a.aiSummary) dependencies['@vuemo/plugin-ai-summary'] = VERSIONS.aiSummary
-  dependencies.vitepress = VERSIONS.vitepress
-  dependencies.vue = VERSIONS.vue
 
   return JSON.stringify(
     {
@@ -40,42 +41,44 @@ export function packageJson(a: Answers): string {
   ) + '\n'
 }
 
+const COMMENTS: Record<CommentsProvider, string> = {
+  none: 'false',
+  utterances: "{ provider: 'utterances', repo: 'user/comments-repo' }",
+  giscus: `{
+    provider: 'giscus',
+    repo: 'user/repo',
+    repoId: 'YOUR_REPO_ID', // from https://giscus.app
+    category: 'Announcements',
+    categoryId: 'YOUR_CATEGORY_ID'
+  }`
+}
+
 export function configTs(a: Answers): string {
-  const imports = ["import { defineBlogConfig } from '@vuemo/core'"]
-  const plugins: string[] = []
+  const aiSummary = a.aiSummary ? "{ api: 'https://YOUR-WORKER.workers.dev' } // see the plugin README" : 'false'
 
-  if (a.comments === 'giscus') {
-    imports.push("import comments from '@vuemo/plugin-comments'")
-    plugins.push(`    // Get repoId / categoryId from https://giscus.app
-    comments({
-      provider: 'giscus',
-      options: { repo: 'user/repo', repoId: 'YOUR_REPO_ID', category: 'Announcements', categoryId: 'YOUR_CATEGORY_ID' }
-    })`)
-  } else if (a.comments === 'utterances') {
-    imports.push("import comments from '@vuemo/plugin-comments'")
-    plugins.push("    comments({ provider: 'utterances', options: { repo: 'user/repo' } })")
-  }
-  if (a.aiSummary) {
-    imports.push("import aiSummary from '@vuemo/plugin-ai-summary'")
-    plugins.push("    // Your Cloudflare Worker, see the plugin README\n    aiSummary({ api: 'https://YOUR-WORKER.workers.dev' })")
-  }
-
-  return `${imports.join('\n')}
+  return `import { defineBlogConfig } from '@vuemo/core'
 
 export default defineBlogConfig({
+  // site
   title: ${JSON.stringify(a.title)},
   description: 'A blog powered by Vuemo',
+  lang: 'en',
   hostname: 'https://example.com',
-  themeConfig: {
-    postsPerPage: 5,
-    nav: [
-      { text: 'Home', link: '/' },
-      { text: 'Archives', link: '/archives' },
-      { text: 'Category', link: '/category' },
-      { text: 'Tags', link: '/tags' },
-      { text: 'About', link: '/about' }
-    ]
-  }${plugins.length ? `,\n  plugins: [\n${plugins.join(',\n')}\n  ]` : ''}
+
+  // theme
+  theme: '@vuemo/theme-default',
+  postsPerPage: 5,
+  nav: [
+    { text: 'Home', link: '/' },
+    { text: 'Archives', link: '/archives' },
+    { text: 'Category', link: '/category' },
+    { text: 'Tags', link: '/tags' },
+    { text: 'About', link: '/about' }
+  ],
+
+  // features: set a key to enable it, use \`false\` to disable it${a.comments === 'none' ? "\n  // comments: { provider: 'utterances', repo: 'user/comments-repo' }" : ''}
+  comments: ${COMMENTS[a.comments]},
+  aiSummary: ${aiSummary}
 })
 `
 }

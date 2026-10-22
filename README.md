@@ -4,7 +4,7 @@ A lightweight blog framework built on VitePress: pick a theme, add plugins, and 
 
 Vuemo is a thin layer on top of [VitePress](https://vitepress.dev). VitePress stays the engine (Markdown, routing, build, HMR). Vuemo adds only what VitePress doesn't have: a post model, a theme contract and a small plugin interface.
 
-> **Status: early development.** Nothing is published to npm yet. The packages below work inside this monorepo; the full documentation is still to come.
+> **Status: early development.** Nothing is published to npm yet. The packages below work inside this monorepo; see [docs/](./docs/README.md) for guides.
 
 ## Packages
 
@@ -24,27 +24,30 @@ my-blog/
 ├── posts/                    # Markdown posts
 ├── public/                   # static assets
 └── .vitepress/
-    ├── config.ts
-    └── theme/index.ts        # export { default } from '@vuemo/theme-default'
+    ├── config.ts             # all settings live here
+    └── theme/index.ts        # boilerplate: export { default } from '@vuemo/core/theme'
 ```
+
+All settings are in one place, `defineBlogConfig`. VitePress options keep working as usual.
 
 ```ts
 // .vitepress/config.ts
 import { defineBlogConfig } from '@vuemo/core'
-import comments from '@vuemo/plugin-comments'
-import aiSummary from '@vuemo/plugin-ai-summary'
 
 export default defineBlogConfig({
+  // site
   title: 'My Blog',
+  description: 'Notes',
   hostname: 'https://example.com',
-  themeConfig: { postsPerPage: 5 },
-  plugins: [
-    comments({
-      provider: 'giscus',
-      options: { repo: 'user/repo', repoId: '...', category: 'Announcements', categoryId: '...' }
-    }),
-    aiSummary({ api: 'https://your-worker.workers.dev' })
-  ]
+
+  // theme
+  theme: '@vuemo/theme-default',
+  postsPerPage: 5,
+  nav: [{ text: 'Home', link: '/' }],
+
+  // features: set a key to enable it, remove it or use `false` to disable it
+  comments: { provider: 'utterances', repo: 'user/comments-repo' },
+  aiSummary: false
 })
 ```
 
@@ -82,7 +85,7 @@ To customize a theme, use VitePress's own `extends` and slots.
 
 ## Plugins
 
-A plugin is a function that returns an object. All fields are optional except `name`:
+Official features (`comments`, `aiSummary`) are switched on in the config. Your own plugins go in `plugins: []`. A plugin is a function that returns an object; all fields are optional except `name`:
 
 ```ts
 interface VuemoPlugin {
@@ -116,7 +119,7 @@ Build the packages once before starting the example (`pnpm build`); the default 
 - [x] Core and default theme
 - [x] Plugin interface, comments and AI summary plugins
 - [x] `create-vuemo` scaffolding
-- [ ] Documentation: writing themes, framework plugins and theme plugins
+- [x] Documentation: see [docs/](./docs/README.md)
 - [ ] RSS
 
 ## License

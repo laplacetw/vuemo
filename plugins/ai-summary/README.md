@@ -2,11 +2,11 @@
 
 A "summarize" button above the post content (`post-before-content` slot). The article text is sent to a Cloudflare Worker you own, which asks Workers AI (through AI Gateway) for a summary.
 
-```ts
-import aiSummary from '@vuemo/plugin-ai-summary'
+Enable it in `.vitepress/config.ts`; remove the key or set it to `false` to turn it off:
 
-defineBlogConfig({
-  plugins: [aiSummary({ api: 'https://vuemo-summary.<you>.workers.dev' })]
+```ts
+export default defineBlogConfig({
+  aiSummary: { api: 'https://vuemo-summary.<you>.workers.dev' }
 })
 ```
 

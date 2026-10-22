@@ -50,7 +50,7 @@ describe('seo', () => {
   })
 })
 
-import { buildVirtualModule } from '../src/virtual'
+import { buildThemeModule, buildVirtualModule } from '../src/virtual'
 import { defineBlogConfig } from '../src/config'
 
 describe('plugins', () => {
@@ -69,11 +69,57 @@ describe('plugins', () => {
     expect(code).not.toContain('B.vue')
     expect(code).toContain('export const enhanceApps = [e0]')
   })
-  it('merges plugin fields into the config', () => {
-    const cfg: any = defineBlogConfig({ head: [['meta', { name: 'y' }]], vite: { define: { __Y__: '2' } }, plugins: [plugin] })
+  it('merges plugin fields into the config', async () => {
+    const cfg: any = await defineBlogConfig({ head: [['meta', { name: 'y' }]], vite: { define: { __Y__: '2' } }, plugins: [plugin] })
     expect(cfg.head).toHaveLength(2)
     expect(cfg.vite.define).toEqual({ __Y__: '2', __X__: '1' })
-    expect(cfg.vite.plugins.some((p: any) => p.name === 'vuemo:plugins')).toBe(true)
+    expect(cfg.vite.plugins.some((p: any) => p.name === 'vuemo:virtual')).toBe(true)
     expect(cfg.vuemo.plugins).toEqual([plugin])
+  })
+})
+
+describe('defineBlogConfig', () => {
+  const fake = (name: string) => async () => ({ default: (options: any) => ({ name, head: [['meta', { name, content: JSON.stringify(options) }]] as any }) })
+  const importer = async (pkg: string) => {
+    if (pkg === '@vuemo/plugin-comments') return fake('comments')()
+    const e: any = new Error('nope')
+    e.code = 'ERR_MODULE_NOT_FOUND'
+    throw e
+  }
+
+  it('maps site options into themeConfig, explicit themeConfig wins', async () => {
+    const cfg: any = await defineBlogConfig({
+      nav: [{ text: 'Home', link: '/' }],
+      footer: 'f',
+      postsPerPage: 3,
+      themeConfig: { postsPerPage: 9, custom: true }
+    })
+    expect(cfg.themeConfig).toEqual({ nav: [{ text: 'Home', link: '/' }], footer: 'f', postsPerPage: 9, custom: true })
+    expect(cfg.nav).toBeUndefined()
+  })
+
+  it('enables official features by their keys and strips them from the config', async () => {
+    const cfg: any = await defineBlogConfig({ comments: { provider: 'utterances', repo: 'a/b' } } as any, importer)
+    expect(cfg.head).toEqual([['meta', { name: 'comments', content: '{"provider":"utterances","repo":"a/b"}' }]])
+    expect(cfg.comments).toBeUndefined()
+  })
+
+  it('treats false and missing features as disabled without importing them', async () => {
+    const cfg: any = await defineBlogConfig({ comments: false, aiSummary: undefined } as any, async () => {
+      throw new Error('should not import')
+    })
+    expect(cfg.head).toEqual([])
+  })
+
+  it('explains how to install a missing plugin', async () => {
+    await expect(defineBlogConfig({ aiSummary: { api: 'x' } } as any, importer)).rejects.toThrow(
+      /"aiSummary" is enabled but @vuemo\/plugin-ai-summary is not installed\. Run: pnpm add/
+    )
+  })
+
+  it('points the theme module at the configured theme', async () => {
+    const cfg: any = await defineBlogConfig({ theme: '@x/theme' })
+    expect(cfg.vite.ssr.noExternal).toContain('@x/theme')
+    expect(buildThemeModule('@x/theme')).toBe('export { default } from "@x/theme"\n')
   })
 })

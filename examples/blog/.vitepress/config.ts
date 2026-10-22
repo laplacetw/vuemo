@@ -1,30 +1,27 @@
 import { defineBlogConfig } from '@vuemo/core'
-import comments from '@vuemo/plugin-comments'
-import aiSummary from '@vuemo/plugin-ai-summary'
 
 export default defineBlogConfig({
-  // GitHub Pages serves the example under /vuemo/; the workflow sets BASE
-  base: process.env.BASE ?? '/',
+  // site
   title: 'Vuemo Blog',
   description: 'A blog powered by Vuemo',
   lang: 'en',
+  // GitHub Pages serves the example under /vuemo/; the workflow sets BASE
+  base: process.env.BASE ?? '/',
   hostname: 'https://example.com',
-  plugins: [
-    comments({
-      provider: 'giscus',
-      options: { repo: 'laplacetw/vuemo', repoId: 'REPO_ID', category: 'Announcements', categoryId: 'CATEGORY_ID' }
-    }),
-    aiSummary({ api: 'https://vuemo-summary.example.workers.dev' })
+
+  // theme
+  theme: '@vuemo/theme-default',
+  postsPerPage: 2,
+  nav: [
+    { text: 'Home', link: '/' },
+    { text: 'Archives', link: '/archives' },
+    { text: 'Category', link: '/category' },
+    { text: 'Tags', link: '/tags' },
+    { text: 'About', link: '/about' }
   ],
-  themeConfig: {
-    postsPerPage: 2,
-    nav: [
-      { text: 'Home', link: '/' },
-      { text: 'Archives', link: '/archives' },
-      { text: 'Category', link: '/category' },
-      { text: 'Tags', link: '/tags' },
-      { text: 'About', link: '/about' }
-    ],
-    footer: 'Powered by <a href="https://vitepress.dev">VitePress</a> · Vuemo'
-  }
+  footer: 'Powered by <a href="https://vitepress.dev">VitePress</a> · Vuemo',
+
+  // features: set a key to enable it, remove it or use `false` to disable it
+  comments: { provider: 'utterances', repo: 'laplacetw/vuemo-comments' },
+  aiSummary: false
 })

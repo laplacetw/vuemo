@@ -20,9 +20,7 @@ export interface UtterancesOptions {
   dark?: string
 }
 
-export type CommentsConfig =
-  | { provider: 'giscus'; options: GiscusOptions }
-  | { provider: 'utterances'; options: UtterancesOptions }
+export type CommentsConfig = ({ provider: 'giscus' } & GiscusOptions) | ({ provider: 'utterances' } & UtterancesOptions)
 
 /** Every provider implements this; Comments.vue drives it from page changes and `isDark`. */
 export interface CommentsAdapter {

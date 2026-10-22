@@ -37,6 +37,13 @@ importers:
         version: 3.5.44(typescript@5.9.3)
 
   packages/core:
+    dependencies:
+      '@vuemo/plugin-ai-summary':
+        specifier: workspace:^
+        version: link:../../plugins/ai-summary
+      '@vuemo/plugin-comments':
+        specifier: workspace:^
+        version: link:../../plugins/comments
     devDependencies:
       '@types/node':
         specifier: ^20.0.0

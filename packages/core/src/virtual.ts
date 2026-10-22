@@ -1,6 +1,7 @@
 import { STANDARD_SLOTS, type VuemoPlugin } from './plugin'
 
 export const VIRTUAL_ID = 'virtual:vuemo/plugins'
+export const THEME_ID = 'virtual:vuemo/theme'
 
 /** Source of the module that themes read through `useSlots` / `runEnhanceApps`. */
 export function buildVirtualModule(plugins: VuemoPlugin[]): string {
@@ -32,11 +33,18 @@ export const enhanceApps = [${enhance.join(', ')}]
 `
 }
 
-export function virtualPlugin(plugins: VuemoPlugin[]) {
-  const resolved = '\0' + VIRTUAL_ID
+export function buildThemeModule(theme: string): string {
+  return `export { default } from ${JSON.stringify(theme)}\n`
+}
+
+export function virtualPlugin(plugins: VuemoPlugin[], theme: string) {
+  const prefix = '\0'
   return {
-    name: 'vuemo:plugins',
-    resolveId: (id: string) => (id === VIRTUAL_ID ? resolved : undefined),
-    load: (id: string) => (id === resolved ? buildVirtualModule(plugins) : undefined)
+    name: 'vuemo:virtual',
+    resolveId: (id: string) => (id === VIRTUAL_ID || id === THEME_ID ? prefix + id : undefined),
+    load(id: string) {
+      if (id === prefix + VIRTUAL_ID) return buildVirtualModule(plugins)
+      if (id === prefix + THEME_ID) return buildThemeModule(theme)
+    }
   }
 }

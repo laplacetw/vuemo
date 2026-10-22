@@ -1,1 +1,1 @@
-export { default } from '@vuemo/theme-default'
+export { default } from '@vuemo/core/theme'

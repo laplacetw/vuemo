@@ -17,3 +17,10 @@ export default function aiSummary(options: AiSummaryOptions): VuemoPlugin {
     slots: { 'post-before-content': fileURLToPath(new URL('../src/Summary.vue', import.meta.url)) }
   }
 }
+
+declare module '@vuemo/core' {
+  interface OfficialFeatures {
+    /** AI summary button above each post. Remove or set to `false` to disable. */
+    aiSummary?: AiSummaryOptions | false
+  }
+}

@@ -10,3 +10,8 @@
 - `@vuemo/plugin-comments` (Giscus, Utterances) and `@vuemo/plugin-ai-summary`
 - `create-vuemo`: scaffolds a blog with `posts/`, `public/`, config and theme entry; optional comments / AI summary plugins
 - default theme: hide VitePress code block language label and copy button
+- `defineBlogConfig` is now async and the single place for settings: `theme` (resolved through a virtual module, entry file is `export { default } from '@vuemo/core/theme'`), flat `nav` / `footer` / `postsPerPage`, and official feature switches `comments` / `aiSummary` (no imports; `false` disables)
+- `@vuemo/plugin-comments` config is flat: `{ provider, repo, ... }` instead of `{ provider, options }`
+- `create-vuemo` always installs the official plugins and writes feature switches into the config
+- docs: getting started, configuration, themes, plugins, deployment
+- default theme: readable code blocks in light mode

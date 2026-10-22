@@ -1,4 +1,5 @@
-export { defineBlogConfig, type BlogConfig } from './config'
+export { defineBlogConfig, DEFAULT_THEME, type BlogConfig, type NavItem } from './config'
+export type { OfficialFeatures } from './features'
 export { createPostsLoader } from './loader'
 export { parsePost, type Frontmatter, type Post } from './schema'
 export { groupByYear, groupByCategory, groupByTag } from './group'

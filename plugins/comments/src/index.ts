@@ -11,3 +11,10 @@ export default function comments(config: CommentsConfig): VuemoPlugin {
     slots: { 'post-comments': fileURLToPath(new URL('../src/Comments.vue', import.meta.url)) }
   }
 }
+
+declare module '@vuemo/core' {
+  interface OfficialFeatures {
+    /** Comments below each post. Remove or set to `false` to disable. */
+    comments?: CommentsConfig | false
+  }
+}

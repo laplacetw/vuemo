@@ -3,6 +3,11 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* shiki dual themes emitted by VitePress */
+.shiki,
+.shiki span {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg);
+}
 .dark .shiki,
 .dark .shiki span {
   color: var(--shiki-dark) !important;
