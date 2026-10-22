@@ -1,0 +1,11 @@
+# Vuemo documentation
+
+> Vuemo is under development. APIs may change.
+
+- [Getting started](./getting-started.md): create a blog, write posts
+- [Configuration](./configuration.md): every setting, in one place
+- [Themes](./themes.md): use a theme, build your own
+- [Plugins](./plugins.md): official features, writing plugins
+- [Deployment](./deployment.md): GitHub Pages, AWS Amplify
+
+Plugin-specific docs live next to the code: [comments](../plugins/comments/README.md), [AI summary](../plugins/ai-summary/README.md). The design principles are in [CLAUDE.md](../CLAUDE.md).
