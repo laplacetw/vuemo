@@ -122,7 +122,7 @@ export default defineBlogConfig({
 export { default } from '@vuemo/core/theme'
 ```
 
-Official features are plugins that core loads by their config key. Core has no static dependency on them (they are optional peer dependencies), and each plugin adds its key and types to `OfficialFeatures` by module augmentation.
+Official features are plugins that core loads by their config key. Core has no dependency on them, not even an optional one, because the plugins depend on core. It imports them from the user's project when the key is set, and each plugin adds its key and types to `OfficialFeatures` by module augmentation.
 
 ### Frontmatter schema (defined by core)
 
@@ -167,7 +167,7 @@ Official features are plugins that core loads by their config key. Core has no s
 1. **Core and default theme** (done): create the monorepo, extract Trigger's data logic (post loading, tags, pagination, previous/next, JSON-LD) into `@vuemo/core`, and build a minimal `@vuemo/theme-default` so that `examples/blog` works.
 2. **Plugins** (done): implement `defineBlogConfig`, the plugin interface and the theme's standard slots; finish plugin-comments (Giscus, Utterances) and plugin-ai-summary.
 3. **Scaffolding** (done): build `create-vuemo`, which generates a clean project with only `posts/`, `public/` and the config.
-4. **Documentation**: write guides for building themes, framework plugins and theme plugins.
+4. **Documentation** (done): guides for getting started, configuration, building themes, writing plugins and deployment, in `docs/`.
 
 Do one stage at a time, and verify that build and deployment still work at the end of each stage.
 

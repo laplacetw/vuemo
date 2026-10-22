@@ -26,22 +26,12 @@
   },
   "peerDependencies": {
     "vitepress": ">=1.6.0",
-    "vue": "^3.3.0",
-    "@vuemo/plugin-comments": "workspace:^",
-    "@vuemo/plugin-ai-summary": "workspace:^"
+    "vue": "^3.3.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "tsup": "^8.3.0",
     "vitepress": "^1.6.4",
     "vue": "^3.5.0"
-  },
-  "peerDependenciesMeta": {
-    "@vuemo/plugin-comments": {
-      "optional": true
-    },
-    "@vuemo/plugin-ai-summary": {
-      "optional": true
-    }
   }
 }

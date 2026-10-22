@@ -19,7 +19,10 @@ export type Importer = (pkg: string) => Promise<{ default: PluginFactory }>
 
 const isNotFound = (e: any) => e?.code === 'ERR_MODULE_NOT_FOUND' || e?.code === 'MODULE_NOT_FOUND'
 
-/** Plugins are optional peers of core, so import them from the user's project. */
+/**
+ * Core does not depend on the plugins (they depend on core), so a plain import may not see them,
+ * e.g. under pnpm. Fall back to resolving from the project directory.
+ */
 const importFromProject: Importer = async (pkg) => {
   try {
     return await import(pkg)
