@@ -126,7 +126,7 @@ Official features are plugins that core loads by their config key. Core has no d
 
 ### Frontmatter schema (defined by core)
 
-`title`, `date`, `tags`, `category`, `description`, `draft`. Themes and plugins depend only on this schema.
+`title`, `date`, `tags`, `category`, `description`. Themes and plugins depend only on this schema.
 
 ## Official framework plugins
 

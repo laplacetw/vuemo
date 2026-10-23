@@ -67,7 +67,6 @@ category: Notes
 tags:
   - vuemo
 description: Optional summary
-draft: false        # drafts are left out of lists in production builds
 ---
 ```
 

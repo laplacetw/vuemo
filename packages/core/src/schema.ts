@@ -5,7 +5,6 @@ export interface Frontmatter {
   tags?: string[]
   category?: string
   description?: string
-  draft?: boolean
 }
 
 export interface Post {
@@ -16,7 +15,6 @@ export interface Post {
   tags: string[]
   description?: string
   excerpt?: string
-  draft: boolean
 }
 
 export interface PostSource {
@@ -40,7 +38,6 @@ export function parsePost(src: PostSource): Post | string {
     category: typeof fm.category === 'string' && fm.category ? fm.category : undefined,
     tags,
     description: typeof fm.description === 'string' ? fm.description : undefined,
-    excerpt: src.excerpt,
-    draft: fm.draft === true
+    excerpt: src.excerpt
   }
 }

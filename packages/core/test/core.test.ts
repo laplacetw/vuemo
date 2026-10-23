@@ -12,7 +12,6 @@ describe('parsePost', () => {
     const p = mk(1, { tags: ['a', 3], category: 'x' })
     expect(p.date.string).toBe('2021-01-01')
     expect(p.tags).toEqual(['a'])
-    expect(p.draft).toBe(false)
   })
   it('reports invalid fields', () => {
     expect(parsePost({ url: '/a', frontmatter: { date: '2020-01-01' } })).toMatch(/title/)

@@ -15,3 +15,4 @@
 - `create-vuemo` always installs the official plugins and writes feature switches into the config
 - docs: getting started, configuration, themes, plugins, deployment
 - default theme: readable code blocks in light mode
+- removed the `draft` frontmatter field: a post you don't want published should not be committed

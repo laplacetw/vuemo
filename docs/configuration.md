@@ -60,6 +60,5 @@ Defined by `@vuemo/core` ([`schema.ts`](../packages/core/src/schema.ts)); themes
 | `category` | Optional, one per post. |
 | `tags` | Optional list. |
 | `description` | Optional summary. |
-| `draft` | `true` leaves the post out of lists in production builds (the page itself is still generated). |
 
 A post without a valid `title` or `date` is skipped with a warning.

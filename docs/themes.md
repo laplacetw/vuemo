@@ -53,6 +53,6 @@ The contract, which lets framework plugins work with any theme:
 | `useSlots(name)` | components plugins registered for a slot |
 | `runEnhanceApps(ctx)` | runs the plugins' `enhanceApp` modules |
 
-`Post` is `{ title, url, date: { time, string }, category?, tags, description?, excerpt?, draft }`; see [`schema.ts`](../packages/core/src/schema.ts).
+`Post` is `{ title, url, date: { time, string }, category?, tags, description?, excerpt? }`; see [`schema.ts`](../packages/core/src/schema.ts).
 
 Themes are free to use any CSS approach. `@vuemo/theme-default` uses Tailwind CSS v4 compiled at build time to `dist/style.css`, so users don't need Tailwind.

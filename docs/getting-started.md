@@ -34,7 +34,7 @@ pnpm preview              # preview the build
 pnpm new my-first-post    # create posts/my-first-post.md (`vuemo new`)
 ```
 
-`vuemo new` refuses to overwrite an existing post and creates it with `draft: true`.
+`vuemo new` refuses to overwrite an existing post. To keep a post private, don't commit or push it.
 
 ## Writing posts
 

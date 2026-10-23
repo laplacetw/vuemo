@@ -8,7 +8,6 @@ export interface PostsLoaderOptions {
 }
 
 export function createPostsLoader(options: PostsLoaderOptions = {}) {
-  const isBuild = process.env.NODE_ENV === 'production'
   // VitePress exposes the resolved site config to data loaders; defineBlogConfig stores plugins there.
   const plugins: VuemoPlugin[] = (globalThis as any).VITEPRESS_CONFIG?.userConfig?.vuemo?.plugins ?? []
   return createContentLoader(options.pattern ?? 'posts/*.md', {
@@ -22,7 +21,7 @@ export function createPostsLoader(options: PostsLoaderOptions = {}) {
           continue
         }
         for (const plugin of plugins) post = plugin.transformPost?.(post) ?? post
-        if (!(isBuild && post.draft)) posts.push(post)
+        posts.push(post)
       }
       return posts.sort((a, b) => b.date.time - a.date.time)
     }

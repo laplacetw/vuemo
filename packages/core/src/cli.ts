@@ -30,7 +30,6 @@ category:
 tags:
   -
 description:
-draft: true
 ---
 
 write excerpt here
