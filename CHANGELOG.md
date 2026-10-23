@@ -16,3 +16,4 @@
 - docs: getting started, configuration, themes, plugins, deployment
 - default theme: readable code blocks in light mode
 - removed the `draft` frontmatter field: a post you don't want published should not be committed
+- RSS: `defineBlogConfig` writes `feed.xml` at build time and links it from every page when `hostname` is set (`rss: false` disables it)

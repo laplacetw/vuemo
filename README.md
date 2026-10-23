@@ -119,7 +119,7 @@ Build the packages once before starting the example (`pnpm build`); the default 
 - [x] Plugin interface, comments and AI summary plugins
 - [x] `create-vuemo` scaffolding
 - [x] Documentation: see [docs/](./docs/README.md)
-- [ ] RSS
+- [x] RSS
 
 ## License
 

@@ -27,10 +27,11 @@ export default defineBlogConfig({
 | Option | Description |
 | --- | --- |
 | `theme` | Theme package. Default `@vuemo/theme-default`. See [Themes](./themes.md). |
-| `hostname` | Site origin. Used by the sitemap and the JSON-LD of posts. |
+| `hostname` | Site origin. Used by the sitemap, the JSON-LD of posts and the RSS feed. |
 | `nav` | `{ text, link }[]` navigation links. Becomes `themeConfig.nav`. |
 | `footer` | HTML for the footer. Becomes `themeConfig.footer`. |
 | `postsPerPage` | Posts per page on the home layout. Default 5. Becomes `themeConfig.postsPerPage`. |
+| `rss` | RSS feed at `/feed.xml` with the newest posts (`{ limit?: number }`, default 20). On whenever `hostname` is set, because feeds need absolute links; use `rss: false` to turn it off. |
 | `comments` | Enable comments. See below. |
 | `aiSummary` | Enable the AI summary. See below. |
 | `plugins` | Your own or third-party plugins. See [Plugins](./plugins.md). |

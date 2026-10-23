@@ -122,3 +122,30 @@ describe('defineBlogConfig', () => {
     expect(buildThemeModule('@x/theme')).toBe('export { default } from "@x/theme"\n')
   })
 })
+
+import { buildRss } from '../src/rss'
+
+describe('rss', () => {
+  const posts = [mk(3, { description: 'a & b' }), mk(2), mk(1)]
+  const xml = buildRss(posts, { title: 'T <x>', hostname: 'https://x.com/', base: '/b/', lang: 'en', limit: 2 })
+
+  it('lists the newest posts with absolute links', () => {
+    expect(xml.match(/<item>/g)).toHaveLength(2)
+    expect(xml).toContain('<link>https://x.com/b/posts/p3</link>')
+    expect(xml).toContain('<link>https://x.com/b/</link>')
+    expect(xml.indexOf('P3')).toBeLessThan(xml.indexOf('P2'))
+  })
+  it('escapes text', () => {
+    expect(xml).toContain('<title>T &lt;x&gt;</title>')
+    expect(xml).toContain('<description>a &amp; b</description>')
+  })
+})
+
+describe('defineBlogConfig rss', () => {
+  it('adds the feed link when hostname is set and not when rss is false', async () => {
+    const on: any = await defineBlogConfig({ hostname: 'https://x.com', base: '/b/' })
+    expect(on.head).toContainEqual(['link', { rel: 'alternate', type: 'application/rss+xml', href: '/b/feed.xml' }])
+    const off: any = await defineBlogConfig({ hostname: 'https://x.com', rss: false })
+    expect(off.head).toEqual([])
+  })
+})

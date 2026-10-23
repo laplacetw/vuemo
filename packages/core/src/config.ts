@@ -1,7 +1,12 @@
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { defineConfig, mergeConfig, type UserConfig } from 'vitepress'
 import { postJsonLd } from './seo'
 import type { VuemoPlugin } from './plugin'
 import { loadFeatures, OFFICIAL_FEATURES, type Importer, type OfficialFeatures } from './features'
+import { createPostsLoader } from './loader'
+import { buildRss } from './rss'
+import type { Post } from './schema'
 import { virtualPlugin } from './virtual'
 
 export interface NavItem {
@@ -20,6 +25,8 @@ export interface BlogConfig extends UserConfig, Partial<OfficialFeatures> {
   footer?: string
   /** → themeConfig.postsPerPage */
   postsPerPage?: number
+  /** RSS feed at `feed.xml`. On when `hostname` is set; `false` turns it off. */
+  rss?: false | { limit?: number }
   /** Third-party and theme plugins. Official features are enabled by their own keys instead. */
   plugins?: VuemoPlugin[]
 }
@@ -28,9 +35,12 @@ export const DEFAULT_THEME = '@vuemo/theme-default'
 
 /** `importer` only exists so tests don't need real plugin packages. */
 export async function defineBlogConfig(config: BlogConfig = {}, importer?: Importer): Promise<UserConfig> {
-  const { theme = DEFAULT_THEME, hostname, nav, footer, postsPerPage, plugins = [], ...rest } = config
+  const { theme = DEFAULT_THEME, hostname, nav, footer, postsPerPage, rss, plugins = [], ...rest } = config
   const features = Object.fromEntries(Object.keys(OFFICIAL_FEATURES).map((key) => [key, (rest as any)[key]]))
   for (const key of Object.keys(OFFICIAL_FEATURES)) delete (rest as any)[key]
+
+  const rssEnabled = rss !== false && !!hostname
+  if (rss !== false && !hostname) console.warn('[vuemo] no RSS feed: set `hostname` (or `rss: false` to silence this)')
 
   const all = [...(await loadFeatures(features, importer)), ...plugins]
 
@@ -56,7 +66,13 @@ export async function defineBlogConfig(config: BlogConfig = {}, importer?: Impor
     sitemap: hostname ? { hostname } : undefined,
     ...rest,
     themeConfig,
-    head: [...(rest.head ?? []), ...all.flatMap((p) => p.head ?? [])],
+    head: [
+      ...(rest.head ?? []),
+      ...all.flatMap((p) => p.head ?? []),
+      ...(rssEnabled
+        ? [['link', { rel: 'alternate', type: 'application/rss+xml', href: `${rest.base ?? '/'}feed.xml` }] as [string, Record<string, string>]]
+        : [])
+    ],
     markdown: {
       ...rest.markdown,
       config(md) {
@@ -70,6 +86,15 @@ export async function defineBlogConfig(config: BlogConfig = {}, importer?: Impor
       const ld = postJsonLd(ctx.pageData, hostname, rest.base)
       if (ld) head.push(ld)
       return head
+    },
+    async buildEnd(siteConfig) {
+      await rest.buildEnd?.(siteConfig)
+      if (!rssEnabled) return
+      const posts = (await createPostsLoader().load()) as unknown as Post[]
+      const { title, description, lang, base } = siteConfig.site
+      const xml = buildRss(posts, { title, description, lang, base, hostname: hostname!, limit: rss ? rss.limit : undefined })
+      mkdirSync(siteConfig.outDir, { recursive: true })
+      writeFileSync(join(siteConfig.outDir, 'feed.xml'), xml)
     },
     // read by the posts loader (see loader.ts)
     vuemo: { plugins: all }
