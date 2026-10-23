@@ -30,13 +30,15 @@ export default defineBlogConfig({
 | `hostname` | Site origin. Used by the sitemap, the JSON-LD of posts and the RSS feed. |
 | `nav` | `{ text, link }[]` navigation links. Becomes `themeConfig.nav`. |
 | `footer` | HTML for the footer. Becomes `themeConfig.footer`. |
+| `logo` | Path of an image in `public/`, shown next to the site title. Becomes `themeConfig.logo`. |
+| `socialLinks` | `{ icon, link, ariaLabel? }[]` links shown in the footer. `icon` is a text label (e.g. `'github'`) or `{ svg: '<svg>...</svg>' }`. Becomes `themeConfig.socialLinks`. |
 | `postsPerPage` | Posts per page on the home layout. Default 5. Becomes `themeConfig.postsPerPage`. |
 | `rss` | RSS feed at `/feed.xml` with the newest posts (`{ limit?: number }`, default 20). On whenever `hostname` is set, because feeds need absolute links; use `rss: false` to turn it off. |
 | `comments` | Enable comments. See below. |
 | `aiSummary` | Enable the AI summary. See below. |
 | `plugins` | Your own or third-party plugins. See [Plugins](./plugins.md). |
 
-`nav`, `footer` and `postsPerPage` are shortcuts for `themeConfig`. If you also set `themeConfig` yourself (VitePress's own mechanism, or a theme's own options), your `themeConfig` wins.
+`nav`, `footer`, `logo`, `socialLinks` and `postsPerPage` are shortcuts for `themeConfig`. If you also set `themeConfig` yourself (VitePress's own mechanism, or a theme's own options), your `themeConfig` wins.
 
 ## Features
 

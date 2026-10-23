@@ -14,6 +14,13 @@ export interface NavItem {
   link: string
 }
 
+export interface SocialLink {
+  /** A label shown as text (e.g. `github`) or custom inline SVG. */
+  icon: string | { svg: string }
+  link: string
+  ariaLabel?: string
+}
+
 export interface BlogConfig extends UserConfig, Partial<OfficialFeatures> {
   /** Theme package. Default: `@vuemo/theme-default`. */
   theme?: string
@@ -23,6 +30,10 @@ export interface BlogConfig extends UserConfig, Partial<OfficialFeatures> {
   nav?: NavItem[]
   /** HTML shown in the footer. → themeConfig.footer */
   footer?: string
+  /** Path of a file in `public/`. → themeConfig.logo */
+  logo?: string
+  /** → themeConfig.socialLinks */
+  socialLinks?: SocialLink[]
   /** → themeConfig.postsPerPage */
   postsPerPage?: number
   /** RSS feed at `feed.xml`. On when `hostname` is set; `false` turns it off. */
@@ -35,7 +46,7 @@ export const DEFAULT_THEME = '@vuemo/theme-default'
 
 /** `importer` only exists so tests don't need real plugin packages. */
 export async function defineBlogConfig(config: BlogConfig = {}, importer?: Importer): Promise<UserConfig> {
-  const { theme = DEFAULT_THEME, hostname, nav, footer, postsPerPage, rss, plugins = [], ...rest } = config
+  const { theme = DEFAULT_THEME, hostname, nav, footer, logo, socialLinks, postsPerPage, rss, plugins = [], ...rest } = config
   const features = Object.fromEntries(Object.keys(OFFICIAL_FEATURES).map((key) => [key, (rest as any)[key]]))
   for (const key of Object.keys(OFFICIAL_FEATURES)) delete (rest as any)[key]
 
@@ -56,6 +67,8 @@ export async function defineBlogConfig(config: BlogConfig = {}, importer?: Impor
   const themeConfig = {
     ...(nav && { nav }),
     ...(footer && { footer }),
+    ...(logo && { logo }),
+    ...(socialLinks && { socialLinks }),
     ...(postsPerPage && { postsPerPage }),
     ...rest.themeConfig
   }

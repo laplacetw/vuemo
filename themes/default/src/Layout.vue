@@ -8,6 +8,7 @@ import Archive from './layouts/Archive.vue'
 import Tag from './layouts/Tag.vue'
 import Category from './layouts/Category.vue'
 import Page from './layouts/Page.vue'
+import SocialLinks from './components/SocialLinks.vue'
 
 const layouts = { home: Home, post: Post, archive: Archive, tag: Tag, category: Category, page: Page }
 
@@ -32,6 +33,7 @@ const layout = computed(() => {
       </component>
     </main>
     <footer class="py-8 text-center text-sm text-zinc-500">
+      <SocialLinks />
       <span v-if="theme.footer" v-html="theme.footer" />
     </footer>
   </div>

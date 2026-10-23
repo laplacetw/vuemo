@@ -90,10 +90,19 @@ describe('defineBlogConfig', () => {
     const cfg: any = await defineBlogConfig({
       nav: [{ text: 'Home', link: '/' }],
       footer: 'f',
+      logo: '/logo.svg',
+      socialLinks: [{ icon: 'github', link: 'https://github.com/x' }],
       postsPerPage: 3,
       themeConfig: { postsPerPage: 9, custom: true }
     })
-    expect(cfg.themeConfig).toEqual({ nav: [{ text: 'Home', link: '/' }], footer: 'f', postsPerPage: 9, custom: true })
+    expect(cfg.themeConfig).toEqual({
+      nav: [{ text: 'Home', link: '/' }],
+      footer: 'f',
+      logo: '/logo.svg',
+      socialLinks: [{ icon: 'github', link: 'https://github.com/x' }],
+      postsPerPage: 9,
+      custom: true
+    })
     expect(cfg.nav).toBeUndefined()
   })
 
