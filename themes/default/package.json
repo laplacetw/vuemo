@@ -1,14 +1,17 @@
 {
   "name": "@vuemo/theme-default",
-  "version": "0.0.0",
-  "description": "Minimal default theme for Vuemo",
+  "version": "0.1.0",
+  "description": "Minimal default theme for Vuemo (Tailwind CSS)",
   "type": "module",
   "license": "MIT",
   "exports": {
     ".": "./src/index.ts",
     "./style.css": "./dist/style.css"
   },
-  "files": ["src", "dist"],
+  "files": [
+    "src",
+    "dist"
+  ],
   "scripts": {
     "build": "tailwindcss -i src/style.css -o dist/style.css --minify"
   },
@@ -24,5 +27,28 @@
     "tailwindcss": "^4.1.0",
     "vitepress": "^1.6.4",
     "vue": "^3.5.0"
+  },
+  "keywords": [
+    "vuemo",
+    "vitepress",
+    "theme",
+    "blog",
+    "tailwindcss"
+  ],
+  "author": "Nick Liu",
+  "homepage": "https://github.com/laplacetw/vuemo#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/laplacetw/vuemo.git",
+    "directory": "themes/default"
+  },
+  "bugs": {
+    "url": "https://github.com/laplacetw/vuemo/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

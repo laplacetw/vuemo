@@ -1,15 +1,45 @@
 {
   "name": "create-vuemo",
-  "version": "0.0.0",
-  "description": "Scaffold a Vuemo blog: npm create vuemo",
+  "version": "0.1.0",
+  "description": "Scaffold a Vuemo blog with npm create vuemo",
   "type": "module",
   "license": "MIT",
-  "bin": { "create-vuemo": "./dist/index.js" },
-  "files": ["dist", "template"],
-  "engines": { "node": ">=18" },
-  "scripts": { "build": "tsup", "test": "vitest run" },
+  "bin": {
+    "create-vuemo": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "template"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run"
+  },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "tsup": "^8.3.0"
+  },
+  "keywords": [
+    "vuemo",
+    "vitepress",
+    "blog",
+    "scaffold",
+    "create"
+  ],
+  "author": "Nick Liu",
+  "homepage": "https://github.com/laplacetw/vuemo#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/laplacetw/vuemo.git",
+    "directory": "packages/create-vuemo"
+  },
+  "bugs": {
+    "url": "https://github.com/laplacetw/vuemo/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

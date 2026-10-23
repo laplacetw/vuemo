@@ -1,7 +1,7 @@
 {
   "name": "@vuemo/core",
-  "version": "0.0.0",
-  "description": "Blog logic for Vuemo: posts loader, composables, config helpers, CLI",
+  "version": "0.1.0",
+  "description": "Core of Vuemo: posts loader, composables, defineBlogConfig and the vuemo CLI",
   "type": "module",
   "license": "MIT",
   "bin": {
@@ -33,5 +33,28 @@
     "tsup": "^8.3.0",
     "vitepress": "^1.6.4",
     "vue": "^3.5.0"
+  },
+  "keywords": [
+    "vuemo",
+    "vitepress",
+    "blog",
+    "markdown",
+    "rss"
+  ],
+  "author": "Nick Liu",
+  "homepage": "https://github.com/laplacetw/vuemo#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/laplacetw/vuemo.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/laplacetw/vuemo/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

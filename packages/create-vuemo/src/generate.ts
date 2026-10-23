@@ -7,15 +7,23 @@ export interface Answers {
   aiSummary: boolean
 }
 
-/** Dependency ranges of the generated project. */
-export const VERSIONS = {
-  core: '^0.0.0',
-  theme: '^0.0.0',
-  comments: '^0.0.0',
-  aiSummary: '^0.0.0',
-  vitepress: '^1.6.4',
-  vue: '^3.5.0'
+interface Versions {
+  core: string
+  theme: string
+  comments: string
+  aiSummary: string
+  vitepress: string
+  vue: string
 }
+
+/** Injected from the workspace packages at build time (see tsup.config.ts). */
+declare const __VERSIONS__: Versions | undefined
+
+/** Dependency ranges of the generated project. */
+export const VERSIONS: Versions =
+  typeof __VERSIONS__ === 'undefined'
+    ? { core: '*', theme: '*', comments: '*', aiSummary: '*', vitepress: '*', vue: '*' }
+    : __VERSIONS__
 
 export function packageJson(a: Answers): string {
   // Official plugins are always installed, so turning a feature on only takes a config edit.

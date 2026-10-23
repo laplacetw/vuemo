@@ -1,14 +1,23 @@
 {
   "name": "@vuemo/plugin-ai-summary",
-  "version": "0.0.0",
-  "description": "AI post summary for Vuemo (Cloudflare Workers AI)",
+  "version": "0.1.0",
+  "description": "AI post summary for Vuemo blogs with Cloudflare Workers AI",
   "type": "module",
   "license": "MIT",
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
-  "files": ["dist", "src"],
-  "scripts": { "build": "tsup", "test": "vitest run" },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run"
+  },
   "peerDependencies": {
     "@vuemo/core": "workspace:^",
     "vitepress": ">=1.6.0",
@@ -20,5 +29,28 @@
     "tsup": "^8.3.0",
     "vitepress": "^1.6.4",
     "vue": "^3.5.0"
+  },
+  "keywords": [
+    "vuemo",
+    "vitepress",
+    "plugin",
+    "ai",
+    "cloudflare"
+  ],
+  "author": "Nick Liu",
+  "homepage": "https://github.com/laplacetw/vuemo#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/laplacetw/vuemo.git",
+    "directory": "plugins/ai-summary"
+  },
+  "bugs": {
+    "url": "https://github.com/laplacetw/vuemo/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
