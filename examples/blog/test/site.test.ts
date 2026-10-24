@@ -35,6 +35,14 @@ describe('home page', () => {
   })
 })
 
+describe('footer', () => {
+  it('renders the message and the copyright', () => {
+    const html = page('index.html')
+    expect(html).toMatch(/vuemo-footer-message[^>]*>Powered by <a href="https:\/\/vitepress.dev">VitePress<\/a> · Vuemo/)
+    expect(html).toMatch(/vuemo-footer-copyright[^>]*>Copyright © 2025 Vuemo Blog/)
+  })
+})
+
 describe('taxonomy links', () => {
   const html = page('posts/hello-vuemo.html')
 

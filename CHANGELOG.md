@@ -26,3 +26,4 @@
 - `paths` option and `useTaxonomyLinks()`: the default theme links the category and tags of a post to the category and tag pages, which preselect the item from `?category=` / `?tag=`
 - `@vuemo/core`: post JSON-LD includes `dateModified` when VitePress has a valid last-updated time (never earlier than the publish date)
 - `search` option: full-text local search (VitePress's local search with `searchRender`, which makes the text before a post's first heading searchable); the default theme gets a search button and an accessible modal (`/`, Ctrl/Cmd+K), loading MiniSearch and the index only when it opens
+- `footer` accepts `string | { message, copyright }`; core always writes an object to `themeConfig.footer` (a string becomes `{ message }`), and the default theme renders both parts. **Breaking for themes that read `themeConfig.footer` as a string**: read `footer.message` (and `footer.copyright`) instead

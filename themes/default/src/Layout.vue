@@ -14,6 +14,12 @@ const layouts = { home: Home, post: Post, archive: Archive, tag: Tag, category: 
 
 const { page, frontmatter, theme } = useData()
 
+// `themeConfig.footer` is `{ message, copyright }`; a raw string (hand-written config) is the message
+const footer = computed<{ message?: string; copyright?: string }>(() => {
+  const f = theme.value.footer
+  return typeof f === 'string' ? { message: f } : (f ?? {})
+})
+
 const layout = computed(() => {
   if (page.value.isNotFound) return Page
   const name = frontmatter.value.layout as keyof typeof layouts | undefined
@@ -32,9 +38,10 @@ const layout = computed(() => {
         <template #post-comments><slot name="post-comments" /></template>
       </component>
     </main>
-    <footer class="py-8 text-center text-sm text-zinc-500">
+    <footer class="space-y-1 py-8 text-center text-sm text-zinc-500">
       <SocialLinks />
-      <span v-if="theme.footer" v-html="theme.footer" />
+      <p v-if="footer.message" class="vuemo-footer-message" v-html="footer.message" />
+      <p v-if="footer.copyright" class="vuemo-footer-copyright text-xs" v-html="footer.copyright" />
     </footer>
   </div>
 </template>

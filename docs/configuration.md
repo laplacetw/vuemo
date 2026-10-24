@@ -15,7 +15,7 @@ export default defineBlogConfig({
   theme: '@vuemo/theme-default',
   postsPerPage: 5,
   nav: [{ text: 'Home', link: '/' }],
-  footer: 'Powered by Vuemo',
+  footer: { message: 'Powered by Vuemo', copyright: 'Copyright © 2025 Me' },
 
   comments: { provider: 'utterances', repo: 'user/comments-repo' },
   aiSummary: false
@@ -29,7 +29,7 @@ export default defineBlogConfig({
 | `theme` | Theme package. Default `@vuemo/theme-default`. See [Themes](./themes.md). |
 | `hostname` | Site origin. Used by the sitemap, the JSON-LD of posts and the RSS feed. |
 | `nav` | `{ text, link }[]` navigation links. Becomes `themeConfig.nav`. |
-| `footer` | HTML for the footer. Becomes `themeConfig.footer`. |
+| `footer` | HTML for the footer: a string (the message) or `{ message?, copyright? }`. Becomes `themeConfig.footer`, always as an object (a string turns into `{ message }`). |
 | `logo` | Path of an image in `public/`, shown next to the site title. Becomes `themeConfig.logo`. |
 | `socialLinks` | `{ icon, link, ariaLabel? }[]` links shown in the footer. `icon` is a text label (e.g. `'github'`) or `{ svg: '<svg>...</svg>' }`. Becomes `themeConfig.socialLinks`. |
 | `postsPerPage` | Posts per page on the home layout. Default 5. Becomes `themeConfig.postsPerPage`. |

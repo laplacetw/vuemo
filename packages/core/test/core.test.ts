@@ -132,13 +132,21 @@ describe('defineBlogConfig', () => {
       summary: 'excerpt',
       paths: { tag: '/tags', category: '/category' },
       nav: [{ text: 'Home', link: '/' }],
-      footer: 'f',
+      footer: { message: 'f' },
       logo: '/logo.svg',
       socialLinks: [{ icon: 'github', link: 'https://github.com/x' }],
       postsPerPage: 9,
       custom: true
     })
     expect(cfg.nav).toBeUndefined()
+  })
+
+  it('normalizes footer to an object', async () => {
+    expect(((await defineBlogConfig({ footer: 'hi' })) as any).themeConfig.footer).toEqual({ message: 'hi' })
+    expect(((await defineBlogConfig({ footer: { message: 'm', copyright: 'c' } })) as any).themeConfig.footer).toEqual({ message: 'm', copyright: 'c' })
+    expect(((await defineBlogConfig({})) as any).themeConfig.footer).toBeUndefined()
+    const cfg: any = await defineBlogConfig({ footer: 'hi', themeConfig: { footer: 'raw' } })
+    expect(cfg.themeConfig.footer).toBe('raw')
   })
 
   it('defaults summary to excerpt and maps the summary option', async () => {

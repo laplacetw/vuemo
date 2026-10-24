@@ -22,6 +22,13 @@ export interface SocialLink {
   ariaLabel?: string
 }
 
+export interface FooterConfig {
+  /** HTML, e.g. a credit line. */
+  message?: string
+  /** HTML, e.g. a copyright notice. */
+  copyright?: string
+}
+
 export interface BlogConfig extends UserConfig, Partial<OfficialFeatures> {
   /** Theme package. Default: `@vuemo/theme-default`. */
   theme?: string
@@ -29,8 +36,8 @@ export interface BlogConfig extends UserConfig, Partial<OfficialFeatures> {
   hostname?: string
   /** → themeConfig.nav */
   nav?: NavItem[]
-  /** HTML shown in the footer. → themeConfig.footer */
-  footer?: string
+  /** HTML shown in the footer: a string (the message) or `{ message, copyright }`. → themeConfig.footer (always an object) */
+  footer?: string | FooterConfig
   /** Path of a file in `public/`. → themeConfig.logo */
   logo?: string
   /** → themeConfig.socialLinks */
@@ -73,7 +80,7 @@ export async function defineBlogConfig(config: BlogConfig = {}, importer?: Impor
 
   const themeConfig = {
     ...(nav && { nav }),
-    ...(footer && { footer }),
+    ...(footer && { footer: typeof footer === 'string' ? { message: footer } : footer }),
     ...(logo && { logo }),
     ...(socialLinks && { socialLinks }),
     ...(postsPerPage && { postsPerPage }),

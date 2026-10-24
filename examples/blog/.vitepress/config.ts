@@ -23,7 +23,10 @@ export default defineBlogConfig({
   ],
   search: true,
   markdown: { lineNumbers: true },
-  footer: 'Powered by <a href="https://vitepress.dev">VitePress</a> · Vuemo',
+  footer: {
+    message: 'Powered by <a href="https://vitepress.dev">VitePress</a> · Vuemo',
+    copyright: 'Copyright © 2025 Vuemo Blog'
+  },
 
   // features: set a key to enable it, remove it or use `false` to disable it
   comments: { provider: 'utterances', repo: 'laplacetw/vuemo-comments' },
