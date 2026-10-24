@@ -8,7 +8,11 @@ tags:
 description: Every Markdown extension the default theme styles
 ---
 
-A tour of the Markdown features that VitePress adds and the default theme styles. Inline `code` stays readable, and <kbd>Ctrl</kbd> + <kbd>K</kbd> renders as a key. <Badge type="tip" text="new" /> <Badge text="info" /> <Badge type="warning" text="beta" /> <Badge type="danger" text="removed" />
+A tour of the Markdown features that VitePress adds and the default theme styles. Inline `code` stays readable.
+
+---
+
+The <kbd>Ctrl</kbd> + <kbd>K</kbd> shortcut renders as a key. <Badge type="tip" text="new" /> <Badge text="info" /> <Badge type="warning" text="beta" /> <Badge type="danger" text="removed" />
 
 ## Custom containers
 

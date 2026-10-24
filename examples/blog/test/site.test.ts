@@ -16,6 +16,20 @@ if (!existsSync(dist)) {
 const page = (file: string) => readFileSync(resolve(dist, file), 'utf8')
 const css = existsSync(themeCss) ? readFileSync(themeCss, 'utf8') : ''
 
+describe('home page', () => {
+  const html = page('index.html')
+
+  it('lists excerpts and a Read more link', () => {
+    expect(html).toContain('vuemo-excerpt')
+    expect(html).toContain('Read more')
+    expect(html).toContain(`href="${base}posts/markdown-features"`)
+  })
+
+  it('keeps archive lists to title and date', () => {
+    expect(page('archives.html')).not.toContain('Read more')
+  })
+})
+
 describe('markdown features', () => {
   const html = page('posts/markdown-features.html')
 

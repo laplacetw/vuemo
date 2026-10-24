@@ -9,6 +9,6 @@ const { page, goPage } = usePagination(theme.value.postsPerPage ?? 5)
 </script>
 
 <template>
-  <PostList :posts="page.items" />
+  <PostList :posts="page.items" summary />
   <Pagination :page="page.page" :total-pages="page.totalPages" @go="goPage" />
 </template>

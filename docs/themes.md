@@ -40,7 +40,7 @@ The contract, which lets framework plugins work with any theme:
 - reflect dark mode through VitePress's `isDark`
 - never read the file system; everything comes from the composables
 
-The site options `nav`, `footer`, `logo`, `socialLinks` and `postsPerPage` reach the theme as `useData().theme.value.<name>`. Support for them is up to the theme; `@vuemo/theme-default` supports all of them.
+The site options `nav`, `footer`, `logo`, `socialLinks`, `postsPerPage` and `summary` reach the theme as `useData().theme.value.<name>`. Support for them is up to the theme; `@vuemo/theme-default` supports all of them.
 
 ### Composables (`@vuemo/core/client`)
 

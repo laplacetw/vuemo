@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { withBase } from 'vitepress'
+import { useData, withBase } from 'vitepress'
 import type { Post } from '@vuemo/core/client'
+import { postSummary } from '../utils'
 
-defineProps<{ posts: Post[] }>()
+// `summary` adds the excerpt or description (per `themeConfig.summary`) and a "Read more" link.
+defineProps<{ posts: Post[]; summary?: boolean }>()
+const { theme } = useData()
 </script>
 
 <template>
@@ -12,7 +15,15 @@ defineProps<{ posts: Post[] }>()
       <div class="mt-1 text-sm text-zinc-500">
         {{ post.date.string }}<span v-if="post.category"> · {{ post.category }}</span>
       </div>
-      <p v-if="post.description" class="mt-1">{{ post.description }}</p>
+      <template v-if="summary">
+        <div
+          v-if="postSummary(post, theme.summary).html"
+          class="vuemo-excerpt prose prose-sm mt-2 max-w-none dark:prose-invert"
+          v-html="postSummary(post, theme.summary).html"
+        />
+        <p v-else-if="postSummary(post, theme.summary).text" class="mt-2">{{ postSummary(post, theme.summary).text }}</p>
+        <a :href="withBase(post.url)" class="mt-2 inline-block text-sm hover:underline">Read more →</a>
+      </template>
     </li>
   </ul>
 </template>

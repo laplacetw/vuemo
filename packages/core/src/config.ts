@@ -34,6 +34,10 @@ export interface BlogConfig extends UserConfig, Partial<OfficialFeatures> {
   logo?: string
   /** → themeConfig.socialLinks */
   socialLinks?: SocialLink[]
+  /** What the home page lists under each post: its excerpt (default) or its description. → themeConfig.summary */
+  summary?: 'excerpt' | 'description'
+  /** Where the tag and category layouts live. Default `/tags` and `/category`. → themeConfig.paths */
+  paths?: { tag?: string; category?: string }
   /** → themeConfig.postsPerPage */
   postsPerPage?: number
   /** RSS feed at `feed.xml`. On when `hostname` is set; `false` turns it off. */
@@ -46,7 +50,7 @@ export const DEFAULT_THEME = '@vuemo/theme-default'
 
 /** `importer` only exists so tests don't need real plugin packages. */
 export async function defineBlogConfig(config: BlogConfig = {}, importer?: Importer): Promise<UserConfig> {
-  const { theme = DEFAULT_THEME, hostname, nav, footer, logo, socialLinks, postsPerPage, rss, plugins = [], ...rest } = config
+  const { theme = DEFAULT_THEME, hostname, nav, footer, logo, socialLinks, postsPerPage, summary = 'excerpt', paths, rss, plugins = [], ...rest } = config
   const features = Object.fromEntries(Object.keys(OFFICIAL_FEATURES).map((key) => [key, (rest as any)[key]]))
   for (const key of Object.keys(OFFICIAL_FEATURES)) delete (rest as any)[key]
 
@@ -70,6 +74,8 @@ export async function defineBlogConfig(config: BlogConfig = {}, importer?: Impor
     ...(logo && { logo }),
     ...(socialLinks && { socialLinks }),
     ...(postsPerPage && { postsPerPage }),
+    summary,
+    paths: { tag: '/tags', category: '/category', ...paths },
     ...rest.themeConfig
   }
 

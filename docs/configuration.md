@@ -33,12 +33,13 @@ export default defineBlogConfig({
 | `logo` | Path of an image in `public/`, shown next to the site title. Becomes `themeConfig.logo`. |
 | `socialLinks` | `{ icon, link, ariaLabel? }[]` links shown in the footer. `icon` is a text label (e.g. `'github'`) or `{ svg: '<svg>...</svg>' }`. Becomes `themeConfig.socialLinks`. |
 | `postsPerPage` | Posts per page on the home layout. Default 5. Becomes `themeConfig.postsPerPage`. |
+| `summary` | What the home page shows under each post: `'excerpt'` (default) or `'description'`. With `'excerpt'`, a post without an excerpt falls back to its `description`, and shows nothing if it has neither; with `'description'` the excerpt is never used. Every entry gets a "Read more" link. Tag, category and archive lists show only the title and date. Becomes `themeConfig.summary`. |
 | `rss` | RSS feed at `/feed.xml` with the newest posts (`{ limit?: number }`, default 20). On whenever `hostname` is set, because feeds need absolute links; use `rss: false` to turn it off. |
 | `comments` | Enable comments. See below. |
 | `aiSummary` | Enable the AI summary. See below. |
 | `plugins` | Your own or third-party plugins. See [Plugins](./plugins.md). |
 
-`nav`, `footer`, `logo`, `socialLinks` and `postsPerPage` are shortcuts for `themeConfig`. If you also set `themeConfig` yourself (VitePress's own mechanism, or a theme's own options), your `themeConfig` wins.
+`nav`, `footer`, `logo`, `socialLinks`, `postsPerPage` and `summary` are shortcuts for `themeConfig`. If you also set `themeConfig` yourself (VitePress's own mechanism, or a theme's own options), your `themeConfig` wins.
 
 ## Features
 
@@ -63,5 +64,7 @@ Defined by `@vuemo/core` ([`schema.ts`](../packages/core/src/schema.ts)); themes
 | `category` | Optional, one per post. |
 | `tags` | Optional list. |
 | `description` | Optional summary. |
+
+An excerpt is the part of the post before the first `---` line in its body (VitePress's excerpt separator). Put `---` on its own line, with blank lines around it, after the paragraphs you want on the home page.
 
 A post without a valid `title` or `date` is skipped with a warning.

@@ -96,6 +96,8 @@ describe('defineBlogConfig', () => {
       themeConfig: { postsPerPage: 9, custom: true }
     })
     expect(cfg.themeConfig).toEqual({
+      summary: 'excerpt',
+      paths: { tag: '/tags', category: '/category' },
       nav: [{ text: 'Home', link: '/' }],
       footer: 'f',
       logo: '/logo.svg',
@@ -104,6 +106,14 @@ describe('defineBlogConfig', () => {
       custom: true
     })
     expect(cfg.nav).toBeUndefined()
+  })
+
+  it('defaults summary to excerpt and maps the summary option', async () => {
+    expect(((await defineBlogConfig({})) as any).themeConfig.summary).toBe('excerpt')
+    expect(((await defineBlogConfig({ summary: 'description' })) as any).themeConfig.summary).toBe('description')
+    const cfg: any = await defineBlogConfig({ summary: 'description', themeConfig: { summary: 'excerpt' } })
+    expect(cfg.themeConfig.summary).toBe('excerpt')
+    expect(cfg.summary).toBeUndefined()
   })
 
   it('enables official features by their keys and strips them from the config', async () => {

@@ -10,6 +10,8 @@ description: The first post
 
 Welcome to Vuemo.
 
+---
+
 ```ts
 const msg: string = 'hello'
 console.log(msg)
