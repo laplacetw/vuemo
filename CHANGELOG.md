@@ -37,3 +37,4 @@
 - peer dependency `vitepress` is `^1.6.0` (was `>=1.6.0`, which would accept 2.x with different internals) in core, the default theme and the official plugins
 - default theme: no longer uses VitePress's internal `__VP_LOCAL_SEARCH__` flag (`themeConfig.search.provider === 'local'` decides whether the search button shows); `SearchModal.vue` references `env.d.ts` so `vue-tsc` over the shipped sources finds `@localSearchIndex`
 - default theme: muted text (`text-zinc-500`, placeholder) gets `dark:text-zinc-400` for contrast on the dark background; the search modal's Esc button has `aria-label="Close search"`; each "Read more" link carries the post title for screen readers; docs: keep excerpts to plain paragraphs
+- `usePost(url?)` in `@vuemo/core/client` (the normalized post at the current route); `searchRender` is exported from `@vuemo/core`

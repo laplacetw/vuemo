@@ -84,12 +84,12 @@ A plugin is a function that returns an object with these fields:
 ```ts
 interface VuemoPlugin {
   name: string
-  markdown?: (md: MarkdownIt) => void          // → VitePress markdown.config
+  markdown?: (md: MarkdownRenderer) => void    // → VitePress markdown.config
   vite?: UserConfig['vite']                    // → merged into the vite config
   head?: HeadConfig[]                          // → site head
   transformPost?: (post: Post) => Post | void  // → posts data loader
   enhanceApp?: string                          // path of a client-side enhanceApp module
-  slots?: Record<string, string>               // component paths injected into the theme's standard slots
+  slots?: Partial<Record<StandardSlot, string>> // component paths injected into the theme's standard slots
 }
 ```
 

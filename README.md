@@ -10,7 +10,7 @@ Vuemo is a thin layer on top of [VitePress](https://vitepress.dev). VitePress st
 
 | Path | Package | What it does |
 | --- | --- | --- |
-| `packages/core` | `@vuemo/core` | Posts loader, tags / categories / archives, pagination, prev/next, JSON-LD, `defineBlogConfig()`, `vuemo new` CLI |
+| `packages/core` | `@vuemo/core` | Posts loader, tags / categories / archives, pagination, prev/next, JSON-LD, RSS, `defineBlogConfig()`, `vuemo new` CLI |
 | `themes/default` | `@vuemo/theme-default` | Minimal default theme (Tailwind CSS v4) and the reference implementation of the theme contract |
 | `plugins/comments` | `@vuemo/plugin-comments` | Comments with Giscus or Utterances, synced with dark mode |
 | `plugins/ai-summary` | `@vuemo/plugin-ai-summary` | "Summarize" button backed by your own Cloudflare Worker (Workers AI + AI Gateway) |
@@ -51,6 +51,8 @@ export default defineBlogConfig({
 })
 ```
 
+Notes for new users: `create-vuemo` turns on `search: true` and `markdown: { math: true }` for you (both are off in plain `defineBlogConfig`); code block line numbers are opt-in (`markdown: { lineNumbers: true }`); the RSS feed at `/feed.xml` is written whenever `hostname` is set (`rss: false` turns it off). See [Configuration](./docs/configuration.md).
+
 ### Writing posts
 
 ```sh
@@ -72,7 +74,7 @@ description: Optional summary
 
 ## Themes
 
-A theme is a regular VitePress theme that consumes data from `@vuemo/core/client` (`usePosts`, `useTags`, `useCategories`, `useArchives`, `usePagination`, `usePrevNext`). To be usable with Vuemo plugins, a theme must:
+A theme is a regular VitePress theme that consumes data from `@vuemo/core/client` (`usePosts`, `useTags`, `useCategories`, `useArchives`, `usePagination`, `usePrevNext`, `usePost`, `useTaxonomyLinks`, `useQueryParam`). To be usable with Vuemo plugins, a theme must:
 
 - implement the layouts `home`, `post`, `archive`, `tag`, `category` and `page`
 - provide these slots in the `post` layout: `post-before-content`, `post-after-content`, `post-comments`, rendered with `useSlots(name)`

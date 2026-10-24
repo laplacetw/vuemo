@@ -84,6 +84,9 @@ Defined by `@vuemo/core` ([`schema.ts`](../packages/core/src/schema.ts)); themes
 | `category` | Optional, one per post. |
 | `tags` | Optional list. |
 | `description` | Optional summary. |
+| `lastUpdated` | Set to `false` to hide "Updated" on this post (see the `lastUpdated` option). |
+| `search` | Set to `false` to keep this page out of the search index (see Search). |
+| `layout` | Layout of the page; posts default to `post`, other pages to `page`. See [Themes](./themes.md#layouts). |
 
 An excerpt is the part of the post before the first `---` line in its body (VitePress's excerpt separator). Put `---` on its own line, with blank lines around it, after the paragraphs you want on the home page.
 

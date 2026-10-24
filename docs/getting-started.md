@@ -33,6 +33,15 @@ my-blog/
 
 `create-vuemo` asks for a name, a title, whether to enable comments (Giscus or Utterances) and the AI summary. For scripts, skip the prompts: `create-vuemo my-blog --yes --comments=utterances --ai-summary`.
 
+## Defaults for new blogs
+
+The generated config turns on a few things that are off in plain `defineBlogConfig`:
+
+- `search: true`: full-text local search (off unless you set it)
+- `markdown: { math: true }` with `markdown-it-mathjax3` installed: math formulas
+- line numbers in code blocks are **off**; opt in with `markdown: { lineNumbers: true }` ([Markdown](./markdown.md#line-numbers))
+- the RSS feed at `/feed.xml` is written whenever `hostname` is set, so replace the placeholder `https://example.com` with your real origin (or use `rss: false`)
+
 ## Everyday commands
 
 ```sh
