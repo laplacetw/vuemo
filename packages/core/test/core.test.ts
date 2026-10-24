@@ -155,6 +155,13 @@ describe('defineBlogConfig', () => {
     expect(cfg.paths).toBeUndefined()
   })
 
+  it('merges paths per key and lets themeConfig.paths win', async () => {
+    const cfg: any = await defineBlogConfig({ paths: { tag: '/a', category: '/b' }, themeConfig: { paths: { tag: '/t' } } })
+    expect(cfg.themeConfig.paths).toEqual({ tag: '/t', category: '/b' })
+    const partial: any = await defineBlogConfig({ themeConfig: { paths: { tag: '/t' } } })
+    expect(partial.themeConfig.paths).toEqual({ tag: '/t', category: '/category' })
+  })
+
   it('enables official features by their keys and strips them from the config', async () => {
     const cfg: any = await defineBlogConfig({ comments: { provider: 'utterances', repo: 'a/b' } } as any, importer)
     expect(cfg.head).toEqual([['meta', { name: 'comments', content: '{"provider":"utterances","repo":"a/b"}' }]])

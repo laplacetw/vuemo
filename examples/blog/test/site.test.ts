@@ -26,7 +26,10 @@ describe('home page', () => {
   })
 
   it('keeps archive lists to title and date', () => {
-    expect(page('archives.html')).not.toContain('Read more')
+    for (const file of ['archives.html', 'tags.html', 'category.html']) {
+      expect(page(file), file).not.toContain('vuemo-excerpt')
+      expect(page(file), file).not.toContain('Read more')
+    }
   })
 })
 
@@ -39,8 +42,8 @@ describe('taxonomy links', () => {
   })
 
   it('has the tag and category pages', () => {
-    expect(page('tags.html')).toContain('Tags')
-    expect(page('category.html')).toContain('Category')
+    expect(page('tags.html')).toMatch(/<h1[^>]*>Tags<\/h1>/)
+    expect(page('category.html')).toMatch(/<h1[^>]*>Category<\/h1>/)
     expect(readFileSync(resolve(root, 'tags.md'), 'utf8')).toContain('layout: tag')
     expect(readFileSync(resolve(root, 'category.md'), 'utf8')).toContain('layout: category')
   })

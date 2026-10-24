@@ -1,28 +1,12 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
-import { useData, useRoute } from 'vitepress'
+import { useData } from 'vitepress'
 import { useCategories } from '@vuemo/core/client'
 import PostList from '../components/PostList.vue'
+import { useQuerySelection } from '../useQuerySelection'
 
 const { frontmatter } = useData()
 const groups = useCategories()
-const route = useRoute()
-const selected = ref('')
-
-// Selection lives in `?category=` so it can be linked and survives reload.
-const read = () => {
-  selected.value = new URLSearchParams(location.search).get('category') ?? ''
-}
-onMounted(read)
-// client-side navigation (e.g. from a post) changes the query without a remount in some cases
-watch(() => route.path, read, { flush: 'post' })
-
-function select(name: string) {
-  selected.value = selected.value === name ? '' : name
-  const url = new URL(location.href)
-  selected.value ? url.searchParams.set('category', name) : url.searchParams.delete('category')
-  history.replaceState({}, '', url)
-}
+const { selected, select } = useQuerySelection('category')
 </script>
 
 <template>

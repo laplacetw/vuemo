@@ -21,7 +21,9 @@ const { theme } = useData()
           class="vuemo-excerpt prose prose-sm mt-2 max-w-none dark:prose-invert"
           v-html="postSummary(post, theme.summary).html"
         />
-        <p v-else-if="postSummary(post, theme.summary).text" class="mt-2">{{ postSummary(post, theme.summary).text }}</p>
+        <div v-else-if="postSummary(post, theme.summary).text" class="vuemo-excerpt prose prose-sm mt-2 max-w-none dark:prose-invert">
+          <p>{{ postSummary(post, theme.summary).text }}</p>
+        </div>
         <a :href="withBase(post.url)" class="mt-2 inline-block text-sm hover:underline">Read more →</a>
       </template>
     </li>

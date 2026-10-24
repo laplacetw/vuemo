@@ -75,8 +75,9 @@ export async function defineBlogConfig(config: BlogConfig = {}, importer?: Impor
     ...(socialLinks && { socialLinks }),
     ...(postsPerPage && { postsPerPage }),
     summary,
-    paths: { tag: '/tags', category: '/category', ...paths },
-    ...rest.themeConfig
+    ...rest.themeConfig,
+    // merged per key, so a partial `themeConfig.paths` keeps the other default
+    paths: { tag: '/tags', category: '/category', ...paths, ...rest.themeConfig?.paths }
   }
 
   return defineConfig({
