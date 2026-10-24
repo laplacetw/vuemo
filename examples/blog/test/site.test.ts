@@ -34,6 +34,14 @@ describe('markdown features', () => {
   })
 })
 
+describe('dark mode toggle', () => {
+  it('renders both icons so the markup does not depend on isDark', () => {
+    const html = page('index.html')
+    expect(html).toContain('<span class="dark:hidden">🌙</span>')
+    expect(html).toContain('<span class="hidden dark:inline">☀️</span>')
+  })
+})
+
 describe('theme css', () => {
   it('was built', () => {
     expect(css.length, 'run pnpm build first').toBeGreaterThan(0)

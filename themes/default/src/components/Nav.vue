@@ -15,7 +15,9 @@ const nav: { text: string; link: string }[] = theme.value.nav ?? []
       <nav class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
         <a v-for="item in nav" :key="item.link" :href="withBase(item.link)" class="hover:underline">{{ item.text }}</a>
         <button type="button" aria-label="Toggle dark mode" @click="isDark = !isDark">
-          {{ isDark ? '☀️' : '🌙' }}
+          <!-- both icons are rendered; CSS picks one from `.dark`, so SSR and hydration agree -->
+          <span class="dark:hidden">🌙</span>
+          <span class="hidden dark:inline">☀️</span>
         </button>
       </nav>
     </div>
