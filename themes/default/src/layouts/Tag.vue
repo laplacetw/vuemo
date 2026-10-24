@@ -23,5 +23,5 @@ const { selected, select } = useQuerySelection('tag')
       {{ name }} ({{ list.length }})
     </button>
   </div>
-  <PostList v-if="selected && groups[selected]" :posts="groups[selected]" />
+  <PostList v-if="selected && Object.hasOwn(groups, selected)" :posts="groups[selected]" />
 </template>

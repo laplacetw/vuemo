@@ -23,7 +23,7 @@ function isTyping(el: EventTarget | null) {
 }
 
 function onKeydown(e: KeyboardEvent) {
-  if (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey) {
+  if (e.key?.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey) {
     e.preventDefault()
     open.value = true
   } else if (e.key === '/' && !e.metaKey && !e.ctrlKey && !e.altKey && !open.value && !isTyping(e.target)) {

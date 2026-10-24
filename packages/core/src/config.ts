@@ -5,6 +5,7 @@ import { postJsonLd } from './seo'
 import type { VuemoPlugin } from './plugin'
 import { loadFeatures, OFFICIAL_FEATURES, type Importer, type OfficialFeatures } from './features'
 import { createPostsLoader } from './loader'
+import { normalizeBase } from './base'
 import { buildRss } from './rss'
 import { searchRender } from './search'
 import type { Post } from './schema'
@@ -58,6 +59,9 @@ export interface BlogConfig extends Omit<UserConfig, 'lastUpdated'>, Partial<Off
   plugins?: VuemoPlugin[]
 }
 
+/** An `undefined` value must not override a default. */
+const defined = <T extends object>(o?: T) => Object.fromEntries(Object.entries(o ?? {}).filter(([, v]) => v !== undefined))
+
 export const DEFAULT_THEME = '@vuemo/theme-default'
 
 /** `importer` only exists so tests don't need real plugin packages. */
@@ -86,14 +90,14 @@ export async function defineBlogConfig(config: BlogConfig = {}, importer?: Impor
     ...(logo && { logo }),
     ...(socialLinks && { socialLinks }),
     ...(postsPerPage && { postsPerPage }),
-    ...(lastUpdated && { lastUpdated: { text: (lastUpdated === true ? undefined : lastUpdated.text) ?? 'Updated' } }),
+    ...(lastUpdated && { lastUpdated: { ...(lastUpdated !== true && lastUpdated.text && { text: lastUpdated.text }) } }),
     ...(search && {
       search: { provider: 'local', options: { _render: searchRender, ...(search === true ? {} : search) } }
     }),
     summary,
     ...rest.themeConfig,
     // merged per key, so a partial `themeConfig.paths` keeps the other default
-    paths: { tag: '/tags', category: '/category', ...paths, ...rest.themeConfig?.paths }
+    paths: { tag: '/tags', category: '/category', ...defined(paths), ...defined(rest.themeConfig?.paths) }
   }
 
   return defineConfig({
@@ -107,7 +111,7 @@ export async function defineBlogConfig(config: BlogConfig = {}, importer?: Impor
       ...(rest.head ?? []),
       ...all.flatMap((p) => p.head ?? []),
       ...(rssEnabled
-        ? [['link', { rel: 'alternate', type: 'application/rss+xml', href: `${rest.base ?? '/'}feed.xml` }] as [string, Record<string, string>]]
+        ? [['link', { rel: 'alternate', type: 'application/rss+xml', href: `${normalizeBase(rest.base)}feed.xml` }] as [string, Record<string, string>]]
         : [])
     ],
     markdown: {

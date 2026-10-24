@@ -1,3 +1,4 @@
+import { normalizeBase } from './base'
 import type { Post } from './schema'
 
 export interface RssOptions {
@@ -18,7 +19,7 @@ const escapeXml = (text: string) =>
 /** RSS 2.0 for the newest `limit` posts. `posts` must be sorted newest first. */
 export function buildRss(posts: Post[], options: RssOptions): string {
   const origin = options.hostname.replace(/\/$/, '')
-  const base = (options.base ?? '/').replace(/\/$/, '')
+  const base = normalizeBase(options.base).slice(0, -1)
   const items = posts.slice(0, options.limit ?? 20).map((post) => {
     const link = `${origin}${base}${post.url}`
     const summary = post.description ?? post.excerpt

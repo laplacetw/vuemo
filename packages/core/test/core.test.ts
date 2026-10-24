@@ -5,6 +5,7 @@ import { findPost, findPrevNext, paginate } from '../src/pagination'
 import { postJsonLd } from '../src/seo'
 import { taxonomyHref } from '../src/taxonomy'
 import { searchRender } from '../src/search'
+import { normalizeBase } from '../src/base'
 
 const mk = (n: number, fm: Record<string, any> = {}) =>
   parsePost({ url: `/posts/p${n}`, frontmatter: { title: `P${n}`, date: `202${n}-01-01`, ...fm } }) as any
@@ -227,6 +228,21 @@ describe('rss', () => {
   })
 })
 
+describe('normalizeBase', () => {
+  it('adds the missing slashes', () => {
+    for (const b of [undefined, '', '/', '//']) expect(normalizeBase(b)).toBe('/')
+    for (const b of ['vuemo', '/vuemo', '/vuemo/', 'vuemo/']) expect(normalizeBase(b)).toBe('/vuemo/')
+    expect(normalizeBase('/a/b')).toBe('/a/b/')
+  })
+  it('is used for the feed link, the feed items and the JSON-LD url', async () => {
+    const cfg: any = await defineBlogConfig({ hostname: 'https://x.com', base: '/vuemo' })
+    expect(cfg.head).toContainEqual(['link', { rel: 'alternate', type: 'application/rss+xml', href: '/vuemo/feed.xml' }])
+    expect(buildRss([mk(1)], { title: 'T', hostname: 'https://x.com', base: '/vuemo' })).toContain('https://x.com/vuemo/posts/p1')
+    const page: any = { relativePath: 'posts/a.md', frontmatter: { title: 't', date: '2025-01-01' } }
+    expect(postJsonLd(page, 'https://x.com', '/vuemo')![2]).toContain('"url":"https://x.com/vuemo/posts/a"')
+  })
+})
+
 describe('defineBlogConfig rss', () => {
   it('adds the feed link when hostname is set and not when rss is false', async () => {
     const on: any = await defineBlogConfig({ hostname: 'https://x.com', base: '/b/' })
@@ -295,19 +311,28 @@ describe('defineBlogConfig lastUpdated', () => {
       expect(cfg.themeConfig.lastUpdated).toBeUndefined()
     }
   })
-  it('true enables the VitePress option and the default text', async () => {
+  it('true enables the VitePress option; the theme supplies the default text', async () => {
     const cfg: any = await defineBlogConfig({ lastUpdated: true })
     expect(cfg.lastUpdated).toBe(true)
-    expect(cfg.themeConfig.lastUpdated).toEqual({ text: 'Updated' })
+    expect(cfg.themeConfig.lastUpdated).toEqual({})
   })
   it('takes a custom text', async () => {
     const cfg: any = await defineBlogConfig({ lastUpdated: { text: 'Edited' } })
     expect(cfg.lastUpdated).toBe(true)
     expect(cfg.themeConfig.lastUpdated).toEqual({ text: 'Edited' })
-    expect(((await defineBlogConfig({ lastUpdated: {} })) as any).themeConfig.lastUpdated).toEqual({ text: 'Updated' })
+    expect(((await defineBlogConfig({ lastUpdated: {} })) as any).themeConfig.lastUpdated).toEqual({})
   })
   it('lets an explicit themeConfig.lastUpdated win', async () => {
     const cfg: any = await defineBlogConfig({ lastUpdated: true, themeConfig: { lastUpdated: { text: 'X' } } })
     expect(cfg.themeConfig.lastUpdated).toEqual({ text: 'X' })
+  })
+})
+
+describe('defineBlogConfig paths with undefined values', () => {
+  it('keeps the defaults', async () => {
+    const a: any = await defineBlogConfig({ paths: { tag: undefined } })
+    expect(a.themeConfig.paths).toEqual({ tag: '/tags', category: '/category' })
+    const b: any = await defineBlogConfig({ paths: { tag: '/t' }, themeConfig: { paths: { tag: undefined, category: undefined } } })
+    expect(b.themeConfig.paths).toEqual({ tag: '/t', category: '/category' })
   })
 })
