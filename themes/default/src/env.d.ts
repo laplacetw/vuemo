@@ -1,0 +1,8 @@
+// `@localSearchIndex` is provided by VitePress itself when `themeConfig.search.provider` is `'local'`.
+declare module '@localSearchIndex' {
+  const data: Record<string, () => Promise<{ default: string }>>
+  export default data
+}
+
+/** Defined by VitePress: true when the site has a search provider. */
+declare const __VP_LOCAL_SEARCH__: boolean

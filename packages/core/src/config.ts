@@ -1,11 +1,12 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { defineConfig, mergeConfig, type UserConfig } from 'vitepress'
+import { defineConfig, mergeConfig, type DefaultTheme, type UserConfig } from 'vitepress'
 import { postJsonLd } from './seo'
 import type { VuemoPlugin } from './plugin'
 import { loadFeatures, OFFICIAL_FEATURES, type Importer, type OfficialFeatures } from './features'
 import { createPostsLoader } from './loader'
 import { buildRss } from './rss'
+import { searchRender } from './search'
 import type { Post } from './schema'
 import { virtualPlugin } from './virtual'
 
@@ -40,6 +41,8 @@ export interface BlogConfig extends UserConfig, Partial<OfficialFeatures> {
   paths?: { tag?: string; category?: string }
   /** → themeConfig.postsPerPage */
   postsPerPage?: number
+  /** Full-text local search (VitePress's local search; the theme renders the UI). Off by default. → themeConfig.search */
+  search?: boolean | DefaultTheme.LocalSearchOptions
   /** RSS feed at `feed.xml`. On when `hostname` is set; `false` turns it off. */
   rss?: false | { limit?: number }
   /** Third-party and theme plugins. Official features are enabled by their own keys instead. */
@@ -50,7 +53,7 @@ export const DEFAULT_THEME = '@vuemo/theme-default'
 
 /** `importer` only exists so tests don't need real plugin packages. */
 export async function defineBlogConfig(config: BlogConfig = {}, importer?: Importer): Promise<UserConfig> {
-  const { theme = DEFAULT_THEME, hostname, nav, footer, logo, socialLinks, postsPerPage, summary = 'excerpt', paths, rss, plugins = [], ...rest } = config
+  const { theme = DEFAULT_THEME, hostname, nav, footer, logo, socialLinks, postsPerPage, summary = 'excerpt', paths, search, rss, plugins = [], ...rest } = config
   const features = Object.fromEntries(Object.keys(OFFICIAL_FEATURES).map((key) => [key, (rest as any)[key]]))
   for (const key of Object.keys(OFFICIAL_FEATURES)) delete (rest as any)[key]
 
@@ -74,6 +77,9 @@ export async function defineBlogConfig(config: BlogConfig = {}, importer?: Impor
     ...(logo && { logo }),
     ...(socialLinks && { socialLinks }),
     ...(postsPerPage && { postsPerPage }),
+    ...(search && {
+      search: { provider: 'local', options: { _render: searchRender, ...(search === true ? {} : search) } }
+    }),
     summary,
     ...rest.themeConfig,
     // merged per key, so a partial `themeConfig.paths` keeps the other default

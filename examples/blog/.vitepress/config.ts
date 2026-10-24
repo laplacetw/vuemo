@@ -21,6 +21,7 @@ export default defineBlogConfig({
     { text: 'Tags', link: '/tags' },
     { text: 'About', link: '/about' }
   ],
+  search: true,
   markdown: { lineNumbers: true },
   footer: 'Powered by <a href="https://vitepress.dev">VitePress</a> · Vuemo',
 

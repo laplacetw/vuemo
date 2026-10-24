@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 // Post-build checks on the example blog. Run `pnpm build` first.
 const root = resolve(__dirname, '..')
@@ -102,6 +104,57 @@ describe('theme css', () => {
     const used = new Set([...css.matchAll(/var\(--(color-[\w-]+)/g)].map((m) => m[1]))
     for (const name of used) {
       expect(css, `--${name} is used but never defined`).toMatch(new RegExp(`--${name}\\s*:`))
+    }
+  })
+})
+
+describe('search', () => {
+  // the theme owns minisearch: load the index with the very same copy the browser uses
+  const require = createRequire(resolve(root, '../../themes/default/package.json'))
+  const loaded = require('minisearch')
+  const MiniSearch = loaded.default ?? loaded
+
+  const chunks = resolve(dist, 'assets/chunks')
+  const file = readdirSync(chunks).find((f) => /^@localSearchIndexroot\..+\.js$/.test(f))
+
+  it('ships the index chunk', () => {
+    expect(file).toBeTruthy()
+  })
+
+  const options = { fields: ['title', 'titles', 'text'], storeFields: ['title', 'titles'] }
+  const load = async () => {
+    // the chunk is `export default "<serialized MiniSearch index>"`
+    const json: string = (await import(/* @vite-ignore */ pathToFileURL(resolve(chunks, file!)).href)).default
+    return { json, index: MiniSearch.loadJSON(json, options) }
+  }
+
+  it('finds text that comes before the first heading', async () => {
+    const { index } = await load()
+    const hits = index.search('zebrafish', { fuzzy: 0.2, prefix: true })
+    expect(hits.length).toBeGreaterThan(0)
+    expect(hits[0].id).toBe(`${base}posts/second-post#second-post`)
+    expect(hits[0].title).toBe('Second post')
+  })
+
+  it('prefixes every document id with the base', async () => {
+    const { json } = await load()
+    const ids: string[] = Object.values(JSON.parse(json).documentIds)
+    expect(ids.length).toBeGreaterThan(0)
+    for (const id of ids) expect(id.startsWith(base), id).toBe(true)
+  })
+
+  it('does not index the listing pages', async () => {
+    const { json } = await load()
+    const ids: string[] = Object.values(JSON.parse(json).documentIds)
+    for (const path of ['', 'archives', 'tags', 'category']) {
+      expect(ids.some((id) => id === `${base}${path}` || id.startsWith(`${base}${path}#`)), path).toBe(false)
+    }
+    expect(ids.some((id) => id.startsWith(`${base}posts/hello-vuemo`))).toBe(true)
+  })
+
+  it('renders the search button on the server', () => {
+    for (const f of ['index.html', 'posts/hello-vuemo.html', 'about.html']) {
+      expect(page(f), f).toContain('aria-haspopup="dialog"')
     }
   })
 })

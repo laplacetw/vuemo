@@ -35,12 +35,19 @@ export default defineBlogConfig({
 | `postsPerPage` | Posts per page on the home layout. Default 5. Becomes `themeConfig.postsPerPage`. |
 | `summary` | What the home page shows under each post: `'excerpt'` (default) or `'description'`. With `'excerpt'`, a post without an excerpt falls back to its `description`, and shows nothing if it has neither; with `'description'` the excerpt is never used. Every entry gets a "Read more" link. Tag, category and archive lists show only the title and date. Becomes `themeConfig.summary`. |
 | `paths` | `{ tag?, category? }`: the pages that use the `tag` and `category` layouts. Defaults `/tags` and `/category`. Themes link post tags and categories there. Becomes `themeConfig.paths`. |
+| `search` | Full-text search over your posts and pages, with a search box in the header. Off by default; `true` turns it on, or pass VitePress's [local search options](https://vitepress.dev/reference/default-theme-search#local-search) (for example `{ miniSearch: { searchOptions: { fuzzy: 0.1 } }, translations: { button: { buttonText: 'Find' } } }`). Becomes `themeConfig.search = { provider: 'local', options }`. See below. |
 | `rss` | RSS feed at `/feed.xml` with the newest posts (`{ limit?: number }`, default 20). On whenever `hostname` is set, because feeds need absolute links; use `rss: false` to turn it off. |
 | `comments` | Enable comments. See below. |
 | `aiSummary` | Enable the AI summary. See below. |
 | `plugins` | Your own or third-party plugins. See [Plugins](./plugins.md). |
 
-`nav`, `footer`, `logo`, `socialLinks`, `postsPerPage`, `summary` and `paths` are shortcuts for `themeConfig`. If you also set `themeConfig` yourself (VitePress's own mechanism, or a theme's own options), your `themeConfig` wins.
+`nav`, `footer`, `logo`, `socialLinks`, `postsPerPage`, `summary`, `paths` and `search` are shortcuts for `themeConfig`. If you also set `themeConfig` yourself (VitePress's own mechanism, or a theme's own options), your `themeConfig` wins.
+
+## Search
+
+`search: true` indexes the full text of every page at build time (VitePress's local search, nothing is sent to a server). Because posts have no `#` heading, Vuemo adds the post title as one, so text before the first heading is searchable too. The home, archive, tag and category pages are not indexed, and any page can opt out with `search: false` in its frontmatter. Options are passed to VitePress as they are, including `miniSearch` (MiniSearch `options` and `searchOptions`); your own `_render` replaces Vuemo's. Results show the page title and heading path.
+
+The index and the search library are only downloaded when the search box opens. In `vitepress dev` the first open may make Vite optimize dependencies and reload the page once; this is expected and does not happen in a production build.
 
 ## Features
 

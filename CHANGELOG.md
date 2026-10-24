@@ -25,3 +25,4 @@
 - `summary` option (`'excerpt'` default, or `'description'`): the default theme's home page shows each post's excerpt (the part before `---`) or description, with a "Read more" link
 - `paths` option and `useTaxonomyLinks()`: the default theme links the category and tags of a post to the category and tag pages, which preselect the item from `?category=` / `?tag=`
 - `@vuemo/core`: post JSON-LD includes `dateModified` when VitePress has a valid last-updated time (never earlier than the publish date)
+- `search` option: full-text local search (VitePress's local search with `searchRender`, which makes the text before a post's first heading searchable); the default theme gets a search button and an accessible modal (`/`, Ctrl/Cmd+K), loading MiniSearch and the index only when it opens

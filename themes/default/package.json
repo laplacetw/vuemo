@@ -16,6 +16,9 @@
     "build": "tailwindcss -i src/style.css -o dist/style.css --minify",
     "test": "vitest run"
   },
+  "dependencies": {
+    "minisearch": "^7.1.1"
+  },
   "peerDependencies": {
     "@vuemo/core": "workspace:^",
     "vitepress": ">=1.6.0",

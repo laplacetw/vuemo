@@ -4,6 +4,7 @@ import { groupByTag, groupByYear, groupByCategory } from '../src/group'
 import { findPrevNext, paginate } from '../src/pagination'
 import { postJsonLd } from '../src/seo'
 import { taxonomyHref } from '../src/taxonomy'
+import { searchRender } from '../src/search'
 
 const mk = (n: number, fm: Record<string, any> = {}) =>
   parsePost({ url: `/posts/p${n}`, frontmatter: { title: `P${n}`, date: `202${n}-01-01`, ...fm } }) as any
@@ -212,5 +213,52 @@ describe('defineBlogConfig rss', () => {
     expect(on.head).toContainEqual(['link', { rel: 'alternate', type: 'application/rss+xml', href: '/b/feed.xml' }])
     const off: any = await defineBlogConfig({ hostname: 'https://x.com', rss: false })
     expect(off.head).toEqual([])
+  })
+})
+
+describe('defineBlogConfig search', () => {
+  it('is off by default and with false', async () => {
+    expect(((await defineBlogConfig({})) as any).themeConfig.search).toBeUndefined()
+    const off: any = await defineBlogConfig({ search: false })
+    expect(off.themeConfig.search).toBeUndefined()
+    expect('search' in off).toBe(false)
+  })
+  it('true turns the local provider on with searchRender', async () => {
+    const cfg: any = await defineBlogConfig({ search: true })
+    expect(cfg.themeConfig.search).toEqual({ provider: 'local', options: { _render: searchRender } })
+    expect('search' in cfg).toBe(false)
+  })
+  it('passes VitePress options through and lets the user override _render', async () => {
+    const cfg: any = await defineBlogConfig({ search: { detailedView: true, miniSearch: { searchOptions: { fuzzy: 0.5 } } } })
+    expect(cfg.themeConfig.search.options).toMatchObject({ detailedView: true, _render: searchRender })
+    expect(cfg.themeConfig.search.options.miniSearch.searchOptions.fuzzy).toBe(0.5)
+    const _render = () => 'x'
+    expect(((await defineBlogConfig({ search: { _render } })) as any).themeConfig.search.options._render).toBe(_render)
+  })
+  it('lets an explicit themeConfig.search win', async () => {
+    const cfg: any = await defineBlogConfig({ search: true, themeConfig: { search: { provider: 'local', options: { detailedView: true } } } })
+    expect(cfg.themeConfig.search).toEqual({ provider: 'local', options: { detailedView: true } })
+  })
+})
+
+describe('searchRender', () => {
+  const md = { render: (src: string, env?: any) => {
+    if (env) env.frontmatter = (globalThis as any).__fm
+    return src.startsWith('# ') ? `<h1>${src.slice(2)}</h1>` : `<p>${src}</p>`
+  } }
+  const run = (fm: Record<string, any>, src = 'body') => {
+    ;(globalThis as any).__fm = fm
+    return searchRender(src, {}, md as any)
+  }
+  it('prepends the title as a heading', () => {
+    expect(run({ title: 'Hello' })).toBe('<h1>Hello</h1><p>body</p>')
+  })
+  it('keeps the page as is when there is no title', () => {
+    expect(run({})).toBe('<p>body</p>')
+  })
+  it('skips listing layouts and search: false', () => {
+    for (const layout of ['home', 'archive', 'tag', 'category']) expect(run({ title: 'T', layout })).toBe('')
+    expect(run({ title: 'T', search: false })).toBe('')
+    expect(run({ title: 'T', layout: 'post' })).not.toBe('')
   })
 })

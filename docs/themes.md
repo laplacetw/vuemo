@@ -40,7 +40,9 @@ The contract, which lets framework plugins work with any theme:
 - reflect dark mode through VitePress's `isDark`
 - never read the file system; everything comes from the composables
 
-The site options `nav`, `footer`, `logo`, `socialLinks`, `postsPerPage`, `summary` and `paths` reach the theme as `useData().theme.value.<name>`. Support for them is up to the theme; `@vuemo/theme-default` supports all of them.
+The site options `nav`, `footer`, `logo`, `socialLinks`, `postsPerPage`, `summary`, `paths` and `search` reach the theme as `useData().theme.value.<name>`. Support for them is up to the theme; `@vuemo/theme-default` supports all of them.
+
+Search is optional for a theme. When `search` is set, core writes `themeConfig.search = { provider: 'local', options: { _render, ...userOptions } }`, the same shape as VitePress's default theme, so a theme that extends it gets its search box for free. A theme that renders its own box reads that object and imports the module `@localSearchIndex`, which VitePress itself provides when `provider` is `'local'` (a map of locale to `() => import(...)` of a serialized MiniSearch index; load it with `MiniSearch.loadJSON`, using the same `minisearch` major as VitePress). Document ids already contain `base`, so navigate to them without `withBase`. `searchRender` is exported from `@vuemo/core` for themes that set up search themselves. `@vuemo/theme-default` loads MiniSearch and the index only when the box opens. A theme that ignores `search` simply has no search.
 
 ### Composables (`@vuemo/core/client`)
 
