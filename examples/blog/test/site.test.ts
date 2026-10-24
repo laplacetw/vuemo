@@ -19,13 +19,36 @@ if (!existsSync(dist)) {
 const page = (file: string) => readFileSync(resolve(dist, file), 'utf8')
 const css = existsSync(themeCss) ? readFileSync(themeCss, 'utf8') : ''
 
+// The posts the loader accepts (a title and a valid date), newest first, as the loader would normalize them.
+// posts/bad-frontmatter.md has neither and is skipped with a warning.
+const postsDir = resolve(root, 'posts')
+const validPosts = readdirSync(postsDir)
+  .filter((f) => f.endsWith('.md'))
+  .map((f) => {
+    const fm = /^---\n([\s\S]*?)\n---/.exec(readFileSync(resolve(postsDir, f), 'utf8'))?.[1] ?? ''
+    const title = /^title:\s*(.+)$/m.exec(fm)?.[1]?.trim()
+    const raw = /^date:\s*(.+)$/m.exec(fm)?.[1]?.trim()
+    const time = raw ? +new Date(raw) : NaN
+    return { slug: f.replace(/\.md$/, ''), title, time, date: Number.isNaN(time) ? '' : new Date(time).toISOString().slice(0, 10) }
+  })
+  .filter((p) => p.title && p.date)
+  .sort((a, b) => b.time - a.time)
+
+// A check that cannot run here (no git history) must not pass silently: loud locally, a failure in CI.
+function unavailable(reason: string) {
+  const message = `[site test] skipped: ${reason}`
+  if (process.env.CI) throw new Error(message)
+  console.warn(message)
+}
+
 describe('home page', () => {
   const html = page('index.html')
 
   it('lists excerpts and a Read more link', () => {
     expect(html).toContain('vuemo-excerpt')
     expect(html).toContain('Read more')
-    expect(html).toContain(`href="${base}posts/math"`)
+    // the first page lists the newest posts (postsPerPage is 2 in the example config)
+    for (const post of validPosts.slice(0, 2)) expect(html).toContain(`href="${base}posts/${post.slug}"`)
   })
 
   it('keeps archive lists to title and date', () => {
@@ -45,53 +68,65 @@ describe('footer', () => {
 })
 
 describe('archives', () => {
-  // posts without a title and a date are skipped by the loader (see posts/bad-frontmatter.md)
-  const postsDir = resolve(root, 'posts')
-  const valid = readdirSync(postsDir)
-    .filter((f) => f.endsWith('.md'))
-    .map((f) => readFileSync(resolve(postsDir, f), 'utf8'))
-    .map((src) => /^---\n([\s\S]*?)\n---/.exec(src)?.[1] ?? '')
-    .filter((fm) => /^title:/m.test(fm) && /^date:/m.test(fm))
   const html = page('archives.html')
+  const years: Record<string, number> = {}
+  for (const p of validPosts) years[p.date.slice(0, 4)] = (years[p.date.slice(0, 4)] ?? 0) + 1
 
   it('shows the post count', () => {
-    expect(valid.length).toBeGreaterThan(1)
-    expect(html).toContain(`>${valid.length} posts<`)
+    expect(validPosts.length).toBeGreaterThan(1)
+    expect(html).toContain(`>${validPosts.length} posts<`)
   })
 
-  it('lists compact MM-DD rows and counts per year', () => {
-    for (const fm of valid) {
-      const date = /^date:\s*(\d{4})-(\d{2}-\d{2})/m.exec(fm)!
-      expect(html).toContain(`>${date[2]}</time>`)
-      expect(html).toContain(date[1])
-    }
-    expect(html).toMatch(/2025[\s\S]*?\(4\)/)
+  it('has a heading with the right count for every year, and no other', () => {
+    const headings = [...html.matchAll(/<h2[^>]*>\s*(\d{4})\s*<span[^>]*>\((\d+)\)<\/span>/g)].map((m) => [m[1], Number(m[2])])
+    expect(Object.fromEntries(headings)).toEqual(years)
+    expect(headings.length).toBe(Object.keys(years).length)
+  })
+
+  it('lists a compact MM-DD row for every post', () => {
+    for (const p of validPosts) expect(html, p.slug).toContain(`<time class="shrink-0 font-mono text-sm tabular-nums text-zinc-500" datetime="${p.date}">${p.date.slice(5)}</time>`)
   })
 })
 
 describe('last updated', () => {
-  // The git timestamp of a committed post; NaN when git cannot tell (not a checkout, untracked file).
-  const gitTime = (() => {
+  // git day (UTC) of a post's last commit, or undefined when git cannot tell (no checkout, untracked or edited file)
+  const gitDay = (slug: string) => {
     try {
-      const out = execFileSync('git', ['log', '-1', '--format=%ct', '--', 'posts/hello-vuemo.md'], { cwd: root, encoding: 'utf8' }).trim()
-      return out ? Number(out) * 1000 : NaN
+      const file = `posts/${slug}.md`
+      const cwd = root
+      if (execFileSync('git', ['status', '--porcelain', '--', file], { cwd, encoding: 'utf8' }).trim()) return undefined
+      const out = execFileSync('git', ['log', '-1', '--format=%ct', '--', file], { cwd, encoding: 'utf8' }).trim()
+      return out ? new Date(Number(out) * 1000).toISOString().slice(0, 10) : undefined
     } catch {
-      return NaN
+      return undefined
     }
-  })()
+  }
+  const committed = validPosts.map((p) => ({ ...p, day: gitDay(p.slug) })).filter((p) => p.day)
 
-  it.skipIf(!Number.isFinite(gitTime) || gitTime <= 0)('puts dateModified into the JSON-LD of a committed post', () => {
-    const html = page('posts/hello-vuemo.html')
+  it('puts dateModified into the JSON-LD of a committed post', () => {
+    if (!committed.length) return unavailable('no committed example post, so dateModified cannot be checked')
+    const html = page(`posts/${committed[0].slug}.html`)
     const ld = /<script type="application\/ld\+json">(.*?)<\/script>/.exec(html)
     expect(ld).toBeTruthy()
     const data = JSON.parse(ld![1])
     expect(Date.parse(data.dateModified)).toBeGreaterThanOrEqual(Date.parse(data.datePublished))
   })
 
-  it('never renders an invalid date', () => {
-    // files without a git timestamp have NaN: the line is then left out
-    for (const f of ['posts/hello-vuemo.html', 'posts/second-post.html', 'posts/old-post.html']) {
-      expect(page(f), f).not.toMatch(/Updated (NaN|Invalid)/)
+  it('shows the Updated line exactly when the git day is after the publish day', () => {
+    const later = committed.filter((p) => p.day! > p.date)
+    if (!later.length) return unavailable('no committed post was updated after its publish date')
+    for (const p of committed) {
+      const html = page(`posts/${p.slug}.html`)
+      if (p.day! > p.date) expect(html, p.slug).toMatch(new RegExp(`vuemo-updated[^>]*>· Updated ${p.day}<`))
+      else expect(html, p.slug).not.toContain('vuemo-updated')
+    }
+  })
+
+  it('never renders an invalid date, not even on the skipped post', () => {
+    for (const f of ['posts/hello-vuemo.html', 'posts/second-post.html', 'posts/old-post.html', 'posts/bad-frontmatter.html']) {
+      // visible text only: scripts carry serialized data
+      const text = page(f).replace(/<script[\s\S]*?<\/script>/g, '')
+      expect(text, f).not.toMatch(/\b(undefined|Invalid|NaN)\b/)
     }
   })
 })
