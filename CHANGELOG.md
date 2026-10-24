@@ -3,14 +3,13 @@
 ## Unreleased
 
 ### Features
-- math on by default for new blogs: `create-vuemo` installs `markdown-it-mathjax3` and sets `markdown: { math: true }` and `search: true`; example post `math.md`
 - monorepo scaffold: `@vuemo/core`, `@vuemo/theme-default`, `examples/blog`
-- `defineBlogConfig` has no `theme` option; themes are enabled with `.vitepress/theme/index.ts` (`export { default } from '@vuemo/theme-default'`), VitePress's native mechanism
+- `defineBlogConfig` has no `theme` option; themes are enabled with `.vitepress/theme/index.ts` (`export { default } from '@vuemo/theme-default'`), VitePress's native mechanism (superseded below: the `theme` option exists again, resolved through a virtual module, and the entry file is `export { default } from '@vuemo/core/theme'`)
 - `VuemoPlugin` interface and `defineBlogConfig({ plugins })`: merges `markdown`, `vite`, `head`, `transformPost` (posts loader), `enhanceApp` and `slots`
 - theme contract: `useSlots()` / `runEnhanceApps()` from `@vuemo/core/client`; post body must carry class `vuemo-content`
 - `@vuemo/plugin-comments` (Giscus, Utterances) and `@vuemo/plugin-ai-summary`
 - `create-vuemo`: scaffolds a blog with `posts/`, `public/`, config and theme entry; optional comments / AI summary plugins
-- default theme: hide VitePress code block language label and copy button
+- default theme: hide VitePress code block language label and copy button (superseded below: the language label and the copy button are shown and styled)
 - `defineBlogConfig` is now async and the single place for settings: `theme` (resolved through a virtual module, entry file is `export { default } from '@vuemo/core/theme'`), flat `nav` / `footer` / `postsPerPage`, and official feature switches `comments` / `aiSummary` (no imports; `false` disables)
 - `@vuemo/plugin-comments` config is flat: `{ provider, repo, ... }` instead of `{ provider, options }`
 - `create-vuemo` always installs the official plugins and writes feature switches into the config
@@ -30,6 +29,7 @@
 - `footer` accepts `string | { message, copyright }`; core always writes an object to `themeConfig.footer` (a string becomes `{ message }`), and the default theme renders both parts. **Breaking for themes that read `themeConfig.footer` as a string**: read `footer.message` (and `footer.copyright`) instead
 - default theme: the archive page shows the total post count, a count per year and compact `MM-DD` rows with one-line titles
 - `lastUpdated` option (`boolean | { text? }`): turns on VitePress's git-based last updated time; the default theme shows "Updated YYYY-MM-DD" on posts when it differs from the publish date (`lastUpdated: false` in frontmatter hides it), and the JSON-LD gets `dateModified`
+- math on by default for new blogs: `create-vuemo` installs `markdown-it-mathjax3` and sets `markdown: { math: true }` and `search: true`; example post `math.md`
 - `VuemoThemeConfig` and `FooterConfig` are exported from `@vuemo/core`: `VuemoThemeConfig` is exactly what `defineBlogConfig` writes into `themeConfig`, so themes can use `useData<VuemoThemeConfig>()`; `themeConfig.summary` and `themeConfig.paths` (both keys) are always written
 - `useQueryParam(key, { history? })` in `@vuemo/core/client`: a ref that follows the URL's `?key=`, also on same-path link navigation and Back/Forward. `usePagination` is built on it, which fixes the page staying on `?page=2` after clicking the nav "Home" link and a `popstate` listener that was never removed; the tag and category layouts use it (the theme-local `useQuerySelection` is gone)
 - `@vuemo/plugin-comments`: the container no longer uses the Tailwind class `mt-10` (it only worked because the default theme happened to emit it); its spacing is a scoped style, so the plugin does not depend on theme CSS
