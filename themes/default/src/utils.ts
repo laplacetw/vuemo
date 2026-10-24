@@ -15,3 +15,8 @@ export function postSummary(
   if (post.description?.trim()) return { text: post.description }
   return {}
 }
+
+/** "1 post" / "N posts". */
+export function postCountText(count: number): string {
+  return count === 1 ? '1 post' : `${count} posts`
+}

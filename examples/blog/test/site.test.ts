@@ -43,6 +43,31 @@ describe('footer', () => {
   })
 })
 
+describe('archives', () => {
+  // posts without a title and a date are skipped by the loader (see posts/bad-frontmatter.md)
+  const postsDir = resolve(root, 'posts')
+  const valid = readdirSync(postsDir)
+    .filter((f) => f.endsWith('.md'))
+    .map((f) => readFileSync(resolve(postsDir, f), 'utf8'))
+    .map((src) => /^---\n([\s\S]*?)\n---/.exec(src)?.[1] ?? '')
+    .filter((fm) => /^title:/m.test(fm) && /^date:/m.test(fm))
+  const html = page('archives.html')
+
+  it('shows the post count', () => {
+    expect(valid.length).toBeGreaterThan(1)
+    expect(html).toContain(`>${valid.length} posts<`)
+  })
+
+  it('lists compact MM-DD rows and counts per year', () => {
+    for (const fm of valid) {
+      const date = /^date:\s*(\d{4})-(\d{2}-\d{2})/m.exec(fm)!
+      expect(html).toContain(`>${date[2]}</time>`)
+      expect(html).toContain(date[1])
+    }
+    expect(html).toMatch(/2025[\s\S]*?\(3\)/)
+  })
+})
+
 describe('taxonomy links', () => {
   const html = page('posts/hello-vuemo.html')
 
