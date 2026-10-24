@@ -66,7 +66,10 @@ const COMMENTS: Record<CommentsProvider, string> = {
 export function configTs(a: Answers): string {
   const aiSummary = a.aiSummary ? "{ api: 'https://YOUR-WORKER.workers.dev' } // see the plugin README" : 'false'
 
-  return `import { defineBlogConfig } from '@vuemo/core'
+  // the references load the plugins' types, so `comments` and `aiSummary` type-check in the editor and under tsc
+  return `/// <reference types="@vuemo/plugin-comments" />
+/// <reference types="@vuemo/plugin-ai-summary" />
+import { defineBlogConfig } from '@vuemo/core'
 
 export default defineBlogConfig({
   // site

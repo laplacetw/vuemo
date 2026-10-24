@@ -60,6 +60,17 @@ comments: { provider: 'utterances', repo: 'user/comments-repo' }
 aiSummary: { api: 'https://your-worker.workers.dev' }
 ```
 
+### Types of the feature keys
+
+VitePress bundles the config with esbuild, so builds never type-check it. For `tsc`, `vue-tsc` and your editor, the types of `comments` and `aiSummary` come from the plugin packages, which TypeScript only loads when something refers to them. Put these lines at the top of `.vitepress/config.ts` (`create-vuemo` writes them for you):
+
+```ts
+/// <reference types="@vuemo/plugin-comments" />
+/// <reference types="@vuemo/plugin-ai-summary" />
+```
+
+Without them an editor reports `comments` / `aiSummary` as unknown properties, although the build works.
+
 Their packages (`@vuemo/plugin-comments`, `@vuemo/plugin-ai-summary`) must be installed; `create-vuemo` installs both. Options are documented in the plugin READMEs: [comments](../plugins/comments/README.md), [AI summary](../plugins/ai-summary/README.md).
 
 ## Frontmatter

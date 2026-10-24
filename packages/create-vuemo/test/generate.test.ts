@@ -12,6 +12,10 @@ describe('generate', () => {
       expect.arrayContaining(['@vuemo/plugin-comments', '@vuemo/plugin-ai-summary'])
     )
   })
+  it('references the plugin types so the feature keys type-check in the user config', () => {
+    const cfg = configTs(base)
+    expect(cfg.startsWith('/// <reference types="@vuemo/plugin-comments" />\n/// <reference types="@vuemo/plugin-ai-summary" />\n')).toBe(true)
+  })
   it('turns math and search on and installs the math plugin', () => {
     const cfg = configTs(base)
     expect(cfg).toContain('math: true')

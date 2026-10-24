@@ -1,3 +1,5 @@
+/// <reference types="@vuemo/plugin-comments" />
+/// <reference types="@vuemo/plugin-ai-summary" />
 import { defineBlogConfig } from '@vuemo/core'
 
 export default defineBlogConfig({
