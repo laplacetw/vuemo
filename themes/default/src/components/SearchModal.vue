@@ -160,7 +160,7 @@ onBeforeUnmount(() => {
         @keydown="onKeydown"
       >
         <div class="flex items-center gap-2 border-b border-zinc-200 p-3 dark:border-zinc-700">
-          <svg class="h-5 w-5 shrink-0 text-zinc-500" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <svg class="h-5 w-5 shrink-0 text-zinc-500 dark:text-zinc-400" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
             <circle cx="8.5" cy="8.5" r="5.5" />
             <path d="m13 13 4 4" />
           </svg>
@@ -178,11 +178,12 @@ onBeforeUnmount(() => {
             :aria-controls="listId"
             :aria-activedescendant="active >= 0 ? `${listId}-${active}` : undefined"
             :placeholder="placeholder"
-            class="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-zinc-400"
+            class="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-zinc-500 dark:placeholder:text-zinc-400"
           />
           <button
             type="button"
             class="shrink-0 rounded border border-zinc-300 px-2 py-0.5 text-xs text-zinc-600 dark:border-zinc-600 dark:text-zinc-300"
+            aria-label="Close search"
             @click="emit('close')"
           >
             Esc
@@ -206,8 +207,8 @@ onBeforeUnmount(() => {
           </li>
         </ul>
 
-        <p v-if="status === 'unavailable'" class="p-6 text-center text-zinc-500">Search index unavailable</p>
-        <p v-else-if="showEmpty" aria-hidden="true" class="p-6 text-center text-zinc-500">{{ noResultsText }}</p>
+        <p v-if="status === 'unavailable'" class="p-6 text-center text-zinc-500 dark:text-zinc-400">Search index unavailable</p>
+        <p v-else-if="showEmpty" aria-hidden="true" class="p-6 text-center text-zinc-500 dark:text-zinc-400">{{ noResultsText }}</p>
         <p class="sr-only" role="status" aria-live="polite">{{ announce }}</p>
       </div>
     </div>

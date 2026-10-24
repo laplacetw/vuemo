@@ -85,6 +85,8 @@ The default theme's `archive` layout shows the post count, a count per year and 
 | `useSlots(name)` | components plugins registered for a slot |
 | `runEnhanceApps(ctx)` | runs the plugins' `enhanceApp` modules |
 
+The home page renders each post's excerpt (the part before `---`) as HTML, so it keeps heading ids, anchors and relative image paths; keep excerpts to plain paragraphs. A theme that lists excerpts should do the same, or use `summary: 'description'`.
+
 `Post` is `{ title, url, date: { time, string }, category?, tags, description?, excerpt? }`; see [`schema.ts`](../packages/core/src/schema.ts).
 
 Themes are free to use any CSS approach. `@vuemo/theme-default` uses Tailwind CSS v4 compiled at build time to `dist/style.css`, so users don't need Tailwind.

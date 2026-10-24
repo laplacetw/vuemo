@@ -42,6 +42,10 @@ pnpm add markdown-it-mathjax3
 
 Write `$E = mc^2$` inline and `$$ ... $$` for display math. Formulas follow the text colour (also in dark mode). Display math scrolls horizontally when it is wider than the page.
 
+## Excerpts
+
+The home page shows the part of a post before the first `---` line as its excerpt. It is rendered as it is, so heading ids, anchors and relative image paths are kept: keep excerpts to plain paragraphs (or set `summary: 'description'`).
+
 ## Footnotes
 
 Footnotes are **not** built into VitePress 1.x (they are built in from VitePress 2.0). To use them now, install the plugin and register it:

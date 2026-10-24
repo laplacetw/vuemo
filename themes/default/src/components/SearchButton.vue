@@ -59,7 +59,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       <path d="m13 13 4 4" />
     </svg>
     <span>{{ text }}</span>
-    <kbd v-if="hint" class="hidden rounded bg-zinc-100 px-1 text-xs text-zinc-500 sm:inline dark:bg-zinc-800 dark:text-zinc-400">{{ hint }}</kbd>
+    <kbd v-if="hint" class="hidden rounded bg-zinc-100 px-1 text-xs text-zinc-500 dark:text-zinc-400 sm:inline dark:bg-zinc-800 dark:text-zinc-400">{{ hint }}</kbd>
   </button>
   <SearchModal v-if="open" @close="close" />
 </template>

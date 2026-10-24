@@ -12,10 +12,10 @@ const total = computed(() => archives.reduce((n, g) => n + g.posts.length, 0))
 
 <template>
   <h1 class="text-3xl font-bold">{{ frontmatter.title }}</h1>
-  <p class="mb-6 mt-1 text-sm text-zinc-500">{{ postCountText(total) }}</p>
+  <p class="mb-6 mt-1 text-sm text-zinc-500 dark:text-zinc-400">{{ postCountText(total) }}</p>
   <section v-for="group in archives" :key="group.year" class="mb-8">
     <h2 class="mb-3 text-2xl font-semibold">
-      {{ group.year }} <span class="text-base font-normal text-zinc-500">({{ group.posts.length }})</span>
+      {{ group.year }} <span class="text-base font-normal text-zinc-500 dark:text-zinc-400">({{ group.posts.length }})</span>
     </h2>
     <ArchiveList :posts="group.posts" />
   </section>

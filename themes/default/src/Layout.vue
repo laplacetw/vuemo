@@ -36,7 +36,7 @@ const layout = computed(() => {
         <template #post-comments><slot name="post-comments" /></template>
       </component>
     </main>
-    <footer class="space-y-1 py-8 text-center text-sm text-zinc-500">
+    <footer class="space-y-1 py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
       <SocialLinks />
       <p v-if="footer.message" class="vuemo-footer-message" v-html="footer.message" />
       <p v-if="footer.copyright" class="vuemo-footer-copyright text-xs" v-html="footer.copyright" />

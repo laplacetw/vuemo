@@ -23,7 +23,7 @@ const { tagLink, categoryLink } = useTaxonomyLinks()
 <template>
   <article>
     <h1 class="text-3xl font-bold">{{ frontmatter.title }}</h1>
-    <div class="mt-2 text-sm text-zinc-500">
+    <div class="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
       <template v-if="post">
       {{ post.date.string }}
       <span v-if="updated" class="vuemo-updated">· {{ theme.lastUpdated?.text || 'Updated' }} {{ updated }}</span>

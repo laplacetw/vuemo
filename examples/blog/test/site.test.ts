@@ -51,6 +51,19 @@ describe('home page', () => {
     for (const post of validPosts.slice(0, 2)) expect(html).toContain(`href="${base}posts/${post.slug}"`)
   })
 
+  it('gives each Read more link the post title as an accessible name', () => {
+    const links = [...html.matchAll(/Read more →<span class="sr-only">: ([^<]+)<\/span>/g)].map((m) => m[1])
+    expect(links.length).toBeGreaterThan(0)
+    for (const title of links) expect(validPosts.map((p) => p.title)).toContain(title)
+    expect(css).toContain('.sr-only')
+  })
+
+  it('names the search modal close button', () => {
+    const assets = resolve(dist, 'assets/chunks')
+    const chunks = readdirSync(assets).filter((f) => f.endsWith('.js')).map((f) => readFileSync(resolve(assets, f), 'utf8'))
+    expect(chunks.some((c) => c.includes('Close search'))).toBe(true)
+  })
+
   it('keeps archive lists to title and date', () => {
     for (const file of ['archives.html', 'tags.html', 'category.html']) {
       expect(page(file), file).not.toContain('vuemo-excerpt')
@@ -84,7 +97,7 @@ describe('archives', () => {
   })
 
   it('lists a compact MM-DD row for every post', () => {
-    for (const p of validPosts) expect(html, p.slug).toContain(`<time class="shrink-0 font-mono text-sm tabular-nums text-zinc-500" datetime="${p.date}">${p.date.slice(5)}</time>`)
+    for (const p of validPosts) expect(html, p.slug).toMatch(new RegExp(`<time class="shrink-0 [^"]*" datetime="${p.date}">${p.date.slice(5)}</time>`))
   })
 })
 
