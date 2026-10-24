@@ -270,3 +270,27 @@ describe('searchRender', () => {
     expect(run({ title: 'T', layout: 'post' })).not.toBe('')
   })
 })
+
+describe('defineBlogConfig lastUpdated', () => {
+  it('is off by default and with false', async () => {
+    for (const cfg of [await defineBlogConfig({}), await defineBlogConfig({ lastUpdated: false })] as any[]) {
+      expect(cfg.lastUpdated).toBeUndefined()
+      expect(cfg.themeConfig.lastUpdated).toBeUndefined()
+    }
+  })
+  it('true enables the VitePress option and the default text', async () => {
+    const cfg: any = await defineBlogConfig({ lastUpdated: true })
+    expect(cfg.lastUpdated).toBe(true)
+    expect(cfg.themeConfig.lastUpdated).toEqual({ text: 'Updated' })
+  })
+  it('takes a custom text', async () => {
+    const cfg: any = await defineBlogConfig({ lastUpdated: { text: 'Edited' } })
+    expect(cfg.lastUpdated).toBe(true)
+    expect(cfg.themeConfig.lastUpdated).toEqual({ text: 'Edited' })
+    expect(((await defineBlogConfig({ lastUpdated: {} })) as any).themeConfig.lastUpdated).toEqual({ text: 'Updated' })
+  })
+  it('lets an explicit themeConfig.lastUpdated win', async () => {
+    const cfg: any = await defineBlogConfig({ lastUpdated: true, themeConfig: { lastUpdated: { text: 'X' } } })
+    expect(cfg.themeConfig.lastUpdated).toEqual({ text: 'X' })
+  })
+})

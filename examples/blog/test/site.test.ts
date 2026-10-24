@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { execFileSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { resolve } from 'node:path'
@@ -65,6 +66,33 @@ describe('archives', () => {
       expect(html).toContain(date[1])
     }
     expect(html).toMatch(/2025[\s\S]*?\(3\)/)
+  })
+})
+
+describe('last updated', () => {
+  // The git timestamp of a committed post; NaN when git cannot tell (not a checkout, untracked file).
+  const gitTime = (() => {
+    try {
+      const out = execFileSync('git', ['log', '-1', '--format=%ct', '--', 'posts/hello-vuemo.md'], { cwd: root, encoding: 'utf8' }).trim()
+      return out ? Number(out) * 1000 : NaN
+    } catch {
+      return NaN
+    }
+  })()
+
+  it.skipIf(!Number.isFinite(gitTime) || gitTime <= 0)('puts dateModified into the JSON-LD of a committed post', () => {
+    const html = page('posts/hello-vuemo.html')
+    const ld = /<script type="application\/ld\+json">(.*?)<\/script>/.exec(html)
+    expect(ld).toBeTruthy()
+    const data = JSON.parse(ld![1])
+    expect(Date.parse(data.dateModified)).toBeGreaterThanOrEqual(Date.parse(data.datePublished))
+  })
+
+  it('never renders an invalid date', () => {
+    // files without a git timestamp have NaN: the line is then left out
+    for (const f of ['posts/hello-vuemo.html', 'posts/second-post.html', 'posts/old-post.html']) {
+      expect(page(f), f).not.toMatch(/Updated (NaN|Invalid)/)
+    }
   })
 })
 

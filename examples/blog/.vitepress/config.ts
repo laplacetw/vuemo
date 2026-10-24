@@ -21,6 +21,7 @@ export default defineBlogConfig({
     { text: 'Tags', link: '/tags' },
     { text: 'About', link: '/about' }
   ],
+  lastUpdated: true,
   search: true,
   markdown: { lineNumbers: true },
   footer: {

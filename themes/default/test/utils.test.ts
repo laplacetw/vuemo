@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { postCountText, postSummary } from '../src/utils'
+import { postCountText, postSummary, updatedDate } from '../src/utils'
 
 describe('postSummary', () => {
   const both = { excerpt: '<p>Hi</p>', description: 'Desc' }
@@ -29,5 +29,25 @@ describe('postCountText', () => {
     expect(postCountText(1)).toBe('1 post')
     expect(postCountText(0)).toBe('0 posts')
     expect(postCountText(4)).toBe('4 posts')
+  })
+})
+
+describe('updatedDate', () => {
+  const t = Date.UTC(2025, 8, 3, 12)
+  it('formats the UTC date', () => {
+    expect(updatedDate(t, '2025-06-01 10:00:00')).toBe('2025-09-03')
+  })
+  it('hides invalid timestamps', () => {
+    expect(updatedDate(undefined, '2025-06-01')).toBeUndefined()
+    expect(updatedDate(NaN, '2025-06-01')).toBeUndefined()
+    expect(updatedDate(0, '2025-06-01')).toBeUndefined()
+    expect(updatedDate(-5, '2025-06-01')).toBeUndefined()
+  })
+  it('hides it on the publish date', () => {
+    expect(updatedDate(Date.UTC(2025, 5, 1, 23), '2025-06-01 10:00:00')).toBeUndefined()
+  })
+  it('hides it when the post opts out', () => {
+    expect(updatedDate(t, '2025-06-01', false)).toBeUndefined()
+    expect(updatedDate(t, '2025-06-01', true)).toBe('2025-09-03')
   })
 })

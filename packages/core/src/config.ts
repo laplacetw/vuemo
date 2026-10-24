@@ -29,7 +29,7 @@ export interface FooterConfig {
   copyright?: string
 }
 
-export interface BlogConfig extends UserConfig, Partial<OfficialFeatures> {
+export interface BlogConfig extends Omit<UserConfig, 'lastUpdated'>, Partial<OfficialFeatures> {
   /** Theme package. Default: `@vuemo/theme-default`. */
   theme?: string
   /** Site origin, e.g. https://example.com. Used by sitemap and JSON-LD. */
@@ -50,6 +50,8 @@ export interface BlogConfig extends UserConfig, Partial<OfficialFeatures> {
   postsPerPage?: number
   /** Full-text local search (VitePress's local search; the theme renders the UI). Off by default. → themeConfig.search */
   search?: boolean | DefaultTheme.LocalSearchOptions
+  /** Show when posts were last updated (from git history). `true` or `{ text }` turns it on. Off by default; a post opts out with `lastUpdated: false`. */
+  lastUpdated?: boolean | { text?: string }
   /** RSS feed at `feed.xml`. On when `hostname` is set; `false` turns it off. */
   rss?: false | { limit?: number }
   /** Third-party and theme plugins. Official features are enabled by their own keys instead. */
@@ -60,7 +62,7 @@ export const DEFAULT_THEME = '@vuemo/theme-default'
 
 /** `importer` only exists so tests don't need real plugin packages. */
 export async function defineBlogConfig(config: BlogConfig = {}, importer?: Importer): Promise<UserConfig> {
-  const { theme = DEFAULT_THEME, hostname, nav, footer, logo, socialLinks, postsPerPage, summary = 'excerpt', paths, search, rss, plugins = [], ...rest } = config
+  const { theme = DEFAULT_THEME, hostname, nav, footer, logo, socialLinks, postsPerPage, summary = 'excerpt', paths, search, lastUpdated, rss, plugins = [], ...rest } = config
   const features = Object.fromEntries(Object.keys(OFFICIAL_FEATURES).map((key) => [key, (rest as any)[key]]))
   for (const key of Object.keys(OFFICIAL_FEATURES)) delete (rest as any)[key]
 
@@ -84,6 +86,7 @@ export async function defineBlogConfig(config: BlogConfig = {}, importer?: Impor
     ...(logo && { logo }),
     ...(socialLinks && { socialLinks }),
     ...(postsPerPage && { postsPerPage }),
+    ...(lastUpdated && { lastUpdated: { text: (lastUpdated === true ? undefined : lastUpdated.text) ?? 'Updated' } }),
     ...(search && {
       search: { provider: 'local', options: { _render: searchRender, ...(search === true ? {} : search) } }
     }),
@@ -96,6 +99,7 @@ export async function defineBlogConfig(config: BlogConfig = {}, importer?: Impor
   return defineConfig({
     cleanUrls: true,
     srcExclude: ['README.md', 'CHANGELOG.md'],
+    ...(lastUpdated && { lastUpdated: true }),
     sitemap: hostname ? { hostname } : undefined,
     ...rest,
     themeConfig,

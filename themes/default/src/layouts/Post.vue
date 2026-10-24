@@ -1,9 +1,15 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useData, withBase } from 'vitepress'
 import { usePrevNext, useTaxonomyLinks } from '@vuemo/core/client'
 import PluginSlot from '../components/PluginSlot.vue'
+import { updatedDate } from '../utils'
 
-const { frontmatter } = useData()
+const { frontmatter, page, theme } = useData()
+// shown only when the `lastUpdated` option is on; the date is UTC so the server and the browser agree
+const updated = computed(() =>
+  theme.value.lastUpdated ? updatedDate(page.value.lastUpdated, String(frontmatter.value.date), frontmatter.value.lastUpdated) : undefined
+)
 const adjacent = usePrevNext()
 const { tagLink, categoryLink } = useTaxonomyLinks()
 </script>
@@ -13,6 +19,7 @@ const { tagLink, categoryLink } = useTaxonomyLinks()
     <h1 class="text-3xl font-bold">{{ frontmatter.title }}</h1>
     <div class="mt-2 text-sm text-zinc-500">
       {{ String(frontmatter.date).slice(0, 10) }}
+      <span v-if="updated" class="vuemo-updated">· {{ theme.lastUpdated.text || 'Updated' }} {{ updated }}</span>
       <span v-if="frontmatter.category">
         · <a :href="categoryLink(frontmatter.category)" class="hover:underline">{{ frontmatter.category }}</a>
       </span>

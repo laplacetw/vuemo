@@ -40,7 +40,7 @@ The contract, which lets framework plugins work with any theme:
 - reflect dark mode through VitePress's `isDark`
 - never read the file system; everything comes from the composables
 
-The site options `nav`, `footer`, `logo`, `socialLinks`, `postsPerPage`, `summary`, `paths` and `search` reach the theme as `useData().theme.value.<name>`. Support for them is up to the theme; `@vuemo/theme-default` supports all of them.
+The site options `nav`, `footer`, `logo`, `socialLinks`, `postsPerPage`, `summary`, `paths`, `search` and `lastUpdated` reach the theme as `useData().theme.value.<name>`. Support for them is up to the theme; `@vuemo/theme-default` supports all of them.
 
 `themeConfig.footer` is `{ message?: string; copyright?: string }` (HTML in both). Core turns the string form of the `footer` option into `{ message }`, so a theme only needs to read the object; accept a raw string too if users may write `themeConfig` by hand, as the default theme does.
 
