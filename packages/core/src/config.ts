@@ -77,8 +77,8 @@ export interface BlogConfig extends Omit<UserConfig, 'lastUpdated'>, Partial<Off
   search?: boolean | DefaultTheme.LocalSearchOptions
   /** Show when posts were last updated (from git history). `true` or `{ text }` turns it on. Off by default; a post opts out with `lastUpdated: false`. */
   lastUpdated?: boolean | { text?: string }
-  /** RSS feed at `feed.xml`. On when `hostname` is set; `false` turns it off. */
-  rss?: false | { limit?: number }
+  /** RSS feed at `feed.xml`. On when `hostname` is set; `false` turns it off. `true` or `{ limit }` asks for it explicitly (then a missing `hostname` is warned about). */
+  rss?: boolean | { limit?: number }
   /** Third-party and theme plugins. Official features are enabled by their own keys instead. */
   plugins?: VuemoPlugin[]
 }
@@ -98,7 +98,8 @@ export async function defineBlogConfig(config: BlogConfig = {}, importer?: Impor
   for (const key of Object.keys(OFFICIAL_FEATURES)) delete (rest as any)[key]
 
   const rssEnabled = rss !== false && !!hostname
-  if (rss !== false && !hostname) console.warn('[vuemo] no RSS feed: set `hostname` (or `rss: false` to silence this)')
+  // only a blog that asked for a feed is told why it does not get one
+  if (rss && !hostname) console.warn('[vuemo] no RSS feed: `rss` is set but `hostname` is not. Set `hostname` (or remove `rss`).')
 
   const all = [...(await loadFeatures(features, importer)), ...plugins]
 
@@ -162,7 +163,7 @@ export async function defineBlogConfig(config: BlogConfig = {}, importer?: Impor
       if (!rssEnabled) return
       const posts = (await createPostsLoader().load()) as unknown as Post[]
       const { title, description, lang, base } = siteConfig.site
-      const xml = buildRss(posts, { title, description, lang, base, hostname: hostname!, limit: rss ? rss.limit : undefined })
+      const xml = buildRss(posts, { title, description, lang, base, hostname: hostname!, limit: typeof rss === 'object' ? rss.limit : undefined })
       mkdirSync(siteConfig.outDir, { recursive: true })
       writeFileSync(join(siteConfig.outDir, 'feed.xml'), xml)
     },

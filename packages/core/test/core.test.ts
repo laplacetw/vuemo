@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { parsePost } from '../src/schema'
 import { groupByTag, groupByYear, groupByCategory } from '../src/group'
 import { findPost, findPrevNext, paginate, stripBase } from '../src/pagination'
@@ -266,6 +266,33 @@ describe('defineBlogConfig sitemap', () => {
     expect(await host('https://x.com/', 'vuemo')).toBe('https://x.com/vuemo/')
     expect(await host('https://x.com//', '//a/b//')).toBe('https://x.com/a/b/')
     expect(await host(undefined, '/vuemo/')).toBeUndefined()
+  })
+})
+
+describe('defineBlogConfig rss warning', () => {
+  const warnings = async (config: any) => {
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      await defineBlogConfig(config)
+      return spy.mock.calls.map((c) => String(c[0])).filter((m) => m.includes('RSS'))
+    } finally {
+      spy.mockRestore()
+    }
+  }
+  it('stays silent when rss was not asked for', async () => {
+    expect(await warnings({})).toEqual([])
+    expect(await warnings({ rss: false })).toEqual([])
+    expect(await warnings({ hostname: 'https://x.com' })).toEqual([])
+  })
+  it('warns when rss is set without a hostname', async () => {
+    expect(await warnings({ rss: true })).toHaveLength(1)
+    expect(await warnings({ rss: { limit: 5 } })).toHaveLength(1)
+    expect(await warnings({ rss: true, hostname: 'https://x.com' })).toEqual([])
+  })
+  it('does not add the feed link without a hostname, and accepts rss: true', async () => {
+    expect(((await defineBlogConfig({ rss: true })) as any).head).toEqual([])
+    const on: any = await defineBlogConfig({ rss: true, hostname: 'https://x.com' })
+    expect(on.head).toHaveLength(1)
   })
 })
 

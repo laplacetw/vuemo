@@ -41,3 +41,4 @@
 
 ### Fixes
 - sitemap URLs include the site `base` (`https://example.com/vuemo/posts/a`), like the feed and the JSON-LD; before, `base` was dropped and the listed URLs returned 404 under a sub-path
+- `defineBlogConfig` no longer warns about a missing RSS feed on every build of a blog without `hostname`; it warns only when `rss` (`true` or `{ limit }`, now allowed in the type) was set without a `hostname`
