@@ -42,7 +42,7 @@ const rows = computed(() =>
     optionId: `${listId}-${i}`,
     title: highlight(h.title, h.terms),
     path: (h.titles ?? []).join(' › '),
-    href: resultHref(h.id, h.titles ?? [])
+    href: resultHref(h.id)
   }))
 )
 const showEmpty = computed(() => status.value === 'ready' && !!query.value.trim() && !rows.value.length)

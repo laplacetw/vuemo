@@ -259,7 +259,12 @@ describe('searchRender', () => {
     return searchRender(src, {}, md as any)
   }
   it('prepends the title as a heading', () => {
-    expect(run({ title: 'Hello' })).toBe('<h1>Hello</h1><p>body</p>')
+    expect(run({ title: 'Hello' })).toBe('<h1>Hello<a class="header-anchor" href="#"></a></h1><p>body</p>')
+  })
+  it('escapes the title and gives it an empty anchor, so it never clashes with a body heading', () => {
+    const out = run({ title: 'A <b>&</b> "Setup"' }, '<h2 id="setup">Setup <a class="header-anchor" href="#setup"></a></h2>')
+    expect(out.startsWith('<h1>A &lt;b&gt;&amp;&lt;/b&gt; &quot;Setup&quot;<a class="header-anchor" href="#"></a></h1>')).toBe(true)
+    expect(out).not.toContain('href="#setup-1"')
   })
   it('keeps the page as is when there is no title', () => {
     expect(run({})).toBe('<p>body</p>')

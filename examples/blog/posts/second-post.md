@@ -7,3 +7,7 @@ tags:
 ---
 
 The second post. It is about the zebrafish, a small fish that researchers like to study, and it has no heading at all before this sentence.
+
+## Second post
+
+A section named like the post itself, with the word narwhal.

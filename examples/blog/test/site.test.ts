@@ -205,8 +205,19 @@ describe('search', () => {
     const { index } = await load()
     const hits = index.search('zebrafish', { fuzzy: 0.2, prefix: true })
     expect(hits.length).toBeGreaterThan(0)
-    expect(hits[0].id).toBe(`${base}posts/second-post#second-post`)
+    // the title section has no anchor: its id is the page's own
+    expect(hits[0].id).toBe(`${base}posts/second-post`)
     expect(hits[0].title).toBe('Second post')
+  })
+
+  it('indexes a post whose title equals one of its own headings, as two sections', async () => {
+    // posts/second-post.md has `## Second post`: this used to fail the build with "duplicate ID"
+    const { index } = await load()
+    const title = index.search('zebrafish', { prefix: true })[0]
+    const heading = index.search('narwhal', { prefix: true })[0]
+    expect(title.id).toBe(`${base}posts/second-post`)
+    expect(heading.id).toBe(`${base}posts/second-post#second-post`)
+    expect(heading.titles).toEqual(['Second post'])
   })
 
   it('prefixes every document id with the base', async () => {

@@ -24,11 +24,10 @@ export function highlight(text: string, terms: readonly string[]): string {
 
 /**
  * Router target of a search result. Document ids already include `base`, so it is not added again.
- * A result without parent titles is the page itself (its anchor is the generated title heading): drop the anchor.
+ * The page-level result has no anchor, but drop an empty one (`/page#`) in case a theme or `_render` produces it.
  */
-export function resultHref(id: string, titles: readonly string[] = []): string {
-  const hash = id.indexOf('#')
-  return hash === -1 || titles.length ? id : id.slice(0, hash)
+export function resultHref(id: string): string {
+  return id.endsWith('#') ? id.slice(0, -1) : id
 }
 
 /** Next active index when moving by `delta` (+1 / -1), wrapping around. `-1` means nothing is active yet. */

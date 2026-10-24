@@ -27,13 +27,13 @@ describe('highlight', () => {
 })
 
 describe('resultHref', () => {
-  it('keeps the id as is: base is already part of it', () => {
-    expect(resultHref('/vuemo/posts/a#intro', ['A'])).toBe('/vuemo/posts/a#intro')
+  it('keeps the id as is: base is already part of it, and so are real anchors', () => {
+    expect(resultHref('/vuemo/posts/a#intro')).toBe('/vuemo/posts/a#intro')
     expect(resultHref('/posts/a')).toBe('/posts/a')
+    expect(resultHref('/vuemo/posts/a#hello-vuemo')).toBe('/vuemo/posts/a#hello-vuemo')
   })
-  it('drops the anchor of a page-level result', () => {
-    expect(resultHref('/vuemo/posts/a#hello-vuemo', [])).toBe('/vuemo/posts/a')
-    expect(resultHref('/posts/a#hello-vuemo')).toBe('/posts/a')
+  it('drops an empty anchor', () => {
+    expect(resultHref('/posts/a#')).toBe('/posts/a')
   })
 })
 
