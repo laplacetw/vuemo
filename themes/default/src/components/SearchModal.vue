@@ -2,7 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useData, useRouter } from 'vitepress'
 import type MiniSearch from 'minisearch'
-import { highlight, moveIndex, resultHref } from '../search'
+import { highlight, moveIndex, resultHref, resultsText } from '../search'
 
 const emit = defineEmits<{ (e: 'close'): void }>()
 
@@ -46,7 +46,7 @@ const rows = computed(() =>
   }))
 )
 const showEmpty = computed(() => status.value === 'ready' && !!query.value.trim() && !rows.value.length)
-const announce = computed(() => (status.value !== 'ready' || !query.value.trim() ? '' : rows.value.length ? `${rows.value.length} results` : noResultsText))
+const announce = computed(() => (status.value !== 'ready' || !query.value.trim() ? '' : rows.value.length ? resultsText(rows.value.length) : noResultsText))
 
 watch(rows, (r) => {
   active.value = r.length ? 0 : -1
@@ -126,14 +126,20 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 let previousOverflow = ''
+let previousPadding = ''
 onMounted(() => {
   previousOverflow = document.body.style.overflow
+  // hiding the scrollbar widens the page: pad the body by the scrollbar's width so nothing shifts
+  previousPadding = document.body.style.paddingRight
+  const gap = window.innerWidth - document.documentElement.clientWidth
   document.body.style.overflow = 'hidden'
+  if (gap > 0) document.body.style.paddingRight = `${gap}px`
   input.value?.focus()
   load()
 })
 onBeforeUnmount(() => {
   document.body.style.overflow = previousOverflow
+  document.body.style.paddingRight = previousPadding
 })
 </script>
 
@@ -199,7 +205,7 @@ onBeforeUnmount(() => {
         </ul>
 
         <p v-if="status === 'unavailable'" class="p-6 text-center text-zinc-500">Search index unavailable</p>
-        <p v-else-if="showEmpty" class="p-6 text-center text-zinc-500">{{ noResultsText }}</p>
+        <p v-else-if="showEmpty" aria-hidden="true" class="p-6 text-center text-zinc-500">{{ noResultsText }}</p>
         <p class="sr-only" role="status" aria-live="polite">{{ announce }}</p>
       </div>
     </div>

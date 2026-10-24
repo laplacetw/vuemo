@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { highlight, moveIndex, resultHref } from '../src/search'
+import { highlight, moveIndex, resultHref, resultsText } from '../src/search'
 
 describe('highlight', () => {
   it('wraps matches in <mark>, ignoring case', () => {
@@ -49,5 +49,13 @@ describe('moveIndex', () => {
   })
   it('has no active item without results', () => {
     expect(moveIndex(0, 1, 0)).toBe(-1)
+  })
+})
+
+describe('resultsText', () => {
+  it('uses the singular for one result', () => {
+    expect(resultsText(1)).toBe('1 result')
+    expect(resultsText(2)).toBe('2 results')
+    expect(resultsText(0)).toBe('0 results')
   })
 })

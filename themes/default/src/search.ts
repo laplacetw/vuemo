@@ -37,3 +37,8 @@ export function moveIndex(current: number, delta: number, length: number): numbe
   if (current < 0) return delta > 0 ? 0 : length - 1
   return (((current + delta) % length) + length) % length
 }
+
+/** Screen reader announcement for the result count. */
+export function resultsText(count: number): string {
+  return count === 1 ? '1 result' : `${count} results`
+}
