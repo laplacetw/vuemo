@@ -62,6 +62,23 @@ describe('seo', () => {
     expect(postJsonLd(page, 'https://x.com', '/b/')![2]).toContain('"url":"https://x.com/b/posts/a"')
     expect(postJsonLd({ ...page, relativePath: 'about.md' }, undefined)).toBeUndefined()
   })
+
+  describe('dateModified', () => {
+    const ld = (lastUpdated: number | undefined) =>
+      JSON.parse(postJsonLd({ relativePath: 'posts/a.md', frontmatter: { title: 'A', date: '2024-01-02' }, lastUpdated } as any, undefined)![2] as string)
+
+    it('uses a valid lastUpdated timestamp', () => {
+      const t = Date.UTC(2025, 0, 5, 12)
+      expect(ld(t).dateModified).toBe('2025-01-05T12:00:00.000Z')
+    })
+    it('is omitted for NaN, 0 and undefined', () => {
+      for (const v of [NaN, 0, undefined]) expect(ld(v)).not.toHaveProperty('dateModified')
+    })
+    it('never precedes the publish date', () => {
+      const j = ld(Date.UTC(2023, 0, 1))
+      expect(j.dateModified).toBe(j.datePublished)
+    })
+  })
 })
 
 import { buildThemeModule, buildVirtualModule } from '../src/virtual'

@@ -68,4 +68,6 @@ Defined by `@vuemo/core` ([`schema.ts`](../packages/core/src/schema.ts)); themes
 
 An excerpt is the part of the post before the first `---` line in its body (VitePress's excerpt separator). Put `---` on its own line, with blank lines around it, after the paragraphs you want on the home page.
 
+`@vuemo/core` also writes JSON-LD (`BlogPosting`) into every post. It includes `dateModified` when VitePress has a last-updated time for the file (`lastUpdated` enabled and the file committed in git).
+
 A post without a valid `title` or `date` is skipped with a warning.
