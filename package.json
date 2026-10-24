@@ -10,7 +10,7 @@
     "build": "pnpm -r --filter \"./packages/*\" --filter \"./themes/*\" --filter \"./plugins/*\" build && pnpm -r --filter \"./examples/*\" build",
     "test": "pnpm -r test",
     "dev": "pnpm --filter blog dev",
-    "release": "pnpm test && pnpm build && pnpm -r publish"
+    "release": "pnpm test && pnpm build && pnpm -r publish --tag alpha"
   },
   "devDependencies": {
     "typescript": "^5.6.0",

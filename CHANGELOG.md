@@ -18,4 +18,4 @@
 - removed the `draft` frontmatter field: a post you don't want published should not be committed
 - RSS: `defineBlogConfig` writes `feed.xml` at build time and links it from every page when `hostname` is set (`rss: false` disables it)
 - site options `logo` and `socialLinks` (mapped into `themeConfig`); the default theme shows them in the header and footer
-- npm publishing prep: package metadata, version 0.1.0, `create-vuemo` depends on the matching release versions, `RELEASING.md`
+- npm publishing prep: package metadata, version 0.1.0-alpha.0 published under the `alpha` tag, `create-vuemo` depends on the matching release versions, `RELEASING.md`

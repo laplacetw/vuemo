@@ -19,6 +19,8 @@ How to publish Vuemo's packages to npm. The five packages are released together 
 
 ## First release
 
+Vuemo is released as **alpha** versions (`0.1.0-alpha.0`, `0.1.0-alpha.1`, ...) published under the npm tag `alpha`. A plain `npm install @vuemo/core` does not pick them up (there is no `latest` yet), so users opt in with `npm create vuemo@alpha`; projects it generates depend on the exact alpha range, so installing in them needs no tag. This leaves room to change the API before a stable release.
+
 Publishing is hard to undo (`npm unpublish` only works for 72 hours and with restrictions, and a version number can never be reused), so check everything before the real publish.
 
 1. Be on `main`, with a clean working tree that is pushed.
@@ -49,26 +51,30 @@ Publishing is hard to undo (`npm unpublish` only works for 72 hours and with res
 5. Check the result in a clean directory:
 
    ```sh
-   npm create vuemo my-blog
+   npm create vuemo@alpha my-blog
    cd my-blog && npm install && npm run build
    ```
 
 6. Tag and announce:
 
    ```sh
-   git tag v0.1.0 && git push --tags
+   git tag v0.1.0-alpha.0 && git push --tags
    ```
 
-   Then create a GitHub Release for the tag with the notes from `CHANGELOG.md`.
+   Then create a GitHub Release for the tag, marked as a pre-release, with the notes from `CHANGELOG.md`.
 
 ## Later releases
 
-All packages share one version. While the major version is 0, `^0.1.0` only matches `0.1.x`, so a breaking change bumps the minor (`0.2.0`); a fix bumps the patch.
+All packages share one version. During the alpha, bump the prerelease number (`0.1.0-alpha.1`, `0.1.0-alpha.2`, ...) for every release, breaking or not.
 
-1. Set the new version in all five `package.json` files: `pnpm -r exec npm version 0.2.0 --no-git-tag-version`. (`create-vuemo` reads the other versions when it is built, so the projects it generates always depend on the matching release.)
+1. Set the new version in all five `package.json` files: `pnpm -r exec npm version 0.1.0-alpha.1 --no-git-tag-version`. (`create-vuemo` reads the other versions when it is built, so the projects it generates always depend on the matching release.)
 2. Move the "Unreleased" entries of `CHANGELOG.md` under the new version.
 3. Commit, push, and run `pnpm release`.
-4. Tag (`git tag v0.2.0 && git push --tags`) and create the GitHub Release.
+4. Tag (`git tag v0.1.0-alpha.1 && git push --tags`) and create the GitHub Release.
+
+## Going stable
+
+When the API settles, release `0.1.0` (or `1.0.0`) without a prerelease suffix and publish it as `latest`: change `--tag alpha` in the `release` script of the root `package.json` to nothing (or use `--tag latest`). From then on `npm create vuemo` works without a tag. In the 0.x range `^0.1.0` only matches `0.1.x`, so a breaking change bumps the minor (`0.2.0`); a fix bumps the patch.
 
 ## Later: automate it
 

@@ -2,15 +2,21 @@
 
 > Vuemo is under development. APIs may change.
 
-Packages are not published to npm yet. Until they are, build the monorepo and run the scaffolder from it:
+Vuemo is published as an **alpha** release, so name the `alpha` tag:
+
+```sh
+npm create vuemo@alpha my-blog
+```
+
+The generated project depends on the matching alpha versions, so `npm install` in it needs no tag.
+
+To work from the source instead, build the monorepo and run the scaffolder from it:
 
 ```sh
 git clone https://github.com/laplacetw/vuemo.git
 cd vuemo && corepack enable && pnpm install && pnpm build
 node packages/create-vuemo/dist/index.js my-blog
 ```
-
-Once published this becomes `npm create vuemo`.
 
 ## What you get
 

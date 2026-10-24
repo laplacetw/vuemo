@@ -4,7 +4,7 @@ A lightweight blog framework built on VitePress: pick a theme, add plugins, and 
 
 Vuemo is a thin layer on top of [VitePress](https://vitepress.dev). VitePress stays the engine (Markdown, routing, build, HMR). Vuemo adds only what VitePress doesn't have: a post model, a theme contract and a small plugin interface.
 
-> **Status: early development.** Nothing is published to npm yet. The packages below work inside this monorepo; see [docs/](./docs/README.md) for guides.
+> **Status: early development (alpha).** APIs may change. Packages are published with the `alpha` tag: `npm create vuemo@alpha my-blog`. See [docs/](./docs/README.md) for guides.
 
 ## Packages
 
