@@ -2,7 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useData, useRouter } from 'vitepress'
 import type MiniSearch from 'minisearch'
-import { highlight, moveIndex, resultHref, resultsText } from '../search'
+import { decodeEntities, highlight, moveIndex, resultHref, resultsText } from '../search'
 
 const emit = defineEmits<{ (e: 'close'): void }>()
 
@@ -40,8 +40,8 @@ const rows = computed(() =>
   hits.value.map((h, i) => ({
     key: h.id,
     optionId: `${listId}-${i}`,
-    title: highlight(h.title, h.terms),
-    path: (h.titles ?? []).join(' › '),
+    title: highlight(decodeEntities(h.title), h.terms),
+    path: (h.titles ?? []).map(decodeEntities).join(' › '),
     href: resultHref(h.id)
   }))
 )

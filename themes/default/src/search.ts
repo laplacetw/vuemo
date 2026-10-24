@@ -6,6 +6,20 @@ export function escapeHtml(text: string): string {
   return text.replace(/[&<>"']/g, (c) => ESCAPES[c])
 }
 
+const NAMED: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" }
+
+/**
+ * Index titles are HTML-stripped text that keeps entities (`A &amp; B`). Turn the entities markdown-it produces
+ * (the named ones above, `&#NN;` and `&#xHH;`) back into characters; anything else is left as it is.
+ */
+export function decodeEntities(text: string): string {
+  return text.replace(/&(?:#(\d+)|#[xX]([0-9a-fA-F]+)|(\w+));/g, (m, dec, hex, name) => {
+    if (name) return NAMED[name] ?? m
+    const code = dec ? parseInt(dec, 10) : parseInt(hex, 16)
+    return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : m
+  })
+}
+
 /**
  * HTML-escape `text` and wrap every occurrence of a search term in `<mark>`. Matching runs on the raw text and
  * every piece is escaped afterwards, so a term like `lt` can never match inside an entity such as `&lt;`.

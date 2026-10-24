@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { highlight, moveIndex, resultHref, resultsText } from '../src/search'
+import { decodeEntities, highlight, moveIndex, resultHref, resultsText } from '../src/search'
 
 describe('highlight', () => {
   it('wraps matches in <mark>, ignoring case', () => {
@@ -57,5 +57,23 @@ describe('resultsText', () => {
     expect(resultsText(1)).toBe('1 result')
     expect(resultsText(2)).toBe('2 results')
     expect(resultsText(0)).toBe('0 results')
+  })
+})
+
+describe('decodeEntities', () => {
+  it('decodes the entities markdown-it writes', () => {
+    expect(decodeEntities('A &amp; B')).toBe('A & B')
+    expect(decodeEntities('&quot;x&quot; &lt;b&gt;')).toBe('"x" <b>')
+    expect(decodeEntities('it&#39;s &#x27;ok&#X27;;')).toBe("it's 'ok';")
+    expect(decodeEntities('&#26085;&#x672C;')).toBe('日本')
+  })
+  it('leaves unknown or invalid entities and plain text alone', () => {
+    expect(decodeEntities('&nope; &#0; &#99999999; plain')).toBe('&nope; &#0; &#99999999; plain')
+  })
+  it('does not decode twice', () => {
+    expect(decodeEntities('&amp;lt;')).toBe('&lt;')
+  })
+  it('works with highlight: decode first, escape once', () => {
+    expect(highlight(decodeEntities('A &amp; B'), ['a'])).toBe('<mark>A</mark> &amp; B')
   })
 })
