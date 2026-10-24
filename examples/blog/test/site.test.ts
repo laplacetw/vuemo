@@ -25,6 +25,10 @@ describe('markdown features', () => {
     expect(html).toContain('vuemo-badge')
   })
 
+  it('renders line numbers when markdown.lineNumbers is on', () => {
+    expect(html).toContain('line-numbers-wrapper')
+  })
+
   it('serves the post under the configured base', () => {
     expect(html).toContain(`href="${base}assets/`)
   })
@@ -47,6 +51,10 @@ describe('theme css', () => {
     ]) {
       expect(css, selector).toContain(selector)
     }
+  })
+
+  it('does not hide the line number gutter', () => {
+    expect(css).not.toMatch(/line-numbers-wrapper\s*\{\s*display\s*:\s*none/)
   })
 
   it('defines every --color-* variable it uses', () => {

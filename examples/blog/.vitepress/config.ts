@@ -21,6 +21,7 @@ export default defineBlogConfig({
     { text: 'Tags', link: '/tags' },
     { text: 'About', link: '/about' }
   ],
+  markdown: { lineNumbers: true },
   footer: 'Powered by <a href="https://vitepress.dev">VitePress</a> · Vuemo',
 
   // features: set a key to enable it, remove it or use `false` to disable it

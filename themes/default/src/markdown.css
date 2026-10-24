@@ -136,10 +136,12 @@
   border-radius: 0.5rem;
   background-color: var(--vm-code-bg);
   color: var(--vm-code-fg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
   font-size: 0.875rem;
   line-height: 1.7;
 }
 .prose pre.shiki code {
+  font-family: inherit;
   display: block;
   width: fit-content;
   min-width: 100%;
@@ -207,6 +209,37 @@
   font-weight: 500;
   line-height: calc(2rem - 2px);
   white-space: nowrap;
+}
+
+/* line numbers: a fixed gutter beside the scrolling <pre>; same font metrics as the code */
+.prose .line-numbers-mode pre.shiki { padding-left: 3rem; }
+.prose .line-numbers-mode .line-numbers-wrapper {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  left: 1px;
+  z-index: 1;
+  box-sizing: border-box;
+  width: 3rem;
+  padding: 1rem 0.75rem 0 0;
+  border-right: 1px solid var(--vm-border);
+  border-radius: 0.5rem 0 0 0.5rem;
+  background-color: var(--vm-code-bg);
+  color: var(--vm-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  text-align: right;
+  user-select: none;
+  overflow: hidden;
+}
+.prose .line-numbers-mode .line-numbers-wrapper .line-number { display: block; }
+.prose .line-numbers-mode .line-numbers-wrapper br { display: none; }
+.prose .vp-code-group .line-numbers-mode .line-numbers-wrapper {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 0;
 }
 
 /* line highlight, diff, error, warning, focus */
