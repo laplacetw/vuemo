@@ -8,7 +8,9 @@ Vuemo is published as an **alpha** release, so name the `alpha` tag:
 npm create vuemo@alpha my-blog
 ```
 
-The generated project depends on the matching alpha versions, so `npm install` in it needs no tag.
+The generated project has `posts/`, `public/` and one config file, with math (`markdown.math` and `markdown-it-mathjax3`) and local search (`search: true`) already turned on.
+
+It depends on the matching alpha versions, so `npm install` in it needs no tag.
 
 To work from the source instead, build the monorepo and run the scaffolder from it:
 

@@ -25,7 +25,7 @@ describe('home page', () => {
   it('lists excerpts and a Read more link', () => {
     expect(html).toContain('vuemo-excerpt')
     expect(html).toContain('Read more')
-    expect(html).toContain(`href="${base}posts/markdown-features"`)
+    expect(html).toContain(`href="${base}posts/math"`)
   })
 
   it('keeps archive lists to title and date', () => {
@@ -65,7 +65,7 @@ describe('archives', () => {
       expect(html).toContain(`>${date[2]}</time>`)
       expect(html).toContain(date[1])
     }
-    expect(html).toMatch(/2025[\s\S]*?\(3\)/)
+    expect(html).toMatch(/2025[\s\S]*?\(4\)/)
   })
 })
 
@@ -127,6 +127,18 @@ describe('markdown features', () => {
 
   it('serves the post under the configured base', () => {
     expect(html).toContain(`href="${base}assets/`)
+  })
+})
+
+describe('math', () => {
+  it('renders inline and display formulas on the post page', () => {
+    const html = page('posts/math.html')
+    expect(html).toContain('<mjx-container')
+    expect(html).toMatch(/<mjx-container[^>]*display="true"/)
+  })
+
+  it('renders the formula in the excerpt on the home page', () => {
+    expect(page('index.html')).toMatch(/vuemo-excerpt[\s\S]*?<mjx-container/)
   })
 })
 

@@ -34,13 +34,13 @@ Opt a single block out with `:no-line-numbers` after the language, for example `
 
 ## Math
 
-Set `markdown: { math: true }` and install the peer package:
+New blogs made with `create-vuemo` already have `markdown: { math: true }` set and `markdown-it-mathjax3` installed. For an existing blog, set the option and install the peer package:
 
 ```sh
 pnpm add markdown-it-mathjax3
 ```
 
-Display math scrolls horizontally when it is wider than the page.
+Write `$E = mc^2$` inline and `$$ ... $$` for display math. Formulas follow the text colour (also in dark mode). Display math scrolls horizontally when it is wider than the page.
 
 ## Footnotes
 

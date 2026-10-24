@@ -23,7 +23,7 @@ export default defineBlogConfig({
   ],
   lastUpdated: true,
   search: true,
-  markdown: { lineNumbers: true },
+  markdown: { lineNumbers: true, math: true },
   footer: {
     message: 'Powered by <a href="https://vitepress.dev">VitePress</a> · Vuemo',
     copyright: 'Copyright © 2025 Vuemo Blog'

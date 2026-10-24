@@ -12,6 +12,7 @@
   "devDependencies": {
     "@vuemo/core": "workspace:^",
     "@vuemo/theme-default": "workspace:^",
+    "markdown-it-mathjax3": "^4.3.2",
     "vitepress": "^1.6.4",
     "vue": "^3.5.0",
     "@vuemo/plugin-comments": "workspace:^",

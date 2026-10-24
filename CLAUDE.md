@@ -14,7 +14,7 @@
 2. **Simple first**: do not copy Hexo's whole generator / filter / helper / injector system. Open as few hooks as possible and add more only when there is a real need.
 3. **Easy to understand and use**: a user's project should only have `posts/`, `public/` and one config file. **All settings live in `defineBlogConfig`** (site info, theme, theme options, features), without touching how VitePress's own settings work. The only other file is the boilerplate theme entry `.vitepress/theme/index.ts`, which users never edit.
 4. **Separation of concerns**: core owns data and logic (no UI), a theme only renders (it never touches the file system), plugins extend through a fixed interface.
-5. **Do not redo what VitePress already does**: for example, footnotes are a built-in VitePress Markdown extension, so they are not wrapped as a plugin.
+5. **Do not redo what VitePress already does**: for example, GitHub-style alerts and math are built-in VitePress Markdown features (math via `markdown-it-mathjax3`, an optional peer), so they are not wrapped as plugins.
 6. **Every stage works**: while refactoring, the maintainer's own blog must keep building and deploying.
 
 ## Target architecture (pnpm monorepo)
@@ -160,7 +160,7 @@ Official features are plugins that core loads by their config key. Core has no d
 | Utterances comments (with dark mode sync) | merged into plugin-comments as one provider |
 | AI instant summary | plugin-ai-summary (official framework plugin) |
 | MathJax mobile optimization | **removed**: VitePress improved this in later versions |
-| markdown-it-footnote | **removed**: VitePress has built-in footnote syntax |
+| markdown-it-footnote | **kept as a plain Markdown plugin**: the user opts in via `markdown.config` (`md.use(footnote)`); built into VitePress only from 2.0 |
 
 **Validation principle**: if every existing feature can be rewritten as an official plugin without friction, the plugin interface is right. When a rewrite is awkward, revisit the interface first instead of working around it inside the plugin.
 

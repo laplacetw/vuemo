@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Features
+- math on by default for new blogs: `create-vuemo` installs `markdown-it-mathjax3` and sets `markdown: { math: true }` and `search: true`; example post `math.md`
 - monorepo scaffold: `@vuemo/core`, `@vuemo/theme-default`, `examples/blog`
 - `defineBlogConfig` has no `theme` option; themes are enabled with `.vitepress/theme/index.ts` (`export { default } from '@vuemo/theme-default'`), VitePress's native mechanism
 - `VuemoPlugin` interface and `defineBlogConfig({ plugins })`: merges `markdown`, `vite`, `head`, `transformPost` (posts loader), `enhanceApp` and `slots`

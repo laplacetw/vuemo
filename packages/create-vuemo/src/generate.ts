@@ -14,6 +14,7 @@ interface Versions {
   aiSummary: string
   vitepress: string
   vue: string
+  mathjax: string
 }
 
 /** Injected from the workspace packages at build time (see tsup.config.ts). */
@@ -22,7 +23,7 @@ declare const __VERSIONS__: Versions | undefined
 /** Dependency ranges of the generated project. */
 export const VERSIONS: Versions =
   typeof __VERSIONS__ === 'undefined'
-    ? { core: '*', theme: '*', comments: '*', aiSummary: '*', vitepress: '*', vue: '*' }
+    ? { core: '*', theme: '*', comments: '*', aiSummary: '*', vitepress: '*', vue: '*', mathjax: '*' }
     : __VERSIONS__
 
 export function packageJson(a: Answers): string {
@@ -32,6 +33,7 @@ export function packageJson(a: Answers): string {
     '@vuemo/theme-default': VERSIONS.theme,
     '@vuemo/plugin-comments': VERSIONS.comments,
     '@vuemo/plugin-ai-summary': VERSIONS.aiSummary,
+    'markdown-it-mathjax3': VERSIONS.mathjax,
     vitepress: VERSIONS.vitepress,
     vue: VERSIONS.vue
   }
@@ -76,6 +78,7 @@ export default defineBlogConfig({
   // theme
   theme: '@vuemo/theme-default',
   postsPerPage: 5,
+  search: true, // local full-text search
   nav: [
     { text: 'Home', link: '/' },
     { text: 'Archives', link: '/archives' },
@@ -83,6 +86,9 @@ export default defineBlogConfig({
     { text: 'Tags', link: '/tags' },
     { text: 'About', link: '/about' }
   ],
+
+  // Markdown: math ($...$ and $$...$$) needs markdown-it-mathjax3, installed by default
+  markdown: { math: true },
 
   // features: set a key to enable it, use \`false\` to disable it${a.comments === 'none' ? "\n  // comments: { provider: 'utterances', repo: 'user/comments-repo' }" : ''}
   comments: ${COMMENTS[a.comments]},

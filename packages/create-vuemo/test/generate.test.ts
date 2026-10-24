@@ -12,6 +12,13 @@ describe('generate', () => {
       expect.arrayContaining(['@vuemo/plugin-comments', '@vuemo/plugin-ai-summary'])
     )
   })
+  it('turns math and search on and installs the math plugin', () => {
+    const cfg = configTs(base)
+    expect(cfg).toContain('math: true')
+    expect(cfg).toContain('search: true')
+    const deps = JSON.parse(packageJson(base)).dependencies
+    expect(deps).toHaveProperty('markdown-it-mathjax3')
+  })
   it('turns on the chosen features', () => {
     const on = configTs({ ...base, comments: 'giscus', aiSummary: true })
     expect(on).toContain("provider: 'giscus'")
