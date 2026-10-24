@@ -49,6 +49,8 @@ Rule of thumb: if a feature still makes sense after switching themes, it is a fr
 - `@vuemo/theme-default` is a brand-new, minimal theme. It works out of the box and is the reference implementation of the theme contract.
 - It should implement every required layout and standard slot, but it does not chase rich visuals. Stylistic needs are left to other themes.
 - The original Trigger theme is **not** the default theme. The maintainer will rewrite it separately as an independent Vuemo theme.
+- It deliberately does **not** `extends` VitePress's default theme. That theme is a documentation-site theme: its layout, `themeConfig` schema, global CSS and content markup (`VPDoc` renders the post body, so a theme cannot put a class on it) come with it, and its internals are not a stable API. A reference implementation of the Vuemo contract should depend on the contract only. The price is that features the default theme gives for free (search, Markdown extension styles, ...) are implemented in the theme itself; `@localSearchIndex` and `minisearch` make search feasible without pulling in its CSS.
+- The contract does not forbid other themes from using `extends: DefaultTheme`. The known friction is `vuemo-content`: such a theme cannot add the class to the post body element. When the Trigger theme is rewritten, use it to check that the contract stays neutral, and adjust the contract (not the theme) if it does not.
 
 ### @vuemo/core
 
