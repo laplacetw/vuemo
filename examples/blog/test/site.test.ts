@@ -88,6 +88,13 @@ describe('archives', () => {
   })
 })
 
+describe('inline math', () => {
+  it('keeps inline math inline despite the preflight svg { display: block }', () => {
+    expect(page('posts/math.html')).toContain('<mjx-container class="MathJax" jax="SVG"')
+    expect(css).toMatch(/\.prose mjx-container:not\(\[display=["']?true["']?\]\) svg\s*\{\s*display:\s*inline/)
+  })
+})
+
 describe('last updated', () => {
   // git day (UTC) of a post's last commit, or undefined when git cannot tell (no checkout, untracked or edited file)
   const gitDay = (slug: string) => {

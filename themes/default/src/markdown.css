@@ -387,6 +387,10 @@
   overflow-y: hidden;
 }
 
+/* Tailwind's preflight makes every svg a block, which would break the sentence around inline math
+   (also in `.vuemo-excerpt`, which is a `.prose`). MathJax sets the baseline offset itself. */
+.prose mjx-container:not([display='true']) svg { display: inline; }
+
 /* ---- Badge component ---- */
 
 .vuemo-badge {
