@@ -72,6 +72,18 @@ describe('home page', () => {
   })
 })
 
+describe('sitemap', () => {
+  it('lists every page under the origin plus the base', () => {
+    const origin = 'https://example.com' + base.replace(/\/$/, '')
+    const locs = [...page('sitemap.xml').matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1])
+    expect(locs.length).toBeGreaterThan(0)
+    for (const loc of locs) expect(loc.startsWith(origin + '/'), loc).toBe(true)
+    expect(locs).toContain(`${origin}/posts/hello-vuemo`)
+    // the base is neither doubled nor missing
+    for (const loc of locs) expect(loc.slice('https://'.length), loc).not.toContain('//')
+  })
+})
+
 describe('footer', () => {
   it('renders the message and the copyright', () => {
     const html = page('index.html')

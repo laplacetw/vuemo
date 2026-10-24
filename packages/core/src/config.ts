@@ -86,6 +86,9 @@ export interface BlogConfig extends Omit<UserConfig, 'lastUpdated'>, Partial<Off
 /** An `undefined` value must not override a default. */
 const defined = <T extends object>(o?: T) => Object.fromEntries(Object.entries(o ?? {}).filter(([, v]) => v !== undefined))
 
+/** Site origin plus base with a trailing slash: `https://example.com/vuemo/`. */
+export const sitemapHostname = (hostname: string, base?: string) => hostname.replace(/\/+$/, '') + normalizeBase(base)
+
 export const DEFAULT_THEME = '@vuemo/theme-default'
 
 /** `importer` only exists so tests don't need real plugin packages. */
@@ -128,7 +131,9 @@ export async function defineBlogConfig(config: BlogConfig = {}, importer?: Impor
     cleanUrls: true,
     srcExclude: ['README.md', 'CHANGELOG.md'],
     ...(lastUpdated && { lastUpdated: true }),
-    sitemap: hostname ? { hostname } : undefined,
+    // VitePress lists page URLs relative to the site root (`posts/a`) and the sitemap library resolves them
+    // against `hostname`, so the base must be part of it, with a trailing slash (else `/vuemo` is dropped).
+    sitemap: hostname ? { hostname: sitemapHostname(hostname, rest.base) } : undefined,
     ...rest,
     themeConfig,
     head: [

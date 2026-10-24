@@ -257,6 +257,18 @@ describe('normalizeBase', () => {
   })
 })
 
+describe('defineBlogConfig sitemap', () => {
+  it('puts the normalized base into the sitemap hostname, with one trailing slash', async () => {
+    const host = async (hostname?: string, base?: string) => ((await defineBlogConfig({ hostname, base })) as any).sitemap?.hostname
+    expect(await host('https://x.com')).toBe('https://x.com/')
+    expect(await host('https://x.com/', '/')).toBe('https://x.com/')
+    expect(await host('https://x.com', '/vuemo/')).toBe('https://x.com/vuemo/')
+    expect(await host('https://x.com/', 'vuemo')).toBe('https://x.com/vuemo/')
+    expect(await host('https://x.com//', '//a/b//')).toBe('https://x.com/a/b/')
+    expect(await host(undefined, '/vuemo/')).toBeUndefined()
+  })
+})
+
 describe('defineBlogConfig rss', () => {
   it('adds the feed link when hostname is set and not when rss is false', async () => {
     const on: any = await defineBlogConfig({ hostname: 'https://x.com', base: '/b/' })

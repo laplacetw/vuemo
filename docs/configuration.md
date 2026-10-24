@@ -27,7 +27,7 @@ export default defineBlogConfig({
 | Option | Description |
 | --- | --- |
 | `theme` | Theme package. Default `@vuemo/theme-default`. See [Themes](./themes.md). |
-| `hostname` | Site origin. Used by the sitemap, the JSON-LD of posts and the RSS feed. |
+| `hostname` | Site origin. Used by the sitemap, the JSON-LD of posts and the RSS feed; the site `base` is added to every URL. |
 | `nav` | `{ text, link }[]` navigation links. Becomes `themeConfig.nav`. |
 | `footer` | HTML for the footer: a string (the message) or `{ message?, copyright? }`. Becomes `themeConfig.footer`, always as an object (a string turns into `{ message }`). |
 | `logo` | Path of an image in `public/`, shown next to the site title. Becomes `themeConfig.logo`. |
