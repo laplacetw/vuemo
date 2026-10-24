@@ -20,6 +20,12 @@ export function paginate<T>(list: T[], page: number, perPage: number): Page<T> {
 
 const normalize = (url: string) => url.replace(/(index)?(\.html)?$/, '').replace(/\/$/, '') || '/'
 
+/** The post served at `url` (with or without `.html` / `index`), if the loader accepted it. */
+export function findPost<T extends { url: string }>(posts: T[], url: string): T | undefined {
+  const target = normalize(url)
+  return posts.find((p) => normalize(p.url) === target)
+}
+
 /** `posts` must be sorted newest first. prev = newer, next = older. */
 export function findPrevNext<T extends { url: string }>(posts: T[], url: string): { prev?: T; next?: T } {
   const target = normalize(url)

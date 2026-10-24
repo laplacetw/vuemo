@@ -24,15 +24,18 @@ export function postCountText(count: number): string {
 /**
  * "Updated" date (YYYY-MM-DD, UTC) of a post, or undefined when nothing should be shown: the feature is off or
  * opted out per post (`lastUpdated: false`), the timestamp is not a positive number (NaN = untracked file,
- * 0 = missing), or it falls on the publish date.
+ * 0 = missing), the publish date is not a valid date, or the update is not after the publish day. The last rule
+ * matches the JSON-LD, whose `dateModified` is never earlier than `datePublished`.
  */
 export function updatedDate(
   lastUpdated: number | undefined,
-  published: string,
+  published: string | Date,
   optOut?: unknown
 ): string | undefined {
   if (optOut === false) return undefined
   if (typeof lastUpdated !== 'number' || !Number.isFinite(lastUpdated) || lastUpdated <= 0) return undefined
+  const day = published instanceof Date ? (Number.isNaN(+published) ? '' : published.toISOString().slice(0, 10)) : String(published)
+  if (!/^\d{4}-\d{2}-\d{2}/.test(day)) return undefined
   const date = new Date(lastUpdated).toISOString().slice(0, 10)
-  return date === String(published).slice(0, 10) ? undefined : date
+  return date > day.slice(0, 10) ? date : undefined
 }

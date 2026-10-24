@@ -43,6 +43,17 @@ describe('updatedDate', () => {
     expect(updatedDate(0, '2025-06-01')).toBeUndefined()
     expect(updatedDate(-5, '2025-06-01')).toBeUndefined()
   })
+  it('hides it before the publish day, and needs a valid publish date', () => {
+    expect(updatedDate(Date.UTC(2025, 4, 1), '2025-06-01')).toBeUndefined()
+    expect(updatedDate(t, 'undefined')).toBeUndefined()
+    expect(updatedDate(t, '')).toBeUndefined()
+    expect(updatedDate(t, new Date('nope'))).toBeUndefined()
+  })
+  it('accepts ISO strings and Date objects as the publish date', () => {
+    expect(updatedDate(t, '2025-06-01T10:00:00.000Z')).toBe('2025-09-03')
+    expect(updatedDate(t, new Date('2025-06-01T10:00:00Z'))).toBe('2025-09-03')
+    expect(updatedDate(t, new Date('2025-09-03T01:00:00Z'))).toBeUndefined()
+  })
   it('hides it on the publish date', () => {
     expect(updatedDate(Date.UTC(2025, 5, 1, 23), '2025-06-01 10:00:00')).toBeUndefined()
   })

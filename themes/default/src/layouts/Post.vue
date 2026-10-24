@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useData, withBase } from 'vitepress'
-import { usePrevNext, useTaxonomyLinks } from '@vuemo/core/client'
+import { usePost, usePrevNext, useTaxonomyLinks } from '@vuemo/core/client'
 import PluginSlot from '../components/PluginSlot.vue'
 import { updatedDate } from '../utils'
 
 const { frontmatter, page, theme } = useData()
+// date, tags and category come from the normalized post (invalid values are already dropped);
+// a post the loader skipped has none of them, so none is shown
+const post = usePost()
 // shown only when the `lastUpdated` option is on; the date is UTC so the server and the browser agree
 const updated = computed(() =>
-  theme.value.lastUpdated ? updatedDate(page.value.lastUpdated, String(frontmatter.value.date), frontmatter.value.lastUpdated) : undefined
+  theme.value.lastUpdated && post.value
+    ? updatedDate(page.value.lastUpdated, post.value.date.string, frontmatter.value.lastUpdated)
+    : undefined
 )
 const adjacent = usePrevNext()
 const { tagLink, categoryLink } = useTaxonomyLinks()
@@ -18,14 +23,16 @@ const { tagLink, categoryLink } = useTaxonomyLinks()
   <article>
     <h1 class="text-3xl font-bold">{{ frontmatter.title }}</h1>
     <div class="mt-2 text-sm text-zinc-500">
-      {{ String(frontmatter.date).slice(0, 10) }}
+      <template v-if="post">
+      {{ post.date.string }}
       <span v-if="updated" class="vuemo-updated">· {{ theme.lastUpdated.text || 'Updated' }} {{ updated }}</span>
-      <span v-if="frontmatter.category">
-        · <a :href="categoryLink(frontmatter.category)" class="hover:underline">{{ frontmatter.category }}</a>
+      <span v-if="post.category">
+        · <a :href="categoryLink(post.category)" class="hover:underline">{{ post.category }}</a>
       </span>
-      <span v-for="tag in frontmatter.tags ?? []" :key="tag">
+      <span v-for="tag in post.tags" :key="tag">
         · <a :href="tagLink(tag)" class="hover:underline">#{{ tag }}</a>
       </span>
+      </template>
     </div>
     <slot name="post-before-content" />
     <PluginSlot name="post-before-content" />

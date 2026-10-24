@@ -5,7 +5,7 @@ import type { Component } from 'vue'
 import type { EnhanceAppContext } from 'vitepress'
 import { data } from '../posts.data'
 import { groupByCategory, groupByTag, groupByYear } from '../group'
-import { findPrevNext, paginate } from '../pagination'
+import { findPost, findPrevNext, paginate } from '../pagination'
 import { taxonomyHref } from '../taxonomy'
 
 export type { Post, Frontmatter } from '../schema'
@@ -55,6 +55,15 @@ export function usePagination(perPage = 5, list = data) {
 export function usePrevNext(url?: string) {
   const route = useRoute()
   return computed(() => findPrevNext(data, url ?? route.path))
+}
+
+/**
+ * The normalized post at the current route (or `url`): validated date, tags and category.
+ * `undefined` for pages that are not posts, or posts the loader skipped for invalid frontmatter.
+ */
+export function usePost(url?: string) {
+  const route = useRoute()
+  return computed(() => findPost(data, url ?? route.path))
 }
 
 /** Links to the tag and category pages (`themeConfig.paths`), preselecting the item through the query. */

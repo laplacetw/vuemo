@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { parsePost } from '../src/schema'
 import { groupByTag, groupByYear, groupByCategory } from '../src/group'
-import { findPrevNext, paginate } from '../src/pagination'
+import { findPost, findPrevNext, paginate } from '../src/pagination'
 import { postJsonLd } from '../src/seo'
 import { taxonomyHref } from '../src/taxonomy'
 import { searchRender } from '../src/search'
@@ -40,6 +40,18 @@ describe('pagination', () => {
     const posts = [mk(3), mk(2), mk(1)]
     expect(findPrevNext(posts, '/posts/p2.html')).toEqual({ prev: posts[0], next: posts[2] })
     expect(findPrevNext(posts, '/nope')).toEqual({})
+  })
+})
+
+describe('findPost', () => {
+  const posts = [mk(2), mk(1)]
+  it('finds a post by route path', () => {
+    expect(findPost(posts, '/posts/p1.html')).toBe(posts[1])
+    expect(findPost(posts, '/posts/p2')).toBe(posts[0])
+    expect(findPost(posts, '/posts/p2/')).toBe(posts[0])
+  })
+  it('returns undefined for other pages', () => {
+    expect(findPost(posts, '/about')).toBeUndefined()
   })
 })
 
