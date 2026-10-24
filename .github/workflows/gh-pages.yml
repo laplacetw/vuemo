@@ -32,6 +32,9 @@ jobs:
       - run: pnpm build
         env:
           BASE: /vuemo/
+      - run: pnpm test:site
+        env:
+          BASE: /vuemo/
       - uses: actions/upload-pages-artifact@v5
         with:
           path: examples/blog/.vitepress/dist

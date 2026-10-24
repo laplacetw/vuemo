@@ -1,0 +1,375 @@
+/*
+ * Styles for the Markdown output VitePress produces (custom containers, GitHub
+ * alerts, code blocks, code groups, anchors, tables, ...).
+ *
+ * The rules are unlayered on purpose: Tailwind's typography plugin lives in the
+ * `utilities` layer, and unlayered rules always win over layered ones.
+ * Colours are theme tokens with literal values, because Tailwind v4 only emits
+ * its own `--color-*` variables when a utility uses them.
+ */
+
+:root {
+  --vm-border: #e4e4e7;
+  --vm-muted: #71717a;
+  --vm-soft-bg: #f4f4f5;
+  --vm-code-bg: #f6f8fa;
+  --vm-code-fg: #24292e;
+  --vm-inline-code-bg: #f1f1f3;
+  --vm-inline-code-fg: #3f3f46;
+  --vm-line-highlight: rgba(142, 150, 170, 0.14);
+  --vm-line-add: rgba(16, 185, 129, 0.16);
+  --vm-line-remove: rgba(244, 63, 94, 0.14);
+  --vm-line-error: rgba(244, 63, 94, 0.14);
+  --vm-line-warning: rgba(234, 179, 8, 0.16);
+  --vm-anchor: #a1a1aa;
+
+  --vm-info-bg: #f4f4f5;
+  --vm-info-border: #a1a1aa;
+  --vm-info-fg: #3f3f46;
+  --vm-tip-bg: #ecfdf5;
+  --vm-tip-border: #10b981;
+  --vm-tip-fg: #047857;
+  --vm-important-bg: #f5f3ff;
+  --vm-important-border: #8b5cf6;
+  --vm-important-fg: #6d28d9;
+  --vm-warning-bg: #fffbeb;
+  --vm-warning-border: #f59e0b;
+  --vm-warning-fg: #b45309;
+  --vm-danger-bg: #fff1f2;
+  --vm-danger-border: #f43f5e;
+  --vm-danger-fg: #be123c;
+}
+
+.dark {
+  --vm-border: #3f3f46;
+  --vm-muted: #a1a1aa;
+  --vm-soft-bg: #27272a;
+  --vm-code-bg: #24292e;
+  --vm-code-fg: #e1e4e8;
+  --vm-inline-code-bg: #2f2f33;
+  --vm-inline-code-fg: #e4e4e7;
+  --vm-line-highlight: rgba(142, 150, 170, 0.2);
+  --vm-line-add: rgba(16, 185, 129, 0.2);
+  --vm-line-remove: rgba(244, 63, 94, 0.2);
+  --vm-line-error: rgba(244, 63, 94, 0.2);
+  --vm-line-warning: rgba(234, 179, 8, 0.2);
+  --vm-anchor: #71717a;
+
+  --vm-info-bg: #27272a;
+  --vm-info-border: #71717a;
+  --vm-info-fg: #d4d4d8;
+  --vm-tip-bg: #052e22;
+  --vm-tip-border: #10b981;
+  --vm-tip-fg: #6ee7b7;
+  --vm-important-bg: #231a42;
+  --vm-important-border: #8b5cf6;
+  --vm-important-fg: #c4b5fd;
+  --vm-warning-bg: #35280a;
+  --vm-warning-border: #f59e0b;
+  --vm-warning-fg: #fcd34d;
+  --vm-danger-bg: #3a1119;
+  --vm-danger-border: #f43f5e;
+  --vm-danger-fg: #fda4af;
+}
+
+/* ---- custom containers and GitHub alerts ---- */
+
+.prose .custom-block {
+  --cb-bg: var(--vm-info-bg);
+  --cb-border: var(--vm-info-border);
+  --cb-fg: var(--vm-info-fg);
+  margin: 1.25rem 0;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--cb-border);
+  border-radius: 0.5rem;
+  background: var(--cb-bg);
+  line-height: 1.6;
+}
+.prose .custom-block.tip { --cb-bg: var(--vm-tip-bg); --cb-border: var(--vm-tip-border); --cb-fg: var(--vm-tip-fg); }
+.prose .custom-block.important { --cb-bg: var(--vm-important-bg); --cb-border: var(--vm-important-border); --cb-fg: var(--vm-important-fg); }
+.prose .custom-block.warning { --cb-bg: var(--vm-warning-bg); --cb-border: var(--vm-warning-border); --cb-fg: var(--vm-warning-fg); }
+.prose .custom-block.caution,
+.prose .custom-block.danger { --cb-bg: var(--vm-danger-bg); --cb-border: var(--vm-danger-border); --cb-fg: var(--vm-danger-fg); }
+.prose .custom-block > :first-child { margin-top: 0; }
+.prose .custom-block > :last-child { margin-bottom: 0; }
+.prose .custom-block p { margin: 0.5rem 0; }
+.prose .custom-block .custom-block-title {
+  margin-top: 0;
+  font-weight: 600;
+  color: var(--cb-fg);
+}
+.prose .custom-block a { color: var(--cb-fg); text-decoration: underline; }
+.prose .custom-block.github-alert .custom-block-title { text-transform: none; }
+
+.prose details.custom-block summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--cb-fg);
+}
+.prose details.custom-block[open] summary { margin-bottom: 0.5rem; }
+
+/* ---- inline code (no backticks from prose) ---- */
+
+.prose code::before,
+.prose code::after { content: none; }
+.prose :not(pre) > code {
+  padding: 0.15em 0.4em;
+  border-radius: 0.25rem;
+  background: var(--vm-inline-code-bg);
+  color: var(--vm-inline-code-fg);
+  font-size: 0.875em;
+  font-weight: 400;
+}
+.prose .custom-block :not(pre) > code { background: transparent; padding: 0.1em 0.25em; color: inherit; font-weight: 600; }
+
+/* ---- code blocks ---- */
+
+.prose div[class*='language-'] {
+  position: relative;
+  margin: 1.25rem 0;
+}
+.prose pre.shiki {
+  margin: 0;
+  padding: 1rem 0;
+  overflow-x: auto;
+  border: 1px solid var(--vm-border);
+  border-radius: 0.5rem;
+  background-color: var(--vm-code-bg);
+  color: var(--vm-code-fg);
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+.prose pre.shiki code {
+  display: block;
+  width: fit-content;
+  min-width: 100%;
+  padding: 0 1.25rem;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  font-weight: 400;
+  line-height: inherit;
+}
+.prose pre.shiki span { color: var(--shiki-light); }
+.dark .prose pre.shiki span { color: var(--shiki-dark); }
+.prose pre.shiki .line { display: inline-block; min-width: 100%; position: relative; }
+
+/* language label and copy button (VitePress supplies the click handler) */
+.prose div[class*='language-'] > .lang {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.75rem;
+  z-index: 2;
+  color: var(--vm-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  user-select: none;
+  transition: opacity 0.25s;
+}
+.prose div[class*='language-']:hover > .lang { opacity: 0; }
+.prose div[class*='language-'] > button.copy {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 3;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--vm-border);
+  border-radius: 0.375rem;
+  background-color: var(--vm-code-bg);
+  background-repeat: no-repeat;
+  background-position: 50%;
+  background-size: 1rem;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='9' width='13' height='13' rx='2'/%3E%3Cpath d='M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1'/%3E%3C/svg%3E");
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.prose div[class*='language-']:hover > button.copy,
+.prose div[class*='language-'] > button.copy:focus-visible,
+.prose div[class*='language-'] > button.copy.copied { opacity: 1; }
+.prose div[class*='language-'] > button.copy.copied {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+}
+.prose div[class*='language-'] > button.copy.copied::before {
+  content: 'Copied';
+  position: absolute;
+  top: -1px;
+  right: 2rem;
+  height: 2rem;
+  padding: 0 0.6rem;
+  border: 1px solid var(--vm-border);
+  border-right: 0;
+  border-radius: 0.375rem 0 0 0.375rem;
+  background-color: var(--vm-code-bg);
+  color: var(--vm-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: calc(2rem - 2px);
+  white-space: nowrap;
+}
+
+/* line highlight, diff, error, warning, focus */
+.prose pre.shiki .line.highlighted,
+.prose pre.shiki .line.diff,
+.prose pre.shiki .line.error,
+.prose pre.shiki .line.warning {
+  width: calc(100% + 2.5rem);
+  margin: 0 -1.25rem;
+  padding: 0 1.25rem;
+  box-sizing: border-box;
+}
+.prose pre.shiki .line.highlighted { background-color: var(--vm-line-highlight); }
+.prose pre.shiki .line.diff.add { background-color: var(--vm-line-add); }
+.prose pre.shiki .line.diff.remove { background-color: var(--vm-line-remove); opacity: 0.75; }
+.prose pre.shiki .line.highlighted.error { background-color: var(--vm-line-error); }
+.prose pre.shiki .line.highlighted.warning { background-color: var(--vm-line-warning); }
+.prose pre.shiki .line.diff::before {
+  position: absolute;
+  left: 0.4rem;
+  color: var(--vm-muted);
+}
+.prose pre.shiki .line.diff.add::before { content: '+'; color: #10b981; }
+.prose pre.shiki .line.diff.remove::before { content: '-'; color: #f43f5e; }
+.prose pre.shiki.has-focused-lines .line:not(.has-focus) {
+  opacity: 0.4;
+  filter: blur(0.095rem);
+  transition: filter 0.35s, opacity 0.35s;
+}
+.prose pre.shiki.has-focused-lines:hover .line:not(.has-focus) {
+  opacity: 1;
+  filter: none;
+}
+
+/* ---- code groups ---- */
+
+.prose .vp-code-group {
+  margin: 1.25rem 0;
+  overflow: hidden;
+  border: 1px solid var(--vm-border);
+  border-radius: 0.5rem;
+  background-color: var(--vm-code-bg);
+}
+.prose .vp-code-group .tabs {
+  position: relative;
+  display: flex;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--vm-border);
+}
+.prose .vp-code-group .tabs input {
+  position: fixed;
+  opacity: 0;
+  pointer-events: none;
+}
+.prose .vp-code-group .tabs label {
+  position: relative;
+  padding: 0 1rem;
+  color: var(--vm-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 2.5rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.25s;
+}
+.prose .vp-code-group .tabs label::after {
+  content: '';
+  position: absolute;
+  right: 0.5rem;
+  bottom: -1px;
+  left: 0.5rem;
+  height: 2px;
+  background-color: transparent;
+  transition: background-color 0.25s;
+}
+.prose .vp-code-group .tabs input:checked + label { color: var(--vm-code-fg); }
+.prose .vp-code-group .tabs input:checked + label::after { background-color: var(--vm-tip-border); }
+.prose .vp-code-group .tabs input:focus-visible + label { outline: 2px solid var(--vm-tip-border); outline-offset: -2px; }
+.prose .vp-code-group .blocks > div[class*='language-'] { margin: 0; display: none; }
+.prose .vp-code-group .blocks > div[class*='language-'].active { display: block; }
+.prose .vp-code-group .blocks pre.shiki { border: 0; border-radius: 0; }
+.prose .vp-code-group .blocks > div[class*='language-'] > .lang { display: none; }
+.prose .vp-code-group .blocks > div[class*='language-'] > button.copy { top: 0.4rem; }
+
+/* ---- headings and anchors ---- */
+
+.prose :is(h1, h2, h3, h4, h5, h6) { position: relative; }
+.prose .header-anchor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin-left: -0.9em;
+  padding-right: 0.25em;
+  color: var(--vm-anchor);
+  font-weight: 500;
+  text-decoration: none;
+  opacity: 0;
+  user-select: none;
+  transition: opacity 0.2s;
+}
+.prose .header-anchor::before { content: '#'; }
+.prose :is(h1, h2, h3, h4, h5, h6):hover > .header-anchor,
+.prose .header-anchor:focus,
+.prose .header-anchor:focus-visible { opacity: 1; }
+
+/* ---- tables, keys, footnotes, math ---- */
+
+.prose table { border-collapse: collapse; }
+.prose th,
+.prose td {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--vm-border);
+  text-align: left;
+}
+.prose th { background: var(--vm-soft-bg); font-weight: 600; }
+.prose tbody tr:nth-child(2n) { background: var(--vm-soft-bg); }
+
+.prose kbd {
+  display: inline-block;
+  padding: 0.1em 0.45em;
+  border: 1px solid var(--vm-border);
+  border-bottom-width: 2px;
+  border-radius: 0.3rem;
+  background: var(--vm-soft-bg);
+  color: var(--vm-inline-code-fg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  font-weight: 500;
+  line-height: 1.4;
+  box-shadow: none;
+}
+
+.prose .footnotes { margin-top: 2rem; font-size: 0.875em; color: var(--vm-muted); }
+.prose .footnotes-sep { margin: 2rem 0 0; border-color: var(--vm-border); }
+.prose .footnotes ol { margin: 0.5rem 0; padding-left: 1.25rem; }
+.prose .footnotes p { margin: 0.25rem 0; }
+.prose .footnote-ref a,
+.prose .footnote-backref { text-decoration: none; }
+
+.prose mjx-container[display='true'] {
+  display: block;
+  max-width: 100%;
+  margin: 1rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* ---- Badge component ---- */
+
+.vuemo-badge {
+  display: inline-block;
+  margin-left: 0.2em;
+  padding: 0 0.55em;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--vm-info-bg);
+  color: var(--vm-info-fg);
+  border-color: var(--vm-info-border);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.5;
+  vertical-align: middle;
+}
+.vuemo-badge.tip { background: var(--vm-tip-bg); color: var(--vm-tip-fg); border-color: var(--vm-tip-border); }
+.vuemo-badge.warning { background: var(--vm-warning-bg); color: var(--vm-warning-fg); border-color: var(--vm-warning-border); }
+.vuemo-badge.danger { background: var(--vm-danger-bg); color: var(--vm-danger-fg); border-color: var(--vm-danger-border); }

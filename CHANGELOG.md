@@ -19,3 +19,4 @@
 - RSS: `defineBlogConfig` writes `feed.xml` at build time and links it from every page when `hostname` is set (`rss: false` disables it)
 - site options `logo` and `socialLinks` (mapped into `themeConfig`); the default theme shows them in the header and footer
 - npm publishing prep: package metadata, version 0.1.0-alpha.0 published under the `alpha` tag, `create-vuemo` depends on the matching release versions, `RELEASING.md`
+- default theme: styles for VitePress Markdown extensions (containers, alerts, code blocks with copy button, code groups, anchors, tables), a global `Badge` component, `docs/markdown.md`; the example blog gets post-build checks (`pnpm test:site`, `pnpm verify`) that run in CI

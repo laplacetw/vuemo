@@ -4,6 +4,7 @@
 
 - [Getting started](./getting-started.md): create a blog, write posts
 - [Configuration](./configuration.md): every setting, in one place
+- [Markdown](./markdown.md): what the default theme styles, line numbers, math, footnotes
 - [Themes](./themes.md): use a theme, build your own
 - [Plugins](./plugins.md): official features, writing plugins
 - [Deployment](./deployment.md): GitHub Pages, AWS Amplify
