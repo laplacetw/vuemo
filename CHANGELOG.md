@@ -23,3 +23,4 @@
 - default theme: code block line numbers (`markdown.lineNumbers`, opt out per block with `:no-line-numbers`) are shown and aligned instead of hidden
 - default theme: the dark mode toggle renders both icons and switches them with CSS, which fixes a hydration mismatch when the stored appearance is dark
 - `summary` option (`'excerpt'` default, or `'description'`): the default theme's home page shows each post's excerpt (the part before `---`) or description, with a "Read more" link
+- `paths` option and `useTaxonomyLinks()`: the default theme links the category and tags of a post to the category and tag pages, which preselect the item from `?category=` / `?tag=`

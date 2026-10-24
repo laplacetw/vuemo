@@ -30,6 +30,22 @@ describe('home page', () => {
   })
 })
 
+describe('taxonomy links', () => {
+  const html = page('posts/hello-vuemo.html')
+
+  it('links the tags and the category of a post to their pages', () => {
+    expect(html).toContain(`href="${base}tags?tag=vuemo"`)
+    expect(html).toContain(`href="${base}category?category=Notes"`)
+  })
+
+  it('has the tag and category pages', () => {
+    expect(page('tags.html')).toContain('Tags')
+    expect(page('category.html')).toContain('Category')
+    expect(readFileSync(resolve(root, 'tags.md'), 'utf8')).toContain('layout: tag')
+    expect(readFileSync(resolve(root, 'category.md'), 'utf8')).toContain('layout: category')
+  })
+})
+
 describe('markdown features', () => {
   const html = page('posts/markdown-features.html')
 

@@ -40,7 +40,7 @@ The contract, which lets framework plugins work with any theme:
 - reflect dark mode through VitePress's `isDark`
 - never read the file system; everything comes from the composables
 
-The site options `nav`, `footer`, `logo`, `socialLinks`, `postsPerPage` and `summary` reach the theme as `useData().theme.value.<name>`. Support for them is up to the theme; `@vuemo/theme-default` supports all of them.
+The site options `nav`, `footer`, `logo`, `socialLinks`, `postsPerPage`, `summary` and `paths` reach the theme as `useData().theme.value.<name>`. Support for them is up to the theme; `@vuemo/theme-default` supports all of them.
 
 ### Composables (`@vuemo/core/client`)
 
@@ -52,6 +52,7 @@ The site options `nav`, `footer`, `logo`, `socialLinks`, `postsPerPage` and `sum
 | `useArchives()` | `{ year, posts }[]`, newest year first |
 | `usePagination(perPage?)` | `{ page, goPage }`; the page number lives in `?page=` |
 | `usePrevNext(url?)` | `{ prev, next }` for the current post (`prev` = newer, `next` = older) |
+| `useTaxonomyLinks()` | `{ tagLink(name), categoryLink(name) }`: URLs of the tag and category pages (`themeConfig.paths`, with `base`) that preselect the item through `?tag=` / `?category=`. The tag and category layouts read that query and re-read it when the route changes |
 | `useSlots(name)` | components plugins registered for a slot |
 | `runEnhanceApps(ctx)` | runs the plugins' `enhanceApp` modules |
 

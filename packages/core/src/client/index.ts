@@ -1,11 +1,12 @@
 import { computed, onMounted, ref } from 'vue'
-import { useRoute } from 'vitepress'
+import { useData, useRoute } from 'vitepress'
 import { slots, enhanceApps } from 'virtual:vuemo/plugins'
 import type { Component } from 'vue'
 import type { EnhanceAppContext } from 'vitepress'
 import { data } from '../posts.data'
 import { groupByCategory, groupByTag, groupByYear } from '../group'
 import { findPrevNext, paginate } from '../pagination'
+import { taxonomyHref } from '../taxonomy'
 
 export type { Post, Frontmatter } from '../schema'
 
@@ -54,6 +55,16 @@ export function usePagination(perPage = 5, list = data) {
 export function usePrevNext(url?: string) {
   const route = useRoute()
   return computed(() => findPrevNext(data, url ?? route.path))
+}
+
+/** Links to the tag and category pages (`themeConfig.paths`), preselecting the item through the query. */
+export function useTaxonomyLinks() {
+  const { theme, site } = useData()
+  const paths = () => ({ tag: '/tags', category: '/category', ...theme.value.paths })
+  return {
+    tagLink: (name: string) => taxonomyHref(site.value.base, paths().tag, 'tag', name),
+    categoryLink: (name: string) => taxonomyHref(site.value.base, paths().category, 'category', name)
+  }
 }
 
 /** Components plugins registered for a standard slot (`post-before-content`, `post-after-content`, `post-comments`). */

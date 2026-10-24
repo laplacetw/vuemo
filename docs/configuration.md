@@ -34,12 +34,13 @@ export default defineBlogConfig({
 | `socialLinks` | `{ icon, link, ariaLabel? }[]` links shown in the footer. `icon` is a text label (e.g. `'github'`) or `{ svg: '<svg>...</svg>' }`. Becomes `themeConfig.socialLinks`. |
 | `postsPerPage` | Posts per page on the home layout. Default 5. Becomes `themeConfig.postsPerPage`. |
 | `summary` | What the home page shows under each post: `'excerpt'` (default) or `'description'`. With `'excerpt'`, a post without an excerpt falls back to its `description`, and shows nothing if it has neither; with `'description'` the excerpt is never used. Every entry gets a "Read more" link. Tag, category and archive lists show only the title and date. Becomes `themeConfig.summary`. |
+| `paths` | `{ tag?, category? }`: the pages that use the `tag` and `category` layouts. Defaults `/tags` and `/category`. Themes link post tags and categories there. Becomes `themeConfig.paths`. |
 | `rss` | RSS feed at `/feed.xml` with the newest posts (`{ limit?: number }`, default 20). On whenever `hostname` is set, because feeds need absolute links; use `rss: false` to turn it off. |
 | `comments` | Enable comments. See below. |
 | `aiSummary` | Enable the AI summary. See below. |
 | `plugins` | Your own or third-party plugins. See [Plugins](./plugins.md). |
 
-`nav`, `footer`, `logo`, `socialLinks`, `postsPerPage` and `summary` are shortcuts for `themeConfig`. If you also set `themeConfig` yourself (VitePress's own mechanism, or a theme's own options), your `themeConfig` wins.
+`nav`, `footer`, `logo`, `socialLinks`, `postsPerPage`, `summary` and `paths` are shortcuts for `themeConfig`. If you also set `themeConfig` yourself (VitePress's own mechanism, or a theme's own options), your `themeConfig` wins.
 
 ## Features
 

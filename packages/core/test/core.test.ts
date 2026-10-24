@@ -3,6 +3,7 @@ import { parsePost } from '../src/schema'
 import { groupByTag, groupByYear, groupByCategory } from '../src/group'
 import { findPrevNext, paginate } from '../src/pagination'
 import { postJsonLd } from '../src/seo'
+import { taxonomyHref } from '../src/taxonomy'
 
 const mk = (n: number, fm: Record<string, any> = {}) =>
   parsePost({ url: `/posts/p${n}`, frontmatter: { title: `P${n}`, date: `202${n}-01-01`, ...fm } }) as any
@@ -38,6 +39,20 @@ describe('pagination', () => {
     const posts = [mk(3), mk(2), mk(1)]
     expect(findPrevNext(posts, '/posts/p2.html')).toEqual({ prev: posts[0], next: posts[2] })
     expect(findPrevNext(posts, '/nope')).toEqual({})
+  })
+})
+
+describe('taxonomyHref', () => {
+  it('joins base and path', () => {
+    expect(taxonomyHref('/', '/tags', 'tag', 'vuemo')).toBe('/tags?tag=vuemo')
+    expect(taxonomyHref('/vuemo/', '/category', 'category', 'Notes')).toBe('/vuemo/category?category=Notes')
+  })
+  it('tolerates slashes', () => {
+    expect(taxonomyHref('/vuemo', 'tags/', 'tag', 'a')).toBe('/vuemo/tags?tag=a')
+    expect(taxonomyHref('/', '/topics/', 'tag', 'a')).toBe('/topics?tag=a')
+  })
+  it('encodes names', () => {
+    expect(taxonomyHref('/', '/tags', 'tag', 'c++ & 中文/x?')).toBe('/tags?tag=c%2B%2B%20%26%20%E4%B8%AD%E6%96%87%2Fx%3F')
   })
 })
 
@@ -114,6 +129,13 @@ describe('defineBlogConfig', () => {
     const cfg: any = await defineBlogConfig({ summary: 'description', themeConfig: { summary: 'excerpt' } })
     expect(cfg.themeConfig.summary).toBe('excerpt')
     expect(cfg.summary).toBeUndefined()
+  })
+
+  it('writes paths with defaults, user paths override per key', async () => {
+    expect(((await defineBlogConfig({})) as any).themeConfig.paths).toEqual({ tag: '/tags', category: '/category' })
+    const cfg: any = await defineBlogConfig({ paths: { tag: '/topics' } })
+    expect(cfg.themeConfig.paths).toEqual({ tag: '/topics', category: '/category' })
+    expect(cfg.paths).toBeUndefined()
   })
 
   it('enables official features by their keys and strips them from the config', async () => {

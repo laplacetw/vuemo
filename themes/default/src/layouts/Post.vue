@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { useData, withBase } from 'vitepress'
-import { usePrevNext } from '@vuemo/core/client'
+import { usePrevNext, useTaxonomyLinks } from '@vuemo/core/client'
 import PluginSlot from '../components/PluginSlot.vue'
 
 const { frontmatter } = useData()
 const adjacent = usePrevNext()
+const { tagLink, categoryLink } = useTaxonomyLinks()
 </script>
 
 <template>
@@ -12,8 +13,12 @@ const adjacent = usePrevNext()
     <h1 class="text-3xl font-bold">{{ frontmatter.title }}</h1>
     <div class="mt-2 text-sm text-zinc-500">
       {{ String(frontmatter.date).slice(0, 10) }}
-      <span v-if="frontmatter.category"> · {{ frontmatter.category }}</span>
-      <span v-for="tag in frontmatter.tags ?? []" :key="tag"> · #{{ tag }}</span>
+      <span v-if="frontmatter.category">
+        · <a :href="categoryLink(frontmatter.category)" class="hover:underline">{{ frontmatter.category }}</a>
+      </span>
+      <span v-for="tag in frontmatter.tags ?? []" :key="tag">
+        · <a :href="tagLink(tag)" class="hover:underline">#{{ tag }}</a>
+      </span>
     </div>
     <slot name="post-before-content" />
     <PluginSlot name="post-before-content" />
