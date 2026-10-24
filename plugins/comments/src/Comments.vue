@@ -26,5 +26,9 @@ onBeforeUnmount(() => container.value && adapter.unmount(container.value))
 </script>
 
 <template>
-  <div ref="container" class="vuemo-comments mt-10" />
+  <div ref="container" class="vuemo-comments" />
 </template>
+
+<style scoped>
+.vuemo-comments { margin-top: 2.5rem; }
+</style>
