@@ -5,7 +5,7 @@ import type { Component } from 'vue'
 import type { EnhanceAppContext } from 'vitepress'
 import { data } from '../posts.data'
 import { groupByCategory, groupByTag, groupByYear } from '../group'
-import { findPost, findPrevNext, paginate } from '../pagination'
+import { findPost, findPrevNext, paginate, stripBase } from '../pagination'
 import { taxonomyHref } from '../taxonomy'
 
 export type { Post, Frontmatter } from '../schema'
@@ -54,7 +54,8 @@ export function usePagination(perPage = 5, list = data) {
 /** prev = newer post, next = older post. Defaults to the current route. */
 export function usePrevNext(url?: string) {
   const route = useRoute()
-  return computed(() => findPrevNext(data, url ?? route.path))
+  const { site } = useData()
+  return computed(() => findPrevNext(data, url ?? stripBase(route.path, site.value.base)))
 }
 
 /**
@@ -63,7 +64,8 @@ export function usePrevNext(url?: string) {
  */
 export function usePost(url?: string) {
   const route = useRoute()
-  return computed(() => findPost(data, url ?? route.path))
+  const { site } = useData()
+  return computed(() => findPost(data, url ?? stripBase(route.path, site.value.base)))
 }
 
 /** Links to the tag and category pages (`themeConfig.paths`), preselecting the item through the query. */

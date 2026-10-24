@@ -20,6 +20,12 @@ export function paginate<T>(list: T[], page: number, perPage: number): Page<T> {
 
 const normalize = (url: string) => url.replace(/(index)?(\.html)?$/, '').replace(/\/$/, '') || '/'
 
+/** `route.path` includes the site `base` (`/vuemo/posts/a`), post urls do not: strip it. */
+export function stripBase(path: string, base = '/'): string {
+  const prefix = base.replace(/\/+$/, '')
+  return prefix && (path === prefix || path.startsWith(prefix + '/')) ? path.slice(prefix.length) || '/' : path
+}
+
 /** The post served at `url` (with or without `.html` / `index`), if the loader accepted it. */
 export function findPost<T extends { url: string }>(posts: T[], url: string): T | undefined {
   const target = normalize(url)

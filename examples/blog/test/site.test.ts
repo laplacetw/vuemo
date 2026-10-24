@@ -88,6 +88,16 @@ describe('archives', () => {
   })
 })
 
+describe('previous and next links', () => {
+  it('link to the neighbours of a post, under any base', () => {
+    // valid posts are sorted newest first: the middle one has both neighbours
+    const [newer, mid, older] = validPosts
+    const html = page(`posts/${mid.slug}.html`)
+    expect(html).toContain(`href="${base}posts/${newer.slug}"`)
+    expect(html).toContain(`href="${base}posts/${older.slug}"`)
+  })
+})
+
 describe('inline math', () => {
   it('keeps inline math inline despite the preflight svg { display: block }', () => {
     expect(page('posts/math.html')).toContain('<mjx-container class="MathJax" jax="SVG"')

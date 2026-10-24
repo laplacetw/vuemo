@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { parsePost } from '../src/schema'
 import { groupByTag, groupByYear, groupByCategory } from '../src/group'
-import { findPost, findPrevNext, paginate } from '../src/pagination'
+import { findPost, findPrevNext, paginate, stripBase } from '../src/pagination'
 import { postJsonLd } from '../src/seo'
 import { taxonomyHref } from '../src/taxonomy'
 import { searchRender } from '../src/search'
@@ -41,6 +41,19 @@ describe('pagination', () => {
     const posts = [mk(3), mk(2), mk(1)]
     expect(findPrevNext(posts, '/posts/p2.html')).toEqual({ prev: posts[0], next: posts[2] })
     expect(findPrevNext(posts, '/nope')).toEqual({})
+  })
+})
+
+describe('stripBase', () => {
+  it('removes the site base from a route path', () => {
+    expect(stripBase('/vuemo/posts/a', '/vuemo/')).toBe('/posts/a')
+    expect(stripBase('/vuemo/', '/vuemo/')).toBe('/')
+    expect(stripBase('/vuemo', '/vuemo/')).toBe('/')
+  })
+  it('leaves other paths alone', () => {
+    expect(stripBase('/posts/a', '/')).toBe('/posts/a')
+    expect(stripBase('/posts/a')).toBe('/posts/a')
+    expect(stripBase('/vuemo-x/a', '/vuemo/')).toBe('/vuemo-x/a')
   })
 })
 
