@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useData } from 'vitepress'
+import type { VuemoThemeConfig } from '@vuemo/core'
 
 // the modal (and MiniSearch with the index) is only fetched when it opens
 const SearchModal = defineAsyncComponent(() => import('./SearchModal.vue'))
 
-const { theme, localeIndex } = useData()
+const { theme, localeIndex } = useData<VuemoThemeConfig>()
 const options = theme.value.search?.options
 const text: string =
   options?.locales?.[localeIndex.value]?.translations?.button?.buttonText ||

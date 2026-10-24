@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useData } from 'vitepress'
+import type { VuemoThemeConfig } from '@vuemo/core'
 import Nav from './components/Nav.vue'
 import Home from './layouts/Home.vue'
 import Post from './layouts/Post.vue'
@@ -12,13 +13,10 @@ import SocialLinks from './components/SocialLinks.vue'
 
 const layouts = { home: Home, post: Post, archive: Archive, tag: Tag, category: Category, page: Page }
 
-const { page, frontmatter, theme } = useData()
+const { page, frontmatter, theme } = useData<VuemoThemeConfig>()
 
-// `themeConfig.footer` is `{ message, copyright }`; a raw string (hand-written config) is the message
-const footer = computed<{ message?: string; copyright?: string }>(() => {
-  const f = theme.value.footer
-  return typeof f === 'string' ? { message: f } : (f ?? {})
-})
+// `themeConfig.footer` is `{ message, copyright }` (defineBlogConfig turns a string into the message)
+const footer = computed(() => theme.value.footer ?? {})
 
 const layout = computed(() => {
   if (page.value.isNotFound) return Page

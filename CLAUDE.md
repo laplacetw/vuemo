@@ -59,10 +59,10 @@ Responsible for:
 - tags, categories, archives, pagination, previous/next links
 - JSON-LD, sitemap, RSS
 - frontmatter schema definition and validation
-- `defineBlogConfig()`: wraps VitePress `defineConfig`; one place for site info, theme choice, theme options (`nav`, `footer`, `postsPerPage`) and feature switches (`comments`, `aiSummary`). Plain VitePress options keep working as they do in `defineConfig`
+- `defineBlogConfig()`: wraps VitePress `defineConfig`; one place for site info, theme choice, theme options (`nav`, `footer`, `logo`, `socialLinks`, `postsPerPage`, `summary`, `paths`, `search`, `lastUpdated`) and feature switches (`comments`, `aiSummary`). Plain VitePress options keep working as they do in `defineConfig`
 - CLI: `vuemo new <filename>` (replaces the old `npm run new`)
 
-Composables provided to themes: `usePosts()`, `useTags()`, `useCategories()`, `useArchives()`, `usePagination()`, `usePrevNext()`.
+Composables provided to themes: `usePosts()`, `useTags()`, `useCategories()`, `useArchives()`, `usePagination()`, `usePrevNext()`, `usePost()`, `useTaxonomyLinks()`, `useQueryParam()`.
 
 ### Theme contract
 

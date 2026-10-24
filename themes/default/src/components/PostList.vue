@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useData, withBase } from 'vitepress'
+import type { VuemoThemeConfig } from '@vuemo/core'
 import type { Post } from '@vuemo/core/client'
 import { postSummary } from '../utils'
 
 // `summary` adds the excerpt or description (per `themeConfig.summary`) and a "Read more" link.
 const props = defineProps<{ posts: Post[]; summary?: boolean }>()
-const { theme } = useData()
+const { theme } = useData<VuemoThemeConfig>()
 // the summary of each post is worked out once, not once per use in the template
 const items = computed(() => props.posts.map((post) => ({ post, summary: props.summary ? postSummary(post, theme.value.summary) : {} })))
 </script>

@@ -1,14 +1,9 @@
 <script setup lang="ts">
 import { useData } from 'vitepress'
+import type { VuemoThemeConfig } from '@vuemo/core'
 
-interface SocialLink {
-  icon: string | { svg: string }
-  link: string
-  ariaLabel?: string
-}
-
-const { theme } = useData()
-const links: SocialLink[] = theme.value.socialLinks ?? []
+const { theme } = useData<VuemoThemeConfig>()
+const links = theme.value.socialLinks ?? []
 </script>
 
 <template>

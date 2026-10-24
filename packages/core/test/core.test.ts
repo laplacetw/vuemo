@@ -6,6 +6,7 @@ import { postJsonLd } from '../src/seo'
 import { taxonomyHref } from '../src/taxonomy'
 import { searchRender } from '../src/search'
 import { normalizeBase } from '../src/base'
+import { onAfterRouteChange, readQueryParam, withQueryParam } from '../src/query'
 
 const mk = (n: number, fm: Record<string, any> = {}) =>
   parsePost({ url: `/posts/p${n}`, frontmatter: { title: `P${n}`, date: `202${n}-01-01`, ...fm } }) as any
@@ -347,5 +348,58 @@ describe('defineBlogConfig paths with undefined values', () => {
     expect(a.themeConfig.paths).toEqual({ tag: '/tags', category: '/category' })
     const b: any = await defineBlogConfig({ paths: { tag: '/t' }, themeConfig: { paths: { tag: undefined, category: undefined } } })
     expect(b.themeConfig.paths).toEqual({ tag: '/t', category: '/category' })
+  })
+})
+
+describe('query param helpers', () => {
+  it('reads a param', () => {
+    expect(readQueryParam('?page=2&tag=a%20b', 'tag')).toBe('a b')
+    expect(readQueryParam('?page=2', 'tag')).toBe('')
+    expect(readQueryParam('', 'page')).toBe('')
+  })
+  it('sets and removes a param, keeping the rest', () => {
+    expect(withQueryParam('https://x.io/tags?a=1#h', 'tag', 'a b').href).toBe('https://x.io/tags?a=1&tag=a+b#h')
+    expect(withQueryParam('https://x.io/tags?tag=x&a=1', 'tag', '').href).toBe('https://x.io/tags?a=1')
+    expect(withQueryParam('https://x.io/?page=2', 'page', '').href).toBe('https://x.io/')
+  })
+})
+
+describe('onAfterRouteChange', () => {
+  it('chains behind the previous hook, in order', async () => {
+    const calls: string[] = []
+    const host: any = { onAfterRouteChange: async (h: string) => void calls.push('prev ' + h) }
+    onAfterRouteChange(host, (h) => calls.push('cb ' + h))
+    await host.onAfterRouteChange('/a')
+    expect(calls).toEqual(['prev /a', 'cb /a'])
+  })
+  it('falls back to the old hook name', async () => {
+    const calls: string[] = []
+    const host: any = { onAfterRouteChanged: () => void calls.push('old') }
+    onAfterRouteChange(host, () => calls.push('cb'))
+    await host.onAfterRouteChange('/a')
+    expect(calls).toEqual(['old', 'cb'])
+  })
+  it('restores the previous hook on stop', () => {
+    const prev = () => {}
+    const host: any = { onAfterRouteChange: prev }
+    const stop = onAfterRouteChange(host, () => {})
+    stop()
+    expect(host.onAfterRouteChange).toBe(prev)
+    const bare: any = {}
+    onAfterRouteChange(bare, () => {})()
+    expect(bare.onAfterRouteChange).toBeUndefined()
+  })
+  it('keeps hooks installed on top of ours, but silences ours', async () => {
+    const calls: string[] = []
+    const host: any = {}
+    const stop = onAfterRouteChange(host, () => calls.push('cb'))
+    const ours = host.onAfterRouteChange
+    host.onAfterRouteChange = async (h: string) => {
+      await ours(h)
+      calls.push('later')
+    }
+    stop()
+    await host.onAfterRouteChange('/a')
+    expect(calls).toEqual(['later'])
   })
 })

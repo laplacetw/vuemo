@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useData, useRouter } from 'vitepress'
+import type { VuemoThemeConfig } from '@vuemo/core'
 import type MiniSearch from 'minisearch'
 import { decodeEntities, highlight, moveIndex, resultHref, resultsText } from '../search'
 
@@ -15,7 +16,7 @@ interface Hit extends Stored {
   terms: string[]
 }
 
-const { theme, localeIndex } = useData()
+const { theme, localeIndex } = useData<VuemoThemeConfig>()
 const router = useRouter()
 const options = theme.value.search?.options
 const t = (key: 'noResultsText') =>

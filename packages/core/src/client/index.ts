@@ -1,5 +1,5 @@
-import { computed, onMounted, ref } from 'vue'
-import { useData, useRoute } from 'vitepress'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useData, useRoute, useRouter } from 'vitepress'
 import { slots, enhanceApps } from 'virtual:vuemo/plugins'
 import type { Component } from 'vue'
 import type { EnhanceAppContext } from 'vitepress'
@@ -7,6 +7,8 @@ import { data } from '../posts.data'
 import { groupByCategory, groupByTag, groupByYear } from '../group'
 import { findPost, findPrevNext, paginate, stripBase } from '../pagination'
 import { taxonomyHref } from '../taxonomy'
+import { onAfterRouteChange, readQueryParam, withQueryParam, type RouteHookHost } from '../query'
+import type { VuemoThemeConfig } from '../config'
 
 export type { Post, Frontmatter } from '../schema'
 
@@ -26,26 +28,45 @@ export function useArchives() {
   return groupByYear(data)
 }
 
-/** Page number lives in `?page=` and changes through the History API. */
-export function usePagination(perPage = 5, list = data) {
-  const current = ref(1)
-
+/**
+ * A ref that follows the URL's `?key=` (`''` when absent): read on mount, on link navigation (also to the same
+ * path, e.g. from `/?page=2` to `/`) and on Back/Forward. Assigning updates the URL without a navigation
+ * (`''` removes the param): `history.replaceState` by default, `history: 'push'` adds a history entry.
+ * Renders `''` on the server. Listeners are removed when the component unmounts.
+ */
+export function useQueryParam(key: string, options: { history?: 'replace' | 'push' } = {}) {
+  const router = useRouter() as unknown as RouteHookHost
+  const value = ref('')
   const read = () => {
-    current.value = Number(new URLSearchParams(location.search).get('page')) || 1
+    value.value = readQueryParam(location.search, key)
   }
 
+  let stop: (() => void) | undefined
   onMounted(() => {
     read()
-    window.addEventListener('popstate', read)
+    stop = onAfterRouteChange(router, read)
   })
+  onBeforeUnmount(() => stop?.())
 
+  return computed({
+    get: () => value.value,
+    set(next: string) {
+      value.value = next
+      const url = withQueryParam(location.href, key, next)
+      // replace keeps VitePress's own history state (scroll position)
+      options.history === 'push' ? history.pushState({}, '', url) : history.replaceState(history.state, '', url)
+    }
+  })
+}
+
+/** Page number lives in `?page=`; going to a page adds a history entry, Back/Forward and links follow the URL. */
+export function usePagination(perPage = 5, list = data) {
+  const param = useQueryParam('page', { history: 'push' })
+  const current = computed(() => Number(param.value) || 1)
   const page = computed(() => paginate(list, current.value, perPage))
 
   function goPage(n: number) {
-    const url = new URL(location.href)
-    n > 1 ? url.searchParams.set('page', String(n)) : url.searchParams.delete('page')
-    history.pushState({}, '', url)
-    current.value = n
+    param.value = n > 1 ? String(n) : ''
   }
 
   return { page, goPage }
@@ -70,8 +91,8 @@ export function usePost(url?: string) {
 
 /** Links to the tag and category pages (`themeConfig.paths`), preselecting the item through the query. */
 export function useTaxonomyLinks() {
-  const { theme, site } = useData()
-  const paths = () => ({ tag: '/tags', category: '/category', ...theme.value.paths })
+  const { theme, site } = useData<VuemoThemeConfig>()
+  const paths = () => theme.value.paths
   return {
     tagLink: (name: string) => taxonomyHref(site.value.base, paths().tag, 'tag', name),
     categoryLink: (name: string) => taxonomyHref(site.value.base, paths().category, 'category', name)

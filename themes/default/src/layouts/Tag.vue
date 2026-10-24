@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { useData } from 'vitepress'
-import { useTags } from '@vuemo/core/client'
+import { useTags, useQueryParam } from '@vuemo/core/client'
 import PostList from '../components/PostList.vue'
-import { useQuerySelection } from '../useQuerySelection'
 
 const { frontmatter } = useData()
 const groups = useTags()
-const { selected, select } = useQuerySelection('tag')
+const selected = useQueryParam('tag')
+const toggle = (name: string) => (selected.value = selected.value === name ? '' : name)
 </script>
 
 <template>
@@ -18,7 +18,7 @@ const { selected, select } = useQuerySelection('tag')
       type="button"
       class="rounded-full border border-zinc-300 px-3 py-1 text-sm dark:border-zinc-600"
       :class="selected === name && 'bg-zinc-800 text-white dark:bg-zinc-200 dark:text-zinc-900'"
-      @click="select(String(name))"
+      @click="toggle(String(name))"
     >
       {{ name }} ({{ list.length }})
     </button>

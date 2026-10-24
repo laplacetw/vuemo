@@ -30,6 +30,30 @@ export interface FooterConfig {
   copyright?: string
 }
 
+/**
+ * What `defineBlogConfig` writes into VitePress's `themeConfig`, i.e. what a theme reads with
+ * `useData<VuemoThemeConfig>().theme.value`. Other `themeConfig` keys the user sets pass through untouched.
+ */
+export interface VuemoThemeConfig {
+  nav?: NavItem[]
+  /** Always an object: a string `footer` option becomes `{ message }`. */
+  footer?: FooterConfig
+  /** Path of a file in `public/`. */
+  logo?: string
+  socialLinks?: SocialLink[]
+  postsPerPage?: number
+  /** Always written; `'excerpt'` unless configured. */
+  summary: 'excerpt' | 'description'
+  /** Always written; both keys are always set (defaults `/tags` and `/category`). */
+  paths: { tag: string; category: string }
+  /** Present only when search is on. */
+  search?: { provider: 'local'; options?: DefaultTheme.LocalSearchOptions }
+  /** Present only when last-updated is on. */
+  lastUpdated?: { text?: string }
+  /** Theme-specific keys. */
+  [key: string]: unknown
+}
+
 export interface BlogConfig extends Omit<UserConfig, 'lastUpdated'>, Partial<OfficialFeatures> {
   /** Theme package. Default: `@vuemo/theme-default`. */
   theme?: string
@@ -84,7 +108,7 @@ export async function defineBlogConfig(config: BlogConfig = {}, importer?: Impor
     false
   )
 
-  const themeConfig = {
+  const themeConfig: VuemoThemeConfig = {
     ...(nav && { nav }),
     ...(footer && { footer: typeof footer === 'string' ? { message: footer } : footer }),
     ...(logo && { logo }),
@@ -92,7 +116,7 @@ export async function defineBlogConfig(config: BlogConfig = {}, importer?: Impor
     ...(postsPerPage && { postsPerPage }),
     ...(lastUpdated && { lastUpdated: { ...(lastUpdated !== true && lastUpdated.text && { text: lastUpdated.text }) } }),
     ...(search && {
-      search: { provider: 'local', options: { _render: searchRender, ...(search === true ? {} : search) } }
+      search: { provider: 'local' as const, options: { _render: searchRender, ...(search === true ? {} : search) } }
     }),
     summary,
     ...rest.themeConfig,

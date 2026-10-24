@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { useData, withBase } from 'vitepress'
+import type { VuemoThemeConfig } from '@vuemo/core'
 import SearchButton from './SearchButton.vue'
 
-const { site, theme, isDark } = useData()
+const { site, theme, isDark } = useData<VuemoThemeConfig>()
 const hasSearch = __VP_LOCAL_SEARCH__ && theme.value.search?.provider === 'local'
-const nav: { text: string; link: string }[] = theme.value.nav ?? []
+const nav = theme.value.nav ?? []
 </script>
 
 <template>
