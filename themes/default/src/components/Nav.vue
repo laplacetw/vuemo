@@ -4,7 +4,7 @@ import type { VuemoThemeConfig } from '@vuemo/core'
 import SearchButton from './SearchButton.vue'
 
 const { site, theme, isDark } = useData<VuemoThemeConfig>()
-const hasSearch = __VP_LOCAL_SEARCH__ && theme.value.search?.provider === 'local'
+const hasSearch = theme.value.search?.provider === 'local'
 const nav = theme.value.nav ?? []
 </script>
 

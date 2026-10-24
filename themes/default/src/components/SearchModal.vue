@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/// <reference path="../env.d.ts" />
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useData, useRouter } from 'vitepress'
 import type { VuemoThemeConfig } from '@vuemo/core'
