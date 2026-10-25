@@ -97,8 +97,8 @@ describe('layouts', () => {
 describe('footer', () => {
   it('renders the message and the copyright', () => {
     const html = page('index.html')
-    expect(html).toMatch(/vuemo-footer-message[^>]*>Powered by <a href="https:\/\/vitepress.dev">VitePress<\/a> · Vuemo/)
-    expect(html).toMatch(/vuemo-footer-copyright[^>]*>Copyright © 2025 Vuemo Blog/)
+    expect(html).toMatch(/vuemo-footer-message[^>]*>Powered by <a href="https:\/\/vitepress.dev">VitePress<\/a> · <a href="https:\/\/github.com\/laplacetw\/vuemo">Vuemo<\/a>/)
+    expect(html).toMatch(new RegExp(`vuemo-footer-copyright[^>]*>Copyright © ${new Date().getFullYear()} Vuemo Blog`))
   })
 })
 

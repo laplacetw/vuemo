@@ -27,8 +27,9 @@ export default defineBlogConfig({
   search: true,
   markdown: { lineNumbers: true, math: true },
   footer: {
-    message: 'Powered by <a href="https://vitepress.dev">VitePress</a> · Vuemo',
-    copyright: 'Copyright © 2025 Vuemo Blog'
+    message:
+      'Powered by <a href="https://vitepress.dev">VitePress</a> · <a href="https://github.com/laplacetw/vuemo">Vuemo</a>',
+    copyright: `Copyright © ${new Date().getFullYear()} Vuemo Blog`
   },
 
   // features: set a key to enable it, remove it or use `false` to disable it
