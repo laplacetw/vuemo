@@ -43,6 +43,7 @@
 - `create-vuemo --theme <package>[@range]` (and a "Theme package" prompt): scaffolds a blog with another theme instead of `@vuemo/theme-default`, writing the dependency (`latest` without a range) and an explicit `theme` line into the config; an invalid package name exits with code 1
 - `create-vuemo --template theme` (and a "What do you want to create?" prompt): scaffolds a theme package (`vuemo-theme-<name>`) with the six layouts, the standard slots, a dark mode toggle in plain CSS, an example blog and a `test/contract.test.ts` that runs `checkTheme`; `pnpm check` runs `vuemo check-theme`
 - `vuemo` rejects unknown flags with the usage text; `engines.node` is `>=18.3` (for `util.parseArgs`)
+- docs: CLAUDE.md records the final status of every original Trigger feature and the contract friction found by the `vuemo-theme-trigger` 2.0.0-alpha rewrite (unknown layouts under `extends`; resolved by relaxing the dispatch rule)
 
 ### Fixes
 - sitemap URLs include the site `base` (`https://example.com/vuemo/posts/a`), like the feed and the JSON-LD; before, `base` was dropped and the listed URLs returned 404 under a sub-path

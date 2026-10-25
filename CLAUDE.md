@@ -51,9 +51,9 @@ Rule of thumb: if a feature still makes sense after switching themes, it is a fr
 
 - `@vuemo/theme-default` is a brand-new, minimal theme. It works out of the box and is the reference implementation of the theme contract.
 - It should implement every required layout and standard slot, but it does not chase rich visuals. Stylistic needs are left to other themes.
-- The original Trigger theme is **not** the default theme. The maintainer will rewrite it separately as an independent Vuemo theme.
+- The original Trigger theme is **not** the default theme. It was rewritten as an independent Vuemo theme, `vuemo-theme-trigger` 2.0.0-alpha, which lives outside this repo (`/Users/laplacetw/proj/vuomo-theme-trigger`, branch `vuemo`).
 - It deliberately does **not** `extends` VitePress's default theme. That theme is a documentation-site theme: its layout, `themeConfig` schema, global CSS and content markup (`VPDoc` renders the post body, so a theme cannot put a class on it) come with it, and its internals are not a stable API. A reference implementation of the Vuemo contract should depend on the contract only. The price is that features the default theme gives for free (search, Markdown extension styles, ...) are implemented in the theme itself; `@localSearchIndex` and `minisearch` make search feasible without pulling in its CSS.
-- The contract does not forbid other themes from using `extends: DefaultTheme`. The known friction is `vuemo-content`: such a theme cannot add the class to the post body element. When the Trigger theme is rewritten, use it to check that the contract stays neutral, and adjust the contract (not the theme) if it does not.
+- The contract does not forbid other themes from using `extends: DefaultTheme`. The known friction is `vuemo-content`: such a theme cannot add the class to the post body element. The Trigger rewrite (which does `extends: DefaultTheme`) was the check that the contract stays neutral; see the friction recorded under "Where the original Trigger features went".
 
 ### @vuemo/core
 
@@ -155,18 +155,30 @@ Official features are plugins that core loads by their config key. Core has no d
 
 ## Where the original Trigger features went
 
-| Original Trigger feature | Destination |
+The rewrite is `vuemo-theme-trigger` 2.0.0-alpha (outside this repo; it builds on VitePress's default theme via `extends`). Its README has the user-facing 1.x to 2.0 migration table.
+
+| Original Trigger feature | Final status |
 | --- | --- |
-| CLI for new posts | core |
-| JSON-LD | core |
-| sitemap | core (reuse the VitePress sitemap) |
-| Pagination (History API) | core provides the data, the theme renders the UI |
-| Previous/next links | core |
-| Tailwind styles, layout UI | not part of the framework; the Trigger theme will be rewritten separately as an independent theme |
-| Utterances comments (with dark mode sync) | merged into plugin-comments as one provider |
-| AI instant summary | plugin-ai-summary (official framework plugin) |
+| CLI for new posts | done, core: `vuemo new <name>` |
+| JSON-LD | done, core: emitted at build time (with `dateModified`) instead of client-side |
+| sitemap | done, core: reuses the VitePress sitemap, `hostname` and `base` are applied |
+| RSS | new, core: `feed.xml` when `hostname` is set |
+| Pagination (History API) | done: core gives the data (`usePagination`, `useQueryParam`), the theme renders the UI; state lives in `?page=`, `?tag=`, `?category=` so it can be linked |
+| Previous/next links | done, core |
+| Tailwind styles, layout UI | moved into the Trigger theme; Tailwind is compiled into the theme (`dist/style.css`), users install nothing |
+| `archives.md` / `tags.md` / `category.md` page bodies (`<Archives />` ...) | replaced by `layout: archive`, `tag`, `category` in the frontmatter |
+| Local search | done: `search: true` in `defineBlogConfig`; the VitePress search UI shows it |
+| Footer, nav, logo, social links, last updated | done: flat options; the VitePress default theme parts render them |
+| Utterances comments (with dark mode sync) | done, plugin-comments: `comments: { provider: 'utterances', ... }`, dark mode follows `isDark` |
+| AI instant summary | done, plugin-ai-summary: `aiSummary: { api }` |
+| `mdMath`, `mdLineNums` | done: VitePress `markdown: { math, lineNumbers }` |
 | MathJax mobile optimization | **removed**: VitePress improved this in later versions |
-| markdown-it-footnote | **kept as a plain Markdown plugin**: the user opts in via `markdown.config` (`md.use(footnote)`); built into VitePress only from 2.0 |
+| markdown-it-footnote | **kept as a plain Markdown plugin**: the user opts in via `markdown.config` (`md.use(footnote)`), as the theme's example does; built into VitePress only from 2.0 |
+| `.vitepress/theme/index.ts` with the theme code, `theme/config.ts` | removed: the fixed one-liner `export { default } from '@vuemo/core/theme'` and `defineBlogConfig` |
+| `README_CH.md`, the Pages workflow | removed; use Vuemo's deployment guide |
+| About avatar and quote (hard-coded) | theme option `themeConfig.about { avatar, quote }` |
+
+**Contract friction found by the rewrite**: a theme that does `extends: DefaultTheme` cannot fall back to `page` for an unknown `frontmatter.layout`, because VitePress renders `<component :is="layout">` (Trigger registers its layouts as global components). Resolution: the contract was adjusted, not the theme. The six layouts are required and a missing layout is `page`, but handling of other values is theme-defined; `vuemo check-theme` has a warn-level `unknown-layout` check. `vuemo-content` caused no friction in practice.
 
 **Validation principle**: if every existing feature can be rewritten as an official plugin without friction, the plugin interface is right. When a rewrite is awkward, revisit the interface first instead of working around it inside the plugin.
 
@@ -182,7 +194,7 @@ Do one stage at a time, and verify that build and deployment still work at the e
 
 ## Tech stack
 
-- Node.js >= 18, pnpm
+- Node.js >= 18.3 (core and create-vuemo; for `util.parseArgs`), pnpm
 - VitePress, Vue 3, TypeScript
 - Default theme styling: Tailwind CSS v4 (compiled to CSS when the theme is built)
 - Deployment: GitHub Pages (workflow in `.github/workflows`), AWS Amplify
