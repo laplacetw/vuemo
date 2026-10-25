@@ -16,7 +16,14 @@ if (command === 'check-theme') {
 }
 
 async function checkThemeCommand(args: string[]) {
-  const { values, positionals } = parseArgs({ args, allowPositionals: true, options: { keep: { type: 'boolean' } } })
+  let parsed: { values: { keep?: boolean }; positionals: string[] }
+  try {
+    parsed = parseArgs({ args, allowPositionals: true, options: { keep: { type: 'boolean' } } })
+  } catch (e) {
+    console.error(`${(e as Error).message}\n${USAGE}`)
+    process.exit(1)
+  }
+  const { values, positionals } = parsed
   const { checkTheme } = await import('./check/index')
   const { results, ok } = await checkTheme({ theme: positionals[0], keep: values.keep })
   const icon = { pass: '\u2713', fail: '\u2717', warn: '!', manual: '?' } as const

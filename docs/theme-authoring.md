@@ -198,7 +198,7 @@ While you develop, a blog can use a local theme through the absolute path of its
 vuemo check-theme [theme] [--keep]
 ```
 
-It builds a small fixture blog (three posts, a home, archive, tag, category and about page, plus probe plugins that fill the three standard slots and register an `enhanceApp`) with your theme, then reads the generated HTML. `theme` is a path to the theme entry or a package name that resolves from the current directory; without it, the `exports["."]` (or `main`) of the `package.json` in the current directory is used. The fixture lives in `.vuemo-check/` and is deleted afterwards; `--keep` keeps it (it is in the starter's `.gitignore`). The same check is available from code:
+It builds a small fixture blog (three posts, a home, archive, tag, category and about page, plus probe plugins that fill the three standard slots and register an `enhanceApp`) with your theme, then reads the generated HTML. `theme` is a path to the theme entry or a package name that resolves from the current directory; without it, the `exports["."]` (or `main`) of the `package.json` in the current directory is used. The fixture lives in `.vuemo-check/` and is deleted afterwards; `--keep` keeps it (it is in the starter's `.gitignore`). `pnpm check` and `pnpm test` use the same `.vuemo-check/` directory, so do not run them at the same time. The same check is available from code:
 
 ```ts
 import { checkTheme } from '@vuemo/core/check'

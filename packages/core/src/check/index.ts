@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { readFile, rm } from 'node:fs/promises'
 import { createRequire } from 'node:module'
-import { dirname, extname, isAbsolute, join, resolve } from 'node:path'
+import { dirname, extname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import type { VuemoPlugin } from '../plugin'
 import { runAssertions, type CheckResult, type PageHtml } from './assert'
@@ -52,9 +52,22 @@ function entryOf(pkgDir: string): string {
 function resolveTheme(theme: string | undefined, cwd: string): string {
   if (!theme) return entryOf(cwd)
   const asPath = resolve(cwd, theme)
-  if ((theme.startsWith('.') || isAbsolute(theme)) || existsSync(asPath)) {
+  const isFile = (p: string) => existsSync(p) && statSync(p).isFile()
+  if (theme.startsWith('.') || isAbsolute(theme) || isFile(asPath)) {
     if (!existsSync(asPath)) throw new Error(`theme entry ${asPath} does not exist`)
-    return asPath
+    return statSync(asPath).isDirectory() ? entryOf(asPath) : asPath
+  }
+  // a package: find <name>/package.json up the node_modules chain and read its entry ourselves (require.resolve ignores import-only `exports`)
+  for (let d = cwd; ; d = dirname(d)) {
+    const dir = join(d, 'node_modules', theme)
+    if (existsSync(join(dir, 'package.json'))) {
+      try {
+        return entryOf(dir)
+      } catch {
+        break
+      }
+    }
+    if (dirname(d) === d) break
   }
   try {
     return createRequire(join(cwd, 'package.json')).resolve(theme)
@@ -63,21 +76,27 @@ function resolveTheme(theme: string | undefined, cwd: string): string {
   }
 }
 
+const SKIP_DIRS = new Set(['node_modules', 'dist', 'test', 'tests', 'example', 'examples'])
+
 function readSources(dir: string, out: Record<string, string> = {}): Record<string, string> {
   for (const name of readdirSync(dir)) {
-    if (name === 'node_modules' || name === 'dist' || name.startsWith('.')) continue
+    if (SKIP_DIRS.has(name) || name.startsWith('.')) continue
     const file = join(dir, name)
     if (statSync(file).isDirectory()) readSources(file, out)
+    else if (/\.(test|spec)\./.test(name)) continue
     else if (['.ts', '.js', '.mjs', '.vue', '.css'].includes(extname(name))) out[file] = readFileSync(file, 'utf8')
   }
   return out
 }
 
-function nearestPackageJson(dir: string): PackageJsonLike | undefined {
+/** The nearest package.json; for a local theme inside the project it never looks above the project (`cwd`). */
+function nearestPackageJson(dir: string, cwd: string): PackageJsonLike | undefined {
+  const rel = relative(cwd, dir)
+  const local = !rel.startsWith('..') && !isAbsolute(rel) && !rel.split(sep).includes('node_modules')
   for (let d = dir; ; d = dirname(d)) {
     const file = join(d, 'package.json')
     if (existsSync(file)) return JSON.parse(readFileSync(file, 'utf8'))
-    if (dirname(d) === d) return undefined
+    if ((local && d === cwd) || dirname(d) === d) return undefined
   }
 }
 
@@ -116,6 +135,6 @@ export async function checkTheme(options: CheckOptions = {}): Promise<{ results:
   }
 
   const sources = readSources(dirname(entry))
-  results.push(...staticChecks(nearestPackageJson(dirname(entry)), sources))
+  results.push(...staticChecks(nearestPackageJson(dirname(entry), cwd), sources))
   return finish()
 }

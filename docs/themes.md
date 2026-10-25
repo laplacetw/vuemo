@@ -25,7 +25,7 @@ npm create vuemo@alpha my-blog -- --theme vuemo-theme-x
 npm create vuemo@alpha my-blog -- --theme @scope/vuemo-theme-x@^1.2.0
 ```
 
-`--theme <package>[@version-or-range]` puts that package into the dependencies instead of `@vuemo/theme-default` (without a version it is `latest`) and writes `theme: '<package>'` into `.vitepress/config.ts`. For a scoped name the version is what follows the last `@` after the first character. An invalid package name exits with code 1. The prompt "Theme package" asks for it too.
+`--theme <package>[@version-or-range]` puts that package into the dependencies instead of `@vuemo/theme-default` (without a version it is `latest`; `latest` needs a stable `latest` dist-tag: a theme that only has prerelease versions needs an explicit range (`--theme my-theme@^1.0.0-alpha.0`).) and writes `theme: '<package>'` into `.vitepress/config.ts`. For a scoped name the version is what follows the last `@` after the first character. An invalid package name exits with code 1. The prompt "Theme package" asks for it too.
 
 Your posts, the flat options (`nav`, `footer`, `search`, ...) and the plugins keep working, because they belong to Vuemo and not to the theme. `themeConfig` keys that belonged to the old theme stay in your config and are ignored by the new one. Whether the new theme supports every flat option is up to it: see its README.
 
@@ -33,7 +33,8 @@ Your posts, the flat options (`nav`, `footer`, `search`, ...) and the plugins ke
 
 | Message | Cause and fix |
 | --- | --- |
-| ``[vuemo] theme "X" could not be resolved from <root>. Install it (pnpm add X) or fix the `theme` option.`` | The package is not installed in your project (or the name or path in `theme` is wrong). Run `pnpm add X`, or correct the option. A path must be absolute and point at the theme's entry file. |
+| ``[vuemo] theme "X" could not be resolved from <root>. Install it (npm i X / pnpm add X) or fix the `theme` option.`` | The package is not installed in your project (or the name in `theme` is wrong). Install it, or correct the option. |
+| ``[vuemo] theme file "/path/theme.ts" does not exist. Fix the path in the `theme` option.`` | `theme` is an absolute path and nothing is there. A path must be absolute and point at the theme's entry file. |
 | `[vuemo] theme "X" does not default-export a VitePress theme ({ Layout, enhanceApp })` | The module was found, but its default export is not a theme: it has no `Layout`, not even through an `extends` chain. Check that the entry file does `export default { Layout, enhanceApp }` (or `{ extends, ... }`), and that `theme` points at that file rather than at some other module. |
 
 `themeConfig` keys that belong to a theme you switched away from stay in your config and are ignored by the new one.

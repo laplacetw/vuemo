@@ -28,6 +28,7 @@ describe('theme starter template', () => {
       'src/Layout.vue',
       'src/style.css',
       'src/types.ts',
+      'src/env.d.ts',
       'src/components/PluginSlot.vue',
       ...['Home', 'Post', 'Archive', 'Tag', 'Category', 'Page'].map((n) => `src/layouts/${n}.vue`),
       'example/.vitepress/config.ts',

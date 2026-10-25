@@ -1,4 +1,4 @@
-import { join } from 'node:path'
+import { isAbsolute, join } from 'node:path'
 import { STANDARD_SLOTS, type VuemoPlugin } from './plugin'
 
 export const VIRTUAL_ID = 'virtual:vuemo/plugins'
@@ -41,7 +41,9 @@ export interface ThemeResolver {
 }
 
 export const themeResolveError = (theme: string, root: string) =>
-  `[vuemo] theme "${theme}" could not be resolved from ${root}. Install it (pnpm add ${theme}) or fix the \`theme\` option.`
+  isAbsolute(theme)
+    ? `[vuemo] theme file "${theme}" does not exist. Fix the path in the \`theme\` option.`
+    : `[vuemo] theme "${theme}" could not be resolved from ${root}. Install it (npm i ${theme} / pnpm add ${theme}) or fix the \`theme\` option.`
 
 export const themeShapeError = (theme: string) =>
   `[vuemo] theme "${theme}" does not default-export a VitePress theme ({ Layout, enhanceApp })`
@@ -53,7 +55,7 @@ export const themeShapeError = (theme: string) =>
 export function buildThemeModule(theme: string, id: string = theme): string {
   return `import theme from ${JSON.stringify(id)}
 let t = theme
-while (t && typeof t === 'object' && !t.Layout) t = t.extends
+for (let i = 0; i < 10 && t && typeof t === 'object' && !t.Layout; i++) t = t.extends
 if (!t || typeof t !== 'object' || !t.Layout) throw new Error(${JSON.stringify(themeShapeError(theme))})
 export default theme
 `

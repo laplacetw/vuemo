@@ -37,7 +37,7 @@ import { probePlugin } from '@vuemo/core/check'
 
 export default defineBlogConfig({
   title: 'Vuemo theme check',
-  theme: ${JSON.stringify(theme)},
+  theme: ${JSON.stringify(theme.replace(/\\/g, '/'))},
   hostname: 'https://check.invalid',
   postsPerPage: 100,
   search: false,

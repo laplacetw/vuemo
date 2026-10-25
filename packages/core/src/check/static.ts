@@ -41,5 +41,6 @@ export function checkIsDark(sources: Record<string, string>): CheckResult {
 }
 
 export function staticChecks(pkg: PackageJsonLike | undefined, sources: Record<string, string>): CheckResult[] {
-  return [checkPeerDeps(pkg), checkNoFs(sources), checkIsDark(sources)]
+  // a local theme without a package.json has no peer dependencies to check
+  return [...(pkg ? [checkPeerDeps(pkg)] : []), checkNoFs(sources), checkIsDark(sources)]
 }

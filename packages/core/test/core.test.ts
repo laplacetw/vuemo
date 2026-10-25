@@ -269,8 +269,15 @@ describe('theme module', () => {
   it('explains a theme that cannot be resolved', async () => {
     const ctx = { resolve: async () => null, error: (m: string): never => { throw new Error(m) } }
     await expect(loadThemeModule(ctx, 'nope-theme', '/p')).rejects.toThrow(
-      '[vuemo] theme "nope-theme" could not be resolved from /p. Install it (pnpm add nope-theme) or fix the `theme` option.'
+      '[vuemo] theme "nope-theme" could not be resolved from /p. Install it (npm i nope-theme / pnpm add nope-theme) or fix the `theme` option.'
     )
+  })
+  it('says an absolute theme path does not exist', async () => {
+    const ctx = { resolve: async () => null, error: (m: string): never => { throw new Error(m) } }
+    await expect(loadThemeModule(ctx, '/abs/theme.ts', '/p')).rejects.toThrow('theme file "/abs/theme.ts" does not exist')
+  })
+  it('limits the extends chain so a cycle cannot hang', () => {
+    expect(buildThemeModule('x')).toContain('i < 10')
   })
   it('remembers the root in configResolved', async () => {
     const plugin: any = virtualPlugin([], 'nope-theme')

@@ -106,7 +106,7 @@ Plugins that work with any theme live in `plugins/`. Plugins that only make sens
 
 ## Development
 
-Requires Node.js >= 18 and pnpm (enabled through [Corepack](https://nodejs.org/api/corepack.html): `corepack enable`).
+Requires Node.js >= 18.3 and pnpm (enabled through [Corepack](https://nodejs.org/api/corepack.html): `corepack enable`).
 
 ```sh
 pnpm install

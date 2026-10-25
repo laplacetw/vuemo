@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_THEME, VERSIONS, configTs, hasThemePrefix, packageJson, parseThemeSpec, quote, themePackageJson, validName, validPackageName } from '../src/generate'
+import { DEFAULT_THEME, VERSIONS, configTs, hasThemePrefix, themeTarget, packageJson, parseThemeSpec, quote, themePackageJson, validName, validPackageName } from '../src/generate'
 
 const base = { name: 'b', title: 'My "Blog"', comments: 'none', aiSummary: false } as const
 
@@ -53,10 +53,17 @@ describe('parseThemeSpec', () => {
     expect(parseThemeSpec('vuemo-theme-x@^1.0.0')).toEqual({ name: 'vuemo-theme-x', range: '^1.0.0' })
     expect(parseThemeSpec('@scope/vuemo-theme-x')).toEqual({ name: '@scope/vuemo-theme-x', range: 'latest' })
     expect(parseThemeSpec('@scope/vuemo-theme-x@^1.2.0')).toEqual({ name: '@scope/vuemo-theme-x', range: '^1.2.0' })
+    expect(parseThemeSpec('x@>=1.0.0 <2.0.0')).toEqual({ name: 'x', range: '>=1.0.0 <2.0.0' })
+    expect(parseThemeSpec('  x@^1  ')).toEqual({ name: 'x', range: '^1' })
     expect(parseThemeSpec('@scope/x@2.0.0-alpha.1')).toEqual({ name: '@scope/x', range: '2.0.0-alpha.1' })
   })
+  it('trims a theme spec in the generated files', () => {
+    const deps = (a: Parameters<typeof packageJson>[0]) => JSON.parse(packageJson(a)).dependencies
+    expect(deps({ ...base, theme: ' vuemo-theme-y@^1.0.0 ' })['vuemo-theme-y']).toBe('^1.0.0')
+    expect(deps({ ...base, theme: ` ${DEFAULT_THEME} ` })[DEFAULT_THEME]).toBe(VERSIONS.theme)
+  })
   it('rejects invalid package names and empty ranges', () => {
-    for (const spec of ['', 'Upper', '@scope', '@scope/', 'a b', '../x', '/abs', '_x', '.x', 'x@', '@scope/x@', 'x@1 2', 'http://x/y']) {
+    for (const spec of ['', 'Upper', '@scope', '@scope/', 'a b', '../x', '/abs', '_x', '.x', 'x@', '@scope/x@', 'x@\u00001', 'x@1\n2', 'http://x/y']) {
       expect(() => parseThemeSpec(spec), spec).toThrow()
     }
     expect(() => parseThemeSpec('a'.repeat(215))).toThrow()
@@ -113,5 +120,15 @@ describe('themePackageJson', () => {
     expect(hasThemePrefix('vuemo-theme-')).toBe(false)
     expect(validPackageName('@me/vuemo-theme-x')).toBe(true)
     expect(validPackageName('My Theme')).toBe(false)
+  })
+})
+
+describe('themeTarget', () => {
+  it('takes a package name or a path', () => {
+    expect(themeTarget('vuemo-theme-x')).toEqual({ name: 'vuemo-theme-x', dir: 'vuemo-theme-x' })
+    expect(themeTarget('@me/vuemo-theme-x')).toEqual({ name: '@me/vuemo-theme-x', dir: 'vuemo-theme-x' })
+    expect(themeTarget('./themes/vuemo-theme-x/')).toEqual({ name: 'vuemo-theme-x', dir: './themes/vuemo-theme-x' })
+    expect(themeTarget('/abs/dir/vuemo-theme-x')).toEqual({ name: 'vuemo-theme-x', dir: '/abs/dir/vuemo-theme-x' })
+    expect(validPackageName(themeTarget('./Bad Name').name)).toBe(false)
   })
 })

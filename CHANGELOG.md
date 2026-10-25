@@ -39,16 +39,16 @@
 - default theme: muted text (`text-zinc-500`, placeholder) gets `dark:text-zinc-400` for contrast on the dark background; the search modal's Esc button has `aria-label="Close search"`; each "Read more" link carries the post title for screen readers; docs: keep excerpts to plain paragraphs
 - `usePost(url?)` in `@vuemo/core/client` (the normalized post at the current route); `searchRender` is exported from `@vuemo/core`
 - `vuemo check-theme [theme] [--keep]` and `@vuemo/core/check` (`checkTheme()`): build a fixture blog with a theme and check the theme contract (layouts, `vuemo-content`, standard slots, `runEnhanceApps`, peer dependencies, no file system access); exit code 1 on failure. The default theme runs it as `pnpm test:contract`
+- `theme` accepts a package name or the absolute path of a theme entry file and is resolved from the project root; a theme that cannot be resolved, or whose default export has no `Layout`, fails with an explanation of the fix
+- `create-vuemo --theme <package>[@range]` (and a "Theme package" prompt): scaffolds a blog with another theme instead of `@vuemo/theme-default`, writing the dependency (`latest` without a range) and an explicit `theme` line into the config; an invalid package name exits with code 1
+- `create-vuemo --template theme` (and a "What do you want to create?" prompt): scaffolds a theme package (`vuemo-theme-<name>`) with the six layouts, the standard slots, a dark mode toggle in plain CSS, an example blog and a `test/contract.test.ts` that runs `checkTheme`; `pnpm check` runs `vuemo check-theme`
+- `vuemo` rejects unknown flags with the usage text; `engines.node` is `>=18.3` (for `util.parseArgs`)
 
 ### Fixes
 - sitemap URLs include the site `base` (`https://example.com/vuemo/posts/a`), like the feed and the JSON-LD; before, `base` was dropped and the listed URLs returned 404 under a sub-path
 - `defineBlogConfig` no longer warns about a missing RSS feed on every build of a blog without `hostname`; it warns only when `rss` (`true` or `{ limit }`, now allowed in the type) was set without a `hostname`
 - default theme: search keeps keystrokes typed right after opening (the modal chunk is preloaded when the page is idle, and characters typed before it mounts are handed to it), and a result no longer repeats a heading that equals its title ("Second post | Second post")
 - `create-vuemo` writes the blog title as a single-quoted, escaped string, like the rest of the generated config
-- Theme contract (**breaking**): themes dispatch on `frontmatter.layout` only, and a missing or unknown layout is treated as `page`. `defineBlogConfig` now sets `layout: 'post'` for pages under `posts/` that have none (through `transformPageData`, run after your own hook), so themes must not fall back on the file path. A theme that registers no `post` layout must add one
-- `theme` accepts a package name or the absolute path of a theme entry file and is resolved from the project root; a theme that cannot be resolved, or whose default export has no `Layout`, fails with an explanation of the fix
-- `create-vuemo --theme <package>[@range]` (and a "Theme package" prompt): scaffolds a blog with another theme instead of `@vuemo/theme-default`, writing the dependency (`latest` without a range) and an explicit `theme` line into the config; an invalid package name exits with code 1
-- `create-vuemo --template theme` (and a "What do you want to create?" prompt): scaffolds a theme package (`vuemo-theme-<name>`) with the six layouts, the standard slots, a dark mode toggle in plain CSS, an example blog and a `test/contract.test.ts` that runs `checkTheme`; `pnpm check` runs `vuemo check-theme`
 
 ### Theme contract
 Changes that theme authors must know. While Vuemo is 0.x, a change of the contract is a core minor release, and a theme's `@vuemo/core` peer range is the contract version it supports.

@@ -8,6 +8,7 @@ import {
   DEFAULT_THEME,
   hasThemePrefix,
   parseThemeSpec,
+  themeTarget,
   validName,
   validPackageName,
   type Answers,
@@ -81,12 +82,12 @@ Created ${projectName}. Next:
 }
 
 async function theme() {
-  // the package name: `vuemo-theme-<name>` or `@scope/vuemo-theme-<name>`; a scoped name creates the directory `vuemo-theme-<name>`
-  const name = dirArg ?? (await prompt('Theme package name', 'vuemo-theme-my-theme'))
+  // a package name (`vuemo-theme-<name>`, `@scope/vuemo-theme-<name>`: the directory is `vuemo-theme-<name>`) or a path whose basename is the package name
+  const { name, dir } = themeTarget(dirArg ?? (await prompt('Theme package name', 'vuemo-theme-my-theme')))
   rl?.close()
 
-  if (!validPackageName(name)) fail(`"${name}" is not a valid npm package name`)
-  scaffoldTheme(join(here, '../template-theme'), prepare(basename(name)), name)
+  if (!validPackageName(name)) fail(`"${name}" is not a valid npm package name (the last part of the path is the package name)`)
+  scaffoldTheme(join(here, '../template-theme'), prepare(dir), name)
 
   if (!hasThemePrefix(name)) {
     console.log(`Hint: theme packages are named vuemo-theme-<name> or @scope/vuemo-theme-<name> so people can find them.`)
@@ -94,7 +95,7 @@ async function theme() {
   console.log(`
 Created ${name}. Next:
 
-  cd ${basename(name)}
+  cd ${dir}
   pnpm install
   pnpm dev     # the example blog
   pnpm check   # check the theme against the Vuemo theme contract
@@ -103,4 +104,8 @@ Created ${name}. Next:
 
 const template = values.template ?? (await prompt('What do you want to create? [blog/theme]', 'blog'))
 if (!TEMPLATES.includes(template)) fail(`Unknown template "${template}". Use: ${TEMPLATES.join(', ')}`)
+if (template === 'theme') {
+  const blogOnly = (['theme', 'comments', 'ai-summary'] as const).filter((k) => values[k] !== undefined)
+  if (blogOnly.length) fail(`${blogOnly.map((k) => `--${k}`).join(', ')} only applies to a blog, not to --template theme`)
+}
 await (template === 'theme' ? theme() : blog())

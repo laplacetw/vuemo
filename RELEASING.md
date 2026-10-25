@@ -63,6 +63,11 @@ Publishing is hard to undo (`npm unpublish` only works for 72 hours and with res
 
    Then create a GitHub Release for the tag, marked as a pre-release, with the notes from `CHANGELOG.md`.
 
+## Release order and the theme starter
+
+- **Bump every package before a release that changes the API.** The theme starter (`create-vuemo --template theme`) and the generated blogs pin `@vuemo/core` to the version in the workspace when `create-vuemo` is built. The published `0.1.0-alpha.0` lacks `@vuemo/core/check`, `vuemo check-theme` and absolute-path themes, so a starter that pins it breaks. Release at least `0.1.0-alpha.1` (see "Later releases") before anyone runs `npm create vuemo` for a theme.
+- **Never publish `create-vuemo` before `@vuemo/core`** (and the theme and plugins). `pnpm release` publishes in dependency order; if you publish by hand, publish `create-vuemo` last, then check with `npm create vuemo@alpha x -- --template theme` that the pinned `@vuemo/core` version exists on npm.
+
 ## Later releases
 
 All packages share one version. During the alpha, bump the prerelease number (`0.1.0-alpha.1`, `0.1.0-alpha.2`, ...) for every release, breaking or not.

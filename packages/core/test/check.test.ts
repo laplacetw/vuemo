@@ -5,7 +5,7 @@ import {
   FIXTURE, checkArchive, checkCategory, checkEnhanceApp, checkHome, checkPage, checkPost, checkSlots, checkTag,
   checkVuemoContent, runAssertions
 } from '../src/check/assert'
-import { checkIsDark, checkNoFs, checkPeerDeps } from '../src/check/static'
+import { checkIsDark, checkNoFs, checkPeerDeps, staticChecks } from '../src/check/static'
 import { checkTheme } from '../src/check'
 
 const B = FIXTURE.bodyMarkers[0]
@@ -44,6 +44,13 @@ describe('vuemo-content', () => {
   })
   it('fails when the marker comes before the element', () => {
     expect(checkVuemoContent(`${B}<div class="vuemo-content"></div>`).status).toBe('fail')
+  })
+  it('fails for an empty wrapper followed by the body', () => {
+    expect(checkVuemoContent(`<div class="vuemo-content"></div><p>${B}</p>`).status).toBe('fail')
+    expect(checkVuemoContent(`<main><div class="vuemo-content"><span></span></div>${B}</main>`).status).toBe('fail')
+  })
+  it('passes with nested same-name elements inside', () => {
+    expect(checkVuemoContent(`<div class="vuemo-content"><div><p>x</p></div><p>${B}</p></div><div>after</div>`).status).toBe('pass')
   })
   it('does not match a class that only contains the name', () => {
     expect(checkVuemoContent(`<div class="my-vuemo-content">${B}</div>`).status).toBe('fail')
@@ -92,7 +99,18 @@ describe('enhance-app and runAssertions', () => {
   })
 })
 
+describe('enhance-app skipped', () => {
+  it('does not blame enhanceApp when the page layout failed', () => {
+    const r = runAssertions({ home: '', archive: '', tag: '', category: '', page: '', post: '' })
+    expect(r.find((x) => x.id === 'enhance-app')!.message).toBe('skipped (layout-page failed)')
+  })
+})
+
 describe('static checks', () => {
+  it('skips the peer-deps check without a package.json', () => {
+    expect(staticChecks(undefined, {}).map((r) => r.id)).not.toContain('peer-deps')
+    expect(staticChecks({ peerDependencies: {} }, {}).map((r) => r.id)).toContain('peer-deps')
+  })
   const peers = { '@vuemo/core': '^0.1.0', vitepress: '^1.6.0' }
   it('peer-deps', () => {
     expect(checkPeerDeps({ peerDependencies: peers }).status).toBe('pass')

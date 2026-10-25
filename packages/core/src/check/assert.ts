@@ -87,10 +87,30 @@ export const checkPost = (html: string) =>
     `layout "post" did not render the post body: "${FIXTURE.bodyMarkers[0]}" is missing. Posts get \`layout: post\` by default; register a \`post\` layout that renders <Content />.`
   )
 
+const CONTENT_OPEN = /<([a-zA-Z][\w:-]*)[^>]*\sclass="(?:[^"]*\s)?vuemo-content(?:\s[^"]*)?"[^>]*>/
+
 /** Index of the opening tag of the first element whose class list has `vuemo-content`, or -1. */
 function contentStart(html: string): number {
-  const m = /<[a-zA-Z][^>]*\sclass="(?:[^"]*\s)?vuemo-content(?:\s[^"]*)?"[^>]*>/.exec(html)
+  const m = CONTENT_OPEN.exec(html)
   return m ? m.index : -1
+}
+
+/** The `[start, end)` range of the first `vuemo-content` element's inner HTML (up to its matching close tag), or undefined. */
+function contentRange(html: string): [number, number] | undefined {
+  const m = CONTENT_OPEN.exec(html)
+  if (!m) return undefined
+  const tag = m[1]
+  const from = m.index + m[0].length
+  if (m[0].endsWith('/>')) return [from, from]
+  const re = new RegExp(`<(/?)${tag}(?=[\\s>/])[^>]*>`, 'gi')
+  re.lastIndex = from
+  let depth = 1
+  for (let t = re.exec(html); t; t = re.exec(html)) {
+    if (t[1]) depth--
+    else if (!t[0].endsWith('/>')) depth++
+    if (depth === 0) return [from, t.index]
+  }
+  return [from, html.length]
 }
 
 export function checkVuemoContent(html: string): CheckResult {
@@ -98,8 +118,9 @@ export function checkVuemoContent(html: string): CheckResult {
   if (start < 0) {
     return fail('vuemo-content', 'no element with class "vuemo-content" in the post layout. Put the class on the post body element (e.g. <Content class="vuemo-content" />) so plugins can read the article text.')
   }
-  const marker = html.indexOf(FIXTURE.bodyMarkers[0])
-  if (marker < 0 || marker < start) {
+  const range = contentRange(html)!
+  const marker = html.indexOf(FIXTURE.bodyMarkers[0], range[0])
+  if (marker < 0 || marker >= range[1]) {
     return fail('vuemo-content', `the post body ("${FIXTURE.bodyMarkers[0]}") is not inside the element with class "vuemo-content". The class must be on the element that wraps the post content.`)
   }
   return pass('vuemo-content', 'post body is inside .vuemo-content')
@@ -142,15 +163,17 @@ export const checkEnhanceApp = (html: string) =>
 
 /** Every build-based assertion. `post` is the HTML of a fixture post, `page` of the About page. */
 export function runAssertions(pages: PageHtml): CheckResult[] {
+  const page = checkPage(pages.page)
   return [
     checkHome(pages.home),
     checkArchive(pages.archive),
     checkTag(pages.tag),
     checkCategory(pages.category),
-    checkPage(pages.page),
+    page,
     checkPost(pages.post),
     checkVuemoContent(pages.post),
     checkSlots(pages.post),
-    checkEnhanceApp(pages.page)
+    // the probe sits in the About page: if that page did not render, the result says nothing about enhanceApp
+    page.status === 'fail' ? fail('enhance-app', 'skipped (layout-page failed)') : checkEnhanceApp(pages.page)
   ]
 }

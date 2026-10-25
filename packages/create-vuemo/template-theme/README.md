@@ -26,6 +26,8 @@ A [Vuemo](https://github.com/laplacetw/vuemo) theme. A Vuemo theme is a plain Vi
 
 ## Develop
 
+The starter needs `@vuemo/core` at a version that ships `vuemo check-theme` (and `@vuemo/core/check`) and accepts an absolute path as `theme`. Earlier releases (such as `0.1.0-alpha.0`) lack them: raise the `@vuemo/core` range in `package.json` if `pnpm check` is not found.
+
 ```sh
 pnpm install
 pnpm dev             # the example blog with hot reload
@@ -33,6 +35,8 @@ pnpm build:example   # builds the example
 pnpm check           # vuemo check-theme: builds a fixture blog and checks the contract
 pnpm test            # the same check, as a vitest test
 ```
+
+`pnpm check` and `pnpm test` build in the same `.vuemo-check/` directory: do not run them at the same time.
 
 `pnpm check` prints one line per check (layouts, `vuemo-content`, slots, `enhanceApp`, peer dependencies, no file system access). `is-dark` has to be verified by hand: toggle the mode in `pnpm dev`.
 

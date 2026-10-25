@@ -1,3 +1,5 @@
+import { basename } from 'node:path'
+
 export type CommentsProvider = 'none' | 'giscus' | 'utterances'
 
 export interface Answers {
@@ -26,7 +28,7 @@ export function parseThemeSpec(spec: string): { name: string; range: string } {
   const name = at > 0 ? text.slice(0, at) : text
   const range = at > 0 ? text.slice(at + 1) : 'latest'
   if (!validPackageName(name)) throw new Error(`"${name}" is not a valid npm package name (theme "${spec}")`)
-  if (!range || /\s/.test(range)) throw new Error(`"${range}" is not a valid version or range (theme "${spec}")`)
+  if (!range.trim() || /[\x00-\x1f\x7f]/.test(range)) throw new Error(`"${range}" is not a valid version or range (theme "${spec}")`)
   return { name, range }
 }
 
@@ -52,9 +54,10 @@ export const VERSIONS: Versions =
 
 /** The chosen theme package; the default theme (with the version released together with this scaffolder) when none is given. */
 function themeOf(a: Answers): { name: string; range: string } {
-  if (!a.theme) return { name: DEFAULT_THEME, range: VERSIONS.theme }
-  const { name, range } = parseThemeSpec(a.theme)
-  return name === DEFAULT_THEME && !a.theme.includes('@', 1) ? { name, range: VERSIONS.theme } : { name, range }
+  if (!a.theme?.trim()) return { name: DEFAULT_THEME, range: VERSIONS.theme }
+  const spec = a.theme.trim()
+  const { name, range } = parseThemeSpec(spec)
+  return name === DEFAULT_THEME && !spec.includes('@', 1) ? { name, range: VERSIONS.theme } : { name, range }
 }
 
 export function packageJson(a: Answers): string {
@@ -178,4 +181,15 @@ export function hasThemePrefix(name: string): boolean {
 
 export function validName(name: string): boolean {
   return /^[a-z0-9][a-z0-9._-]*$/i.test(name)
+}
+
+/**
+ * The argument of `--template theme`: a scoped package name (`@scope/vuemo-theme-x`, created in `./vuemo-theme-x`)
+ * or a directory path (`./themes/vuemo-theme-x`), whose basename is the package name.
+ */
+export function themeTarget(arg: string): { name: string; dir: string } {
+  const text = arg.trim()
+  if (/^@[^/\\]+\/[^/\\]+$/.test(text)) return { name: text, dir: text.slice(text.indexOf('/') + 1) }
+  const dir = text.replace(/[\\/]+$/, '')
+  return { name: basename(dir), dir }
 }
