@@ -55,3 +55,19 @@ export function moveIndex(current: number, delta: number, length: number): numbe
 export function resultsText(count: number): string {
   return count === 1 ? '1 result' : `${count} results`
 }
+
+/**
+ * Breadcrumb of a result: the headings above it, as decoded text. A crumb is dropped when it repeats the one
+ * before it or the result's own title, so a page whose title is also a heading (`# Post` then `## Post`) does
+ * not show "Post | Post | Post".
+ */
+export function breadcrumb(title: string, titles: readonly string[] = []): string[] {
+  const own = decodeEntities(title)
+  const crumbs: string[] = []
+  for (const raw of titles) {
+    const crumb = decodeEntities(raw)
+    if (crumb !== crumbs[crumbs.length - 1]) crumbs.push(crumb)
+  }
+  if (crumbs[crumbs.length - 1] === own) crumbs.pop()
+  return crumbs
+}

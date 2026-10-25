@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { configTs, packageJson, validName } from '../src/generate'
+import { configTs, packageJson, quote, validName } from '../src/generate'
 
 const base = { name: 'b', title: 'My "Blog"', comments: 'none', aiSummary: false } as const
 
@@ -30,8 +30,18 @@ describe('generate', () => {
     expect(configTs({ ...base, comments: 'utterances' })).toContain("comments: { provider: 'utterances'")
   })
   it('escapes the title and validates names', () => {
-    expect(configTs(base)).toContain('title: "My \\"Blog\\""')
+    expect(configTs(base)).toContain(`title: 'My "Blog"',`)
+    expect(configTs({ ...base, title: "Tom's \\ blog" })).toContain("title: 'Tom\\'s \\\\ blog',")
     expect(validName('my-blog')).toBe(true)
     expect(validName('../x')).toBe(false)
+  })
+})
+
+describe('quote', () => {
+  it('writes a single-quoted literal that evaluates back to the text', () => {
+    for (const text of ['plain', 'My "Blog"', "it's", 'back\\slash', 'a\nb\r\nc', 'x\u2028y\u2029z', "'\\'"]) {
+      expect(quote(text)).toMatch(/^'/)
+      expect(new Function(`return ${quote(text)}`)()).toBe(text)
+    }
   })
 })

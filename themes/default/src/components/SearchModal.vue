@@ -4,9 +4,10 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch 
 import { useData, useRouter } from 'vitepress'
 import type { VuemoThemeConfig } from '@vuemo/core'
 import type MiniSearch from 'minisearch'
-import { decodeEntities, highlight, moveIndex, resultHref, resultsText } from '../search'
+import { breadcrumb, decodeEntities, highlight, moveIndex, resultHref, resultsText } from '../search'
 
-const emit = defineEmits<{ (e: 'close'): void }>()
+const props = defineProps<{ initialQuery?: string }>()
+const emit = defineEmits<{ (e: 'close'): void; (e: 'ready'): void }>()
 
 interface Stored {
   title: string
@@ -27,7 +28,7 @@ const placeholder: string = options?.locales?.[localeIndex.value]?.translations?
 
 const dialog = ref<HTMLElement>()
 const input = ref<HTMLInputElement>()
-const query = ref('')
+const query = ref(props.initialQuery ?? '')
 const active = ref(-1)
 const status = ref<'loading' | 'ready' | 'unavailable'>('loading')
 const index = shallowRef<MiniSearch<Stored> | null>(null)
@@ -43,7 +44,7 @@ const rows = computed(() =>
     key: h.id,
     optionId: `${listId}-${i}`,
     title: highlight(decodeEntities(h.title), h.terms),
-    path: (h.titles ?? []).map(decodeEntities).join(' › '),
+    path: breadcrumb(h.title, h.titles).join(' › '),
     href: resultHref(h.id)
   }))
 )
@@ -137,6 +138,7 @@ onMounted(() => {
   document.body.style.overflow = 'hidden'
   if (gap > 0) document.body.style.paddingRight = `${gap}px`
   input.value?.focus()
+  emit('ready')
   load()
 })
 onBeforeUnmount(() => {

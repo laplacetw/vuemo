@@ -63,6 +63,11 @@ const COMMENTS: Record<CommentsProvider, string> = {
   }`
 }
 
+/** A single-quoted TypeScript string literal, like the rest of the generated config. */
+export function quote(text: string): string {
+  return `'${text.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r/g, '\\r').replace(/\n/g, '\\n').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029')}'`
+}
+
 export function configTs(a: Answers): string {
   const aiSummary = a.aiSummary ? "{ api: 'https://YOUR-WORKER.workers.dev' } // see the plugin README" : 'false'
 
@@ -73,7 +78,7 @@ import { defineBlogConfig } from '@vuemo/core'
 
 export default defineBlogConfig({
   // site
-  title: ${JSON.stringify(a.title)},
+  title: ${quote(a.title)},
   description: 'A blog powered by Vuemo',
   lang: 'en',
   hostname: 'https://example.com',

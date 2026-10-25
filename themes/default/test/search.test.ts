@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { decodeEntities, highlight, moveIndex, resultHref, resultsText } from '../src/search'
+import { breadcrumb, decodeEntities, highlight, moveIndex, resultHref, resultsText } from '../src/search'
 
 describe('highlight', () => {
   it('wraps matches in <mark>, ignoring case', () => {
@@ -75,5 +75,25 @@ describe('decodeEntities', () => {
   })
   it('works with highlight: decode first, escape once', () => {
     expect(highlight(decodeEntities('A &amp; B'), ['a'])).toBe('<mark>A</mark> &amp; B')
+  })
+})
+
+describe('breadcrumb', () => {
+  it('lists the headings above a result', () => {
+    expect(breadcrumb('Code group', ['Markdown features', 'Code blocks'])).toEqual(['Markdown features', 'Code blocks'])
+    expect(breadcrumb('Page', [])).toEqual([])
+    expect(breadcrumb('Page')).toEqual([])
+  })
+  it('does not repeat the result title (a section named like its page)', () => {
+    expect(breadcrumb('Second post', ['Second post'])).toEqual([])
+    expect(breadcrumb('Setup', ['Guide', 'Setup'])).toEqual(['Guide'])
+  })
+  it('collapses consecutive duplicates but keeps a repeat that is not adjacent', () => {
+    expect(breadcrumb('X', ['A', 'A', 'B'])).toEqual(['A', 'B'])
+    expect(breadcrumb('X', ['A', 'B', 'A'])).toEqual(['A', 'B', 'A'])
+  })
+  it('decodes entities before comparing', () => {
+    expect(breadcrumb('A & B', ['A &amp; B'])).toEqual([])
+    expect(breadcrumb('x', ['Q &lt; R'])).toEqual(['Q < R'])
   })
 })

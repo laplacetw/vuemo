@@ -14,6 +14,10 @@ const text: string =
   'Search'
 
 const open = ref(false)
+// true once the modal is mounted and its input can take keystrokes
+const ready = ref(false)
+// characters typed after opening but before the lazy modal chunk has mounted: handed to the modal, not lost
+const typed = ref('')
 const button = ref<HTMLButtonElement>()
 // set after mount: it depends on the platform, which the server does not know
 const hint = ref('')
@@ -24,6 +28,19 @@ function isTyping(el: EventTarget | null) {
 }
 
 function onKeydown(e: KeyboardEvent) {
+  if (open.value && !ready.value) {
+    if (e.key.length === 1 && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      e.preventDefault()
+      typed.value += e.key
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      close()
+    } else if (e.key === 'Backspace') {
+      e.preventDefault()
+      typed.value = typed.value.slice(0, -1)
+    }
+    return
+  }
   if (e.key?.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey) {
     e.preventDefault()
     open.value = true
@@ -35,10 +52,16 @@ function onKeydown(e: KeyboardEvent) {
 
 function close() {
   open.value = false
+  ready.value = false
+  typed.value = ''
   nextTick(() => button.value?.focus())
 }
 
 onMounted(() => {
+  // fetch the modal's own chunk (not MiniSearch or the index) once the page is idle, so opening is instant
+  const preload = () => void import('./SearchModal.vue')
+  if ('requestIdleCallback' in window) window.requestIdleCallback(preload)
+  else setTimeout(preload, 1000)
   hint.value = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘K' : 'Ctrl K'
   window.addEventListener('keydown', onKeydown)
 })
@@ -61,5 +84,5 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
     <span>{{ text }}</span>
     <kbd v-if="hint" class="hidden rounded bg-zinc-100 px-1 text-xs text-zinc-500 dark:text-zinc-400 sm:inline dark:bg-zinc-800 dark:text-zinc-400">{{ hint }}</kbd>
   </button>
-  <SearchModal v-if="open" @close="close" />
+  <SearchModal v-if="open" :initial-query="typed" @ready="ready = true" @close="close" />
 </template>
