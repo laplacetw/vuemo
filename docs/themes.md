@@ -4,13 +4,22 @@
 
 ## Using a theme
 
-Set `theme` in `defineBlogConfig` (default `@vuemo/theme-default`) and install the package. The file `.vitepress/theme/index.ts` is VitePress's own theme entry; Vuemo makes it a fixed one-liner, so you never edit it:
+Set `theme` in `defineBlogConfig` (default `@vuemo/theme-default`) and install the package. `theme` is a package name or the absolute path of a theme entry file (handy while you develop a theme: `theme: '/path/to/my-theme/src/index.ts'`). The file `.vitepress/theme/index.ts` is VitePress's own theme entry; Vuemo makes it a fixed one-liner, so you never edit it:
 
 ```ts
 export { default } from '@vuemo/core/theme'
 ```
 
-Behind the scenes `theme` is resolved through a Vite virtual module, so no VitePress internals are involved.
+Behind the scenes `theme` is resolved through a Vite virtual module, from your project's root as an `import` written in your project would be, so no VitePress internals are involved.
+
+### Theme errors
+
+| Message | Cause and fix |
+| --- | --- |
+| ``[vuemo] theme "X" could not be resolved from <root>. Install it (pnpm add X) or fix the `theme` option.`` | The package is not installed in your project (or the name or path in `theme` is wrong). Run `pnpm add X`, or correct the option. A path must be absolute and point at the theme's entry file. |
+| `[vuemo] theme "X" does not default-export a VitePress theme ({ Layout, enhanceApp })` | The module was found, but its default export is not a theme: it has no `Layout`, not even through an `extends` chain. Check that the entry file does `export default { Layout, enhanceApp }` (or `{ extends, ... }`), and that `theme` points at that file rather than at some other module. |
+
+`themeConfig` keys that belong to a theme you switched away from stay in your config and are ignored by the new one.
 
 To customize a theme, use VitePress's native `extends` and slots in that file instead:
 
@@ -23,7 +32,9 @@ export default { extends: Theme, Layout: MyLayout }
 
 ## Layouts
 
-A page picks its layout with `layout:` in its frontmatter. Pages under `posts/` default to `post`, everything else to `page`.
+A page picks its layout with `layout:` in its frontmatter. Core gives every page under `posts/` that has no `layout` the layout `post` (in `transformPageData`, after your own `transformPageData` hook if you have one), so a theme never looks at file paths. A page outside `posts/` without a `layout` has none.
+
+The dispatch rule of the theme contract: **a theme chooses its layout from `frontmatter.layout` only, and a missing or unknown layout is rendered as `page`.**
 
 `home` · `post` · `archive` · `tag` · `category` · `page`
 
@@ -33,7 +44,7 @@ A theme is a VitePress theme (default export `{ Layout, enhanceApp? }`) that onl
 
 The contract, which lets framework plugins work with any theme:
 
-- implement the six layouts above
+- implement the six layouts above, and dispatch on `frontmatter.layout` only: a missing or unknown layout is treated as `page`
 - in the `post` layout provide the slots `post-before-content`, `post-after-content` and `post-comments`, and render the components plugins registered for each with `useSlots(name)`
 - put the class `vuemo-content` on the post body (the AI summary reads the article text from it)
 - call `runEnhanceApps(ctx)` in `enhanceApp`

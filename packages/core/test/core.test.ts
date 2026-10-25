@@ -3,6 +3,7 @@ import { parsePost } from '../src/schema'
 import { groupByTag, groupByYear, groupByCategory } from '../src/group'
 import { findPost, findPrevNext, paginate, stripBase } from '../src/pagination'
 import { postJsonLd } from '../src/seo'
+import { isPostPath } from '../src/schema'
 import { taxonomyHref } from '../src/taxonomy'
 import { searchRender } from '../src/search'
 import { normalizeBase } from '../src/base'
@@ -84,6 +85,14 @@ describe('taxonomyHref', () => {
   })
 })
 
+describe('isPostPath', () => {
+  it('matches pages under posts/ only', () => {
+    expect(isPostPath('posts/a.md')).toBe(true)
+    expect(isPostPath('posts/2024/a.md')).toBe(true)
+    for (const p of ['about.md', 'postscript.md', 'docs/posts/a.md', 'Posts/a.md']) expect(isPostPath(p), p).toBe(false)
+  })
+})
+
 describe('seo', () => {
   it('emits JSON-LD only for posts', () => {
     const page: any = { relativePath: 'posts/a.md', frontmatter: { title: 'A', date: '2024-01-02' } }
@@ -109,7 +118,8 @@ describe('seo', () => {
   })
 })
 
-import { buildThemeModule, buildVirtualModule } from '../src/virtual'
+import { join } from 'node:path'
+import { buildThemeModule, buildVirtualModule, loadThemeModule, virtualPlugin } from '../src/virtual'
 import { defineBlogConfig } from '../src/config'
 
 describe('plugins', () => {
@@ -220,7 +230,97 @@ describe('defineBlogConfig', () => {
   it('points the theme module at the configured theme', async () => {
     const cfg: any = await defineBlogConfig({ theme: '@x/theme' })
     expect(cfg.vite.ssr.noExternal).toContain('@x/theme')
-    expect(buildThemeModule('@x/theme')).toBe('export { default } from "@x/theme"\n')
+    const code = buildThemeModule('@x/theme')
+    expect(code).toContain('import theme from "@x/theme"')
+    expect(code).toContain('export default theme')
+    expect(buildThemeModule('@x/theme', '/abs/theme.js')).toContain('import theme from "/abs/theme.js"')
+  })
+})
+
+describe('theme module', () => {
+  const run = (code: string, theme: unknown) => {
+    // evaluate the generated module with `theme` as the imported default
+    const body = code.replace(/^import theme from .*$/m, '').replace('export default theme', 'return theme')
+    return new Function('theme', body)(theme)
+  }
+  const code = buildThemeModule('@x/theme')
+
+  it('accepts a theme with a Layout, directly or through extends', () => {
+    const layout = {}
+    expect(run(code, { Layout: layout })).toEqual({ Layout: layout })
+    const nested = { extends: { extends: { Layout: layout } } }
+    expect(run(code, nested)).toBe(nested)
+  })
+  it('rejects anything else with an explanation', () => {
+    for (const bad of [{}, undefined, null, 'x', () => {}, { extends: {} }, { extends: null }]) {
+      expect(() => run(code, bad), String(bad)).toThrow('[vuemo] theme "@x/theme" does not default-export a VitePress theme ({ Layout, enhanceApp })')
+    }
+  })
+  it('quotes the theme name safely in the message', () => {
+    expect(() => run(buildThemeModule('a"b'), {})).toThrow('theme "a"b" does not')
+  })
+  it('resolves from the project root and loads the resolved id', async () => {
+    const calls: any[] = []
+    const ctx = { resolve: async (id: string, importer?: string) => (calls.push([id, importer]), { id: '/p/node_modules/@x/theme/index.ts' }), error: (m: string): never => { throw new Error(m) } }
+    const out = await loadThemeModule(ctx, '@x/theme', '/p')
+    expect(calls).toEqual([['@x/theme', join('/p', 'index.html')]])
+    expect(out).toContain('import theme from "/p/node_modules/@x/theme/index.ts"')
+  })
+  it('explains a theme that cannot be resolved', async () => {
+    const ctx = { resolve: async () => null, error: (m: string): never => { throw new Error(m) } }
+    await expect(loadThemeModule(ctx, 'nope-theme', '/p')).rejects.toThrow(
+      '[vuemo] theme "nope-theme" could not be resolved from /p. Install it (pnpm add nope-theme) or fix the `theme` option.'
+    )
+  })
+  it('remembers the root in configResolved', async () => {
+    const plugin: any = virtualPlugin([], 'nope-theme')
+    plugin.configResolved({ root: '/proj' })
+    const ctx = { resolve: async () => null, error: (m: string): never => { throw new Error(m) } }
+    await expect(plugin.load.call(ctx, '\0virtual:vuemo/theme')).rejects.toThrow('from /proj.')
+  })
+})
+
+describe('transformPageData', () => {
+  const page = (relativePath: string, frontmatter: Record<string, any> = {}): any => ({ relativePath, frontmatter })
+  const run = async (config: any, p: any) => (await defineBlogConfig(config) as any).transformPageData(p, {})
+  const apply = async (config: any, p: any) => {
+    Object.assign(p, await run(config, p))
+    return p
+  }
+
+  it('gives posts without a layout the post layout', async () => {
+    expect((await apply({}, page('posts/a.md', { title: 'A' }))).frontmatter).toEqual({ title: 'A', layout: 'post' })
+  })
+  it('keeps an explicit layout', async () => {
+    expect((await apply({}, page('posts/a.md', { layout: 'page' }))).frontmatter.layout).toBe('page')
+  })
+  it('leaves other pages alone', async () => {
+    for (const path of ['about.md', 'index.md', 'postscript.md', 'docs/posts/a.md']) {
+      expect(await run({}, page(path, { title: 'x' })), path).toBeUndefined()
+    }
+  })
+  it('runs the user hook first and keeps what it returns', async () => {
+    const order: string[] = []
+    const transformPageData = (p: any) => {
+      order.push('user')
+      return { frontmatter: { ...p.frontmatter, extra: 1 }, title: 'T' }
+    }
+    const p = await apply({ transformPageData }, page('posts/a.md', { title: 'A' }))
+    expect(p.frontmatter).toEqual({ title: 'A', extra: 1, layout: 'post' })
+    expect(p.title).toBe('T')
+    expect(order).toEqual(['user'])
+    // not a post: the user's result passes through untouched
+    expect(await run({ transformPageData }, page('about.md'))).toEqual({ frontmatter: { extra: 1 }, title: 'T' })
+  })
+  it('sees a layout the user hook sets by mutation or by return value', async () => {
+    const mutate = (p: any) => void (p.frontmatter.layout = 'page')
+    expect((await apply({ transformPageData: mutate }, page('posts/a.md'))).frontmatter.layout).toBe('page')
+    const ret = async () => ({ frontmatter: { layout: 'archive' } })
+    expect((await apply({ transformPageData: ret }, page('posts/a.md', { title: 'A' }))).frontmatter).toEqual({ layout: 'archive' })
+  })
+  it('treats a user hook returning nothing as no result', async () => {
+    const p = await apply({ transformPageData: () => {} }, page('posts/a.md'))
+    expect(p.frontmatter.layout).toBe('post')
   })
 })
 

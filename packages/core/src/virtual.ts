@@ -1,3 +1,4 @@
+import { join } from 'node:path'
 import { STANDARD_SLOTS, type VuemoPlugin } from './plugin'
 
 export const VIRTUAL_ID = 'virtual:vuemo/plugins'
@@ -33,18 +34,50 @@ export const enhanceApps = [${enhance.join(', ')}]
 `
 }
 
-export function buildThemeModule(theme: string): string {
-  return `export { default } from ${JSON.stringify(theme)}\n`
+/** What a theme is resolved with: just the two members of the plugin context that are needed (testable). */
+export interface ThemeResolver {
+  resolve(id: string, importer?: string): Promise<{ id: string } | null | undefined>
+  error(message: string): never
+}
+
+export const themeResolveError = (theme: string, root: string) =>
+  `[vuemo] theme "${theme}" could not be resolved from ${root}. Install it (pnpm add ${theme}) or fix the \`theme\` option.`
+
+export const themeShapeError = (theme: string) =>
+  `[vuemo] theme "${theme}" does not default-export a VitePress theme ({ Layout, enhanceApp })`
+
+/**
+ * Source of the theme module. `theme` is what the user wrote (used in messages); `id` is what it resolved to.
+ * The module throws when the default export is not a theme: it needs a `Layout`, directly or through `extends`.
+ */
+export function buildThemeModule(theme: string, id: string = theme): string {
+  return `import theme from ${JSON.stringify(id)}
+let t = theme
+while (t && typeof t === 'object' && !t.Layout) t = t.extends
+if (!t || typeof t !== 'object' || !t.Layout) throw new Error(${JSON.stringify(themeShapeError(theme))})
+export default theme
+`
+}
+
+/** Resolves `theme` like an import written in the user's project would be, and builds the theme module. */
+export async function loadThemeModule(ctx: ThemeResolver, theme: string, root: string): Promise<string> {
+  const resolved = await ctx.resolve(theme, join(root, 'index.html'))
+  if (!resolved) ctx.error(themeResolveError(theme, root))
+  return buildThemeModule(theme, resolved!.id)
 }
 
 export function virtualPlugin(plugins: VuemoPlugin[], theme: string) {
   const prefix = '\0'
+  let root = process.cwd()
   return {
     name: 'vuemo:virtual',
+    configResolved(config: { root: string }) {
+      root = config.root
+    },
     resolveId: (id: string) => (id === VIRTUAL_ID || id === THEME_ID ? prefix + id : undefined),
-    load(id: string) {
+    async load(this: ThemeResolver, id: string) {
       if (id === prefix + VIRTUAL_ID) return buildVirtualModule(plugins)
-      if (id === prefix + THEME_ID) return buildThemeModule(theme)
+      if (id === prefix + THEME_ID) return loadThemeModule(this, theme, root)
     }
   }
 }

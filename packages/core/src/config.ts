@@ -8,7 +8,7 @@ import { createPostsLoader } from './loader'
 import { normalizeBase } from './base'
 import { buildRss } from './rss'
 import { searchRender } from './search'
-import type { Post } from './schema'
+import { isPostPath, type Post } from './schema'
 import { virtualPlugin } from './virtual'
 
 export interface NavItem {
@@ -55,7 +55,7 @@ export interface VuemoThemeConfig {
 }
 
 export interface BlogConfig extends Omit<UserConfig, 'lastUpdated'>, Partial<OfficialFeatures> {
-  /** Theme package. Default: `@vuemo/theme-default`. */
+  /** Theme package name, or the absolute path of a theme entry file. Default: `@vuemo/theme-default`. */
   theme?: string
   /** Site origin, e.g. https://example.com. Used by sitemap and JSON-LD. */
   hostname?: string
@@ -152,6 +152,14 @@ export async function defineBlogConfig(config: BlogConfig = {}, importer?: Impor
       }
     },
     vite,
+    // Themes dispatch on `frontmatter.layout` only, so a post without one gets `post`. The user's own hook runs
+    // first; its result is merged shallowly, as VitePress does.
+    async transformPageData(pageData, ctx) {
+      const result = (await rest.transformPageData?.(pageData, ctx)) || undefined
+      const frontmatter = { ...pageData.frontmatter, ...result?.frontmatter }
+      if (isPostPath(pageData.relativePath) && !frontmatter.layout) return { ...result, frontmatter: { ...frontmatter, layout: 'post' } }
+      return result
+    },
     transformHead(ctx) {
       const head = [...((rest.transformHead?.(ctx) as any) ?? [])]
       const ld = postJsonLd(ctx.pageData, hostname, rest.base)

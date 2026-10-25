@@ -41,3 +41,6 @@ export function parsePost(src: PostSource): Post | string {
     excerpt: src.excerpt
   }
 }
+
+/** True for pages under `posts/` (a VitePress `relativePath`, e.g. `posts/hello.md`). */
+export const isPostPath = (relativePath: string): boolean => relativePath.startsWith('posts/')

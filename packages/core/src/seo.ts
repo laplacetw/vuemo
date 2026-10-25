@@ -1,9 +1,10 @@
 import type { HeadConfig, PageData } from 'vitepress'
 import { normalizeBase } from './base'
+import { isPostPath } from './schema'
 
 export function postJsonLd(page: PageData, hostname: string | undefined, base = '/'): HeadConfig | undefined {
   const fm = page.frontmatter
-  if (!page.relativePath.startsWith('posts/') || !fm.title || !fm.date) return
+  if (!isPostPath(page.relativePath) || !fm.title || !fm.date) return
   const path = normalizeBase(base) + page.relativePath.replace(/\.md$/, '')
   const published = new Date(fm.date).getTime()
   // lastUpdated is NaN for untracked files, 0 for missing ones and undefined when the feature is off

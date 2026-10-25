@@ -84,6 +84,16 @@ describe('sitemap', () => {
   })
 })
 
+describe('layouts', () => {
+  it('renders every built post with the post layout, without a layout in its frontmatter', () => {
+    for (const p of validPosts) expect(page(`posts/${p.slug}.html`), p.slug).toContain('vuemo-content')
+  })
+  it('renders a page without a layout as a plain page', () => {
+    expect(readFileSync(resolve(root, 'about.md'), 'utf8')).not.toMatch(/^layout:/m)
+    expect(page('about.html')).not.toContain('vuemo-content')
+  })
+})
+
 describe('footer', () => {
   it('renders the message and the copyright', () => {
     const html = page('index.html')
