@@ -17,7 +17,7 @@ A [Vuemo](https://github.com/laplacetw/vuemo) theme. A Vuemo theme is a plain Vi
 
 ## The contract in six points
 
-1. Implement the layouts `home`, `post`, `archive`, `tag`, `category` and `page`, and choose one only from `frontmatter.layout`. A missing or unknown layout is `page`. Never look at the file path (core sets `layout: post` for pages under `posts/`).
+1. Implement the layouts `home`, `post`, `archive`, `tag`, `category` and `page`, and choose one only from `frontmatter.layout`. A missing layout is `page`; what to do with other values is up to the theme (here they also fall back to `page`). Never look at the file path (core sets `layout: post` for pages under `posts/`).
 2. In the `post` layout provide the slots `post-before-content`, `post-after-content` and `post-comments`, each as a `<slot>` plus `<PluginSlot name="...">`.
 3. Put the class `vuemo-content` on the post body (`<Content class="vuemo-content" />`).
 4. Call `runEnhanceApps(ctx)` from `@vuemo/core/client` in `enhanceApp`.

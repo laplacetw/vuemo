@@ -53,7 +53,8 @@
 ### Theme contract
 Changes that theme authors must know. While Vuemo is 0.x, a change of the contract is a core minor release, and a theme's `@vuemo/core` peer range is the contract version it supports.
 - **Breaking**: `footer` is always `{ message?, copyright? }` in `themeConfig` (a string option becomes `{ message }`); read `footer.message`
-- **Breaking**: themes dispatch on `frontmatter.layout` only (missing or unknown is `page`); core gives pages under `posts/` the layout `post`
+- **Breaking**: themes dispatch on `frontmatter.layout` only (a missing layout is `page`; handling of values outside the six is theme-defined); core gives pages under `posts/` the layout `post`
+- the dispatch rule is relaxed: the six layouts are required and a missing layout is `page`, but handling of other values is theme-defined (a theme built on plain VitePress `extends` cannot fall back); `vuemo check-theme` gets a warn-level `unknown-layout` check
 - the `vitepress` peer range is `^1.6.0` for themes and plugins; `@vuemo/core` is a peer dependency of a theme, never a `dependency`
 - `themeConfig.summary` and `themeConfig.paths` are always written; `search` and `lastUpdated` only when the option is on; theme-specific options go at the top level of `themeConfig` and must not reuse the names core owns (`nav`, `footer`, `logo`, `socialLinks`, `postsPerPage`, `summary`, `paths`, `search`, `lastUpdated`)
 - new composables in `@vuemo/core/client`: `usePost`, `useQueryParam`, `useTaxonomyLinks`

@@ -18,7 +18,7 @@ const { page, frontmatter, theme } = useData<VuemoThemeConfig>()
 // `themeConfig.footer` is `{ message, copyright }` (defineBlogConfig turns a string into the message)
 const footer = computed(() => theme.value.footer ?? {})
 
-// The contract: dispatch on `frontmatter.layout` only (core gives posts `post`); missing or unknown means `page`
+// The contract: dispatch on `frontmatter.layout` only (core gives posts `post`); a missing layout means `page`; this theme also maps unknown values to `page` (the contract leaves them to the theme)
 const layout = computed(() => {
   if (page.value.isNotFound) return Page
   const name = frontmatter.value.layout as keyof typeof layouts | undefined

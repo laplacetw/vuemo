@@ -24,7 +24,7 @@ A theme works with every framework plugin if it does these things.
 
 Implement six layouts: `home`, `post`, `archive`, `tag`, `category` and `page`.
 
-**Dispatch on `frontmatter.layout` only.** A missing or unknown layout is rendered as `page`. Never look at the file path. Core makes this possible: `defineBlogConfig` gives every page under `posts/` that has no `layout` the layout `post` (in `transformPageData`, after your own hook if you have one). A page outside `posts/` without a `layout` has none, which the theme treats as `page`.
+**Dispatch on `frontmatter.layout` only.** A missing layout is rendered as `page`. What happens to a value outside the six (`layout: foo`) is up to the theme: the default theme renders it as `page`, but a theme built on plain VitePress `extends: DefaultTheme` may render nothing for it, because VitePress renders `<component :is="layout">` and cannot fall back. Authors should not use unknown layout values with a theme they have not checked, and `vuemo check-theme` warns (`unknown-layout`) when a theme loses the body. Never look at the file path. Core makes this possible: `defineBlogConfig` gives every page under `posts/` that has no `layout` the layout `post` (in `transformPageData`, after your own hook if you have one). A page outside `posts/` without a `layout` has none, which the theme treats as `page`.
 
 ```vue
 <script setup lang="ts">
@@ -218,6 +218,7 @@ Each line of the output is `<icon> <id>: <message>`, then a summary:
 | Id | Kind | What it checks |
 | --- | --- | --- |
 | `layout-home`, `layout-archive`, `layout-tag`, `layout-category`, `layout-page`, `layout-post` | fail | the page of that layout renders its content (home lists the newest post, archive lists every post, tag and category show their lists, page and post render the Markdown body) |
+| `unknown-layout` | warn | a page with a layout value no theme knows (`vuemo-check-unknown`) still renders its body; the contract leaves this to the theme, so a loss is only a warning |
 | `vuemo-content` | fail | an element with the class exists in the post layout and the post body is inside it |
 | `slots` | fail | the three standard slots are each rendered exactly once, in the order before-content < body < after-content < comments |
 | `enhance-app` | fail | the plugins' `enhanceApp` ran (you called `runEnhanceApps`) |

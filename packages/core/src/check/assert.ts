@@ -14,7 +14,10 @@ export const FIXTURE = {
   bodyMarkers: ['VUEMO_CHECK_BODY_1', 'VUEMO_CHECK_BODY_2', 'VUEMO_CHECK_BODY_3'],
   tag: 'check-tag-a',
   category: 'check-cat',
-  pageMarker: 'VUEMO_CHECK_PAGE'
+  pageMarker: 'VUEMO_CHECK_PAGE',
+  /** Layout value no theme knows, and the body of the page that uses it. */
+  unknownLayout: 'vuemo-check-unknown',
+  unknownMarker: 'VUEMO_CHECK_UNKNOWN'
 } as const
 
 export interface PageHtml {
@@ -24,6 +27,7 @@ export interface PageHtml {
   category: string
   page: string
   post: string
+  unknown: string
 }
 
 const pass = (id: string, message: string): CheckResult => ({ id, status: 'pass', message })
@@ -86,6 +90,18 @@ export const checkPost = (html: string) =>
     'post layout renders the post body',
     `layout "post" did not render the post body: "${FIXTURE.bodyMarkers[0]}" is missing. Posts get \`layout: post\` by default; register a \`post\` layout that renders <Content />.`
   )
+
+/** Warn-level: a theme built on `extends: DefaultTheme` may render nothing for a layout it does not register. */
+export function checkUnknownLayout(html: string): CheckResult {
+  const id = 'unknown-layout'
+  return html.includes(FIXTURE.unknownMarker)
+    ? pass(id, 'a page with an unknown layout keeps its body')
+    : {
+        id,
+        status: 'warn',
+        message: `a page with an unknown layout (\`layout: ${FIXTURE.unknownLayout}\`) lost its body: "${FIXTURE.unknownMarker}" is missing. The contract leaves unknown values to the theme, but a theme built on VitePress \`extends\` renders an empty element for them. Register a catch-all, or treat an unknown layout as \`page\`; otherwise tell authors not to use layout values outside the six.`
+      }
+}
 
 const CONTENT_OPEN = /<([a-zA-Z][\w:-]*)[^>]*\sclass="(?:[^"]*\s)?vuemo-content(?:\s[^"]*)?"[^>]*>/
 
@@ -173,6 +189,7 @@ export function runAssertions(pages: PageHtml): CheckResult[] {
     checkPost(pages.post),
     checkVuemoContent(pages.post),
     checkSlots(pages.post),
+    checkUnknownLayout(pages.unknown),
     // the probe sits in the About page: if that page did not render, the result says nothing about enhanceApp
     page.status === 'fail' ? fail('enhance-app', 'skipped (layout-page failed)') : checkEnhanceApp(pages.page)
   ]

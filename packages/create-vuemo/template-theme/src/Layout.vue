@@ -15,7 +15,7 @@ const layouts = { home: Home, post: Post, archive: Archive, tag: Tag, category: 
 const { page, frontmatter, theme, site, isDark } = useData<VuemoThemeConfig & MyThemeConfig>()
 
 // Contract: dispatch on `frontmatter.layout` ONLY. Core gives every page under posts/ the `post` layout.
-// A missing or unknown layout is rendered as `page`, and so is the 404 page.
+// A missing layout is rendered as `page` (so is an unknown one, by choice of this theme), and so is the 404 page.
 const layout = computed(() => {
   if (page.value.isNotFound) return Page
   const name = frontmatter.value.layout as keyof typeof layouts | undefined

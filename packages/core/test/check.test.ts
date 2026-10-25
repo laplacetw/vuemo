@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
-  FIXTURE, checkArchive, checkCategory, checkEnhanceApp, checkHome, checkPage, checkPost, checkSlots, checkTag,
+  FIXTURE, checkArchive, checkCategory, checkEnhanceApp, checkHome, checkPage, checkPost, checkSlots, checkTag, checkUnknownLayout,
   checkVuemoContent, runAssertions
 } from '../src/check/assert'
 import { checkIsDark, checkNoFs, checkPeerDeps, staticChecks } from '../src/check/static'
@@ -81,6 +81,17 @@ describe('slots', () => {
   })
 })
 
+describe('unknown-layout', () => {
+  it('passes when the marker is rendered', () => {
+    expect(checkUnknownLayout(`<main>${FIXTURE.unknownMarker}</main>`).status).toBe('pass')
+  })
+  it('warns (never fails) when the body is lost', () => {
+    const r = checkUnknownLayout('<div class="VPContent"><vuemo-check-unknown></vuemo-check-unknown></div>')
+    expect(r.status).toBe('warn')
+    expect(r.message).toContain('catch-all')
+  })
+})
+
 describe('enhance-app and runAssertions', () => {
   it('enhance-app', () => {
     expect(checkEnhanceApp(probe('enhance-app')).status).toBe('pass')
@@ -89,19 +100,21 @@ describe('enhance-app and runAssertions', () => {
   it('runs all assertions', () => {
     const ok = runAssertions({
       home: FIXTURE.newestTitle, archive: FIXTURE.titles.join(), tag: FIXTURE.tag, category: FIXTURE.category,
-      page: FIXTURE.pageMarker + probe('enhance-app'), post: good
+      page: FIXTURE.pageMarker + probe('enhance-app'), post: good, unknown: FIXTURE.unknownMarker
     })
     expect(ok.map((r) => r.id)).toEqual([
-      'layout-home', 'layout-archive', 'layout-tag', 'layout-category', 'layout-page', 'layout-post', 'vuemo-content', 'slots', 'enhance-app'
+      'layout-home', 'layout-archive', 'layout-tag', 'layout-category', 'layout-page', 'layout-post', 'vuemo-content', 'slots', 'unknown-layout', 'enhance-app'
     ])
     expect(ok.every((r) => r.status === 'pass')).toBe(true)
-    expect(runAssertions({ home: '', archive: '', tag: '', category: '', page: '', post: '' }).every((r) => r.status === 'fail')).toBe(true)
+    const bad = runAssertions({ home: '', archive: '', tag: '', category: '', page: '', post: '', unknown: '' })
+    expect(bad.filter((r) => r.id !== 'unknown-layout').every((r) => r.status === 'fail')).toBe(true)
+    expect(bad.find((r) => r.id === 'unknown-layout')!.status).toBe('warn')
   })
 })
 
 describe('enhance-app skipped', () => {
   it('does not blame enhanceApp when the page layout failed', () => {
-    const r = runAssertions({ home: '', archive: '', tag: '', category: '', page: '', post: '' })
+    const r = runAssertions({ home: '', archive: '', tag: '', category: '', page: '', post: '', unknown: '' })
     expect(r.find((x) => x.id === 'enhance-app')!.message).toBe('skipped (layout-page failed)')
   })
 })

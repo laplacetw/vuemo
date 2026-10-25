@@ -70,7 +70,7 @@ Composables provided to themes: `usePosts()`, `useTags()`, `useCategories()`, `u
 ### Theme contract
 
 - A theme is a VitePress theme that only consumes data provided by core.
-- A theme must implement these layouts: `home`, `post`, `archive`, `tag`, `category`, `page`. A theme dispatches on `frontmatter.layout` only, and a missing or unknown layout is treated as `page`; core gives pages under `posts/` without a layout the layout `post`.
+- A theme must implement these layouts: `home`, `post`, `archive`, `tag`, `category`, `page`. A theme dispatches on `frontmatter.layout` only, a missing layout is treated as `page`, and handling of a value outside the six is theme-defined (a theme built on plain VitePress `extends` may render nothing for it, so authors should not use unknown layout values with themes they have not checked); core gives pages under `posts/` without a layout the layout `post`.
 - A theme must provide these standard slots in the `post` layout, so framework plugins can inject content without knowing the theme's internals:
   - `post-before-content`: before the post content (for example an AI summary)
   - `post-after-content`: after the post content

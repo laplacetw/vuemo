@@ -54,6 +54,9 @@ export default defineBlogConfig({
     'archives.md': layoutPage('Archives', 'archive'),
     'tags.md': layoutPage('Tags', 'tag'),
     'category.md': layoutPage('Category', 'category'),
+    'unknown-layout.md': `${layoutPage('Unknown layout', FIXTURE.unknownLayout)}
+${FIXTURE.unknownMarker}
+`,
     'about.md': `---
 title: About
 ---
@@ -81,5 +84,6 @@ export const FIXTURE_PAGES = {
   tag: 'tags.html',
   category: 'category.html',
   page: 'about.html',
+  unknown: 'unknown-layout.html',
   post: 'posts/check-post-1.html'
 } as const

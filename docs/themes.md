@@ -52,7 +52,7 @@ export default { extends: Theme, Layout: MyLayout }
 
 A page picks its layout with `layout:` in its frontmatter. Core gives every page under `posts/` that has no `layout` the layout `post` (in `transformPageData`, after your own `transformPageData` hook if you have one), so a theme never looks at file paths. A page outside `posts/` without a `layout` has none.
 
-The dispatch rule of the theme contract: **a theme chooses its layout from `frontmatter.layout` only, and a missing or unknown layout is rendered as `page`.**
+The dispatch rule of the theme contract: **a theme chooses its layout from `frontmatter.layout` only, and a missing layout is rendered as `page`.** What a theme does with a value outside the six is its own choice (a theme built on plain VitePress `extends` may render nothing), so do not use unknown layout values with a theme you have not checked.
 
 `home` · `post` · `archive` · `tag` · `category` · `page`
 
@@ -62,7 +62,7 @@ The full guide, including the starter template, `vuemo check-theme` and a publis
 
 The contract, which lets framework plugins work with any theme:
 
-- implement the six layouts above, and dispatch on `frontmatter.layout` only: a missing or unknown layout is treated as `page`
+- implement the six layouts above, and dispatch on `frontmatter.layout` only: a missing layout is treated as `page` (unknown values are theme-defined)
 - in the `post` layout provide the slots `post-before-content`, `post-after-content` and `post-comments`, and render the components plugins registered for each with `useSlots(name)`
 - put the class `vuemo-content` on the post body (the AI summary reads the article text from it)
 - call `runEnhanceApps(ctx)` in `enhanceApp`
