@@ -12,6 +12,23 @@ export { default } from '@vuemo/core/theme'
 
 Behind the scenes `theme` is resolved through a Vite virtual module, from your project's root as an `import` written in your project would be, so no VitePress internals are involved.
 
+### Switching themes
+
+1. Install the new theme: `pnpm add vuemo-theme-x` (a theme is a package; `@vuemo/theme-default` can stay installed or be removed).
+2. Set it in `defineBlogConfig`: `theme: 'vuemo-theme-x'`.
+3. Read the theme's README for its own options; they go in `themeConfig`.
+
+For a new blog, `create-vuemo` does both steps:
+
+```sh
+npm create vuemo@alpha my-blog -- --theme vuemo-theme-x
+npm create vuemo@alpha my-blog -- --theme @scope/vuemo-theme-x@^1.2.0
+```
+
+`--theme <package>[@version-or-range]` puts that package into the dependencies instead of `@vuemo/theme-default` (without a version it is `latest`) and writes `theme: '<package>'` into `.vitepress/config.ts`. For a scoped name the version is what follows the last `@` after the first character. An invalid package name exits with code 1. The prompt "Theme package" asks for it too.
+
+Your posts, the flat options (`nav`, `footer`, `search`, ...) and the plugins keep working, because they belong to Vuemo and not to the theme. `themeConfig` keys that belonged to the old theme stay in your config and are ignored by the new one. Whether the new theme supports every flat option is up to it: see its README.
+
 ### Theme errors
 
 | Message | Cause and fix |
@@ -40,7 +57,7 @@ The dispatch rule of the theme contract: **a theme chooses its layout from `fron
 
 ## Writing a theme
 
-A theme is a VitePress theme (default export `{ Layout, enhanceApp? }`) that only consumes data from `@vuemo/core/client`. `@vuemo/theme-default` is the reference implementation; its `Layout.vue` shows the layout dispatch and `layouts/Post.vue` the slots.
+The full guide, including the starter template, `vuemo check-theme` and a publish checklist, is [Theme authoring](./theme-authoring.md). In short, a theme is a VitePress theme (default export `{ Layout, enhanceApp? }`) that only consumes data from `@vuemo/core/client`. `@vuemo/theme-default` is the reference implementation; its `Layout.vue` shows the layout dispatch and `layouts/Post.vue` the slots.
 
 The contract, which lets framework plugins work with any theme:
 

@@ -10,11 +10,11 @@ Vuemo is a thin layer on top of [VitePress](https://vitepress.dev). VitePress st
 
 | Path | Package | What it does |
 | --- | --- | --- |
-| `packages/core` | `@vuemo/core` | Posts loader, tags / categories / archives, pagination, prev/next, JSON-LD, RSS, `defineBlogConfig()`, `vuemo new` CLI |
+| `packages/core` | `@vuemo/core` | Posts loader, tags / categories / archives, pagination, prev/next, JSON-LD, RSS, `defineBlogConfig()`, `vuemo new` and `vuemo check-theme` CLI |
 | `themes/default` | `@vuemo/theme-default` | Minimal default theme (Tailwind CSS v4) and the reference implementation of the theme contract |
 | `plugins/comments` | `@vuemo/plugin-comments` | Comments with Giscus or Utterances, synced with dark mode |
 | `plugins/ai-summary` | `@vuemo/plugin-ai-summary` | "Summarize" button backed by your own Cloudflare Worker (Workers AI + AI Gateway) |
-| `packages/create-vuemo` | `create-vuemo` | Project scaffolding (`npm create vuemo`) |
+| `packages/create-vuemo` | `create-vuemo` | Project scaffolding (`npm create vuemo`): a blog (any theme with `--theme`) or a theme starter (`--template theme`) |
 | `examples/blog` | — | Example blog used for development |
 
 ## What a blog looks like
@@ -76,13 +76,15 @@ description: Optional summary
 
 A theme is a regular VitePress theme that consumes data from `@vuemo/core/client` (`usePosts`, `useTags`, `useCategories`, `useArchives`, `usePagination`, `usePrevNext`, `usePost`, `useTaxonomyLinks`, `useQueryParam`). To be usable with Vuemo plugins, a theme must:
 
-- implement the layouts `home`, `post`, `archive`, `tag`, `category` and `page`
+- implement the layouts `home`, `post`, `archive`, `tag`, `category` and `page`, chosen from `frontmatter.layout` only (missing or unknown is `page`; core gives `posts/` pages the layout `post`)
 - provide these slots in the `post` layout: `post-before-content`, `post-after-content`, `post-comments`, rendered with `useSlots(name)`
 - call `runEnhanceApps(ctx)` from its `enhanceApp`
 - put the class `vuemo-content` on the post body
 - reflect dark mode through VitePress's `isDark`
 
 To customize a theme, use VitePress's own `extends` and slots.
+
+Switch themes with the `theme` option (`create-vuemo --theme <package>` for a new blog); see [Themes](./docs/themes.md). To build your own, start from `npm create vuemo@alpha vuemo-theme-mine -- --template theme`, check it with `vuemo check-theme`, and read [Theme authoring](./docs/theme-authoring.md).
 
 ## Plugins
 

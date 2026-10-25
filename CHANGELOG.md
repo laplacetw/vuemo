@@ -49,3 +49,12 @@
 - `theme` accepts a package name or the absolute path of a theme entry file and is resolved from the project root; a theme that cannot be resolved, or whose default export has no `Layout`, fails with an explanation of the fix
 - `create-vuemo --theme <package>[@range]` (and a "Theme package" prompt): scaffolds a blog with another theme instead of `@vuemo/theme-default`, writing the dependency (`latest` without a range) and an explicit `theme` line into the config; an invalid package name exits with code 1
 - `create-vuemo --template theme` (and a "What do you want to create?" prompt): scaffolds a theme package (`vuemo-theme-<name>`) with the six layouts, the standard slots, a dark mode toggle in plain CSS, an example blog and a `test/contract.test.ts` that runs `checkTheme`; `pnpm check` runs `vuemo check-theme`
+
+### Theme contract
+Changes that theme authors must know. While Vuemo is 0.x, a change of the contract is a core minor release, and a theme's `@vuemo/core` peer range is the contract version it supports.
+- **Breaking**: `footer` is always `{ message?, copyright? }` in `themeConfig` (a string option becomes `{ message }`); read `footer.message`
+- **Breaking**: themes dispatch on `frontmatter.layout` only (missing or unknown is `page`); core gives pages under `posts/` the layout `post`
+- the `vitepress` peer range is `^1.6.0` for themes and plugins; `@vuemo/core` is a peer dependency of a theme, never a `dependency`
+- `themeConfig.summary` and `themeConfig.paths` are always written; `search` and `lastUpdated` only when the option is on; theme-specific options go at the top level of `themeConfig` and must not reuse the names core owns (`nav`, `footer`, `logo`, `socialLinks`, `postsPerPage`, `summary`, `paths`, `search`, `lastUpdated`)
+- new composables in `@vuemo/core/client`: `usePost`, `useQueryParam`, `useTaxonomyLinks`
+- tooling for theme authors: `vuemo check-theme`, `create-vuemo --template theme`, and the guide `docs/theme-authoring.md`

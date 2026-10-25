@@ -22,7 +22,10 @@
 ```
 packages/
   core/                 @vuemo/core            blog logic, no UI
+    src/check/          theme contract check (`vuemo check-theme`, `@vuemo/core/check`)
   create-vuemo/         create-vuemo           project scaffolding (npm create vuemo)
+    template/           blog template
+    template-theme/     theme starter (`--template theme`)
 themes/
   default/              @vuemo/theme-default   minimal default theme (Tailwind CSS, like the default theme Hexo ships)
     plugins/            theme-specific plugins (only for the default theme)
@@ -60,7 +63,7 @@ Responsible for:
 - JSON-LD, sitemap, RSS
 - frontmatter schema definition and validation
 - `defineBlogConfig()`: wraps VitePress `defineConfig`; one place for site info, theme choice, theme options (`nav`, `footer`, `logo`, `socialLinks`, `postsPerPage`, `summary`, `paths`, `search`, `lastUpdated`) and feature switches (`comments`, `aiSummary`). Plain VitePress options keep working as they do in `defineConfig`
-- CLI: `vuemo new <filename>` (replaces the old `npm run new`)
+- CLI: `vuemo new <filename>` (replaces the old `npm run new`) and `vuemo check-theme [theme] [--keep]` (builds a fixture blog with a theme and checks the theme contract; also `checkTheme()` from `@vuemo/core/check`)
 
 Composables provided to themes: `usePosts()`, `useTags()`, `useCategories()`, `useArchives()`, `usePagination()`, `usePrevNext()`, `usePost()`, `useTaxonomyLinks()`, `useQueryParam()`.
 
@@ -75,6 +78,9 @@ Composables provided to themes: `usePosts()`, `useTags()`, `useCategories()`, `u
 - A theme must put the class `vuemo-content` on the post body element in the `post` layout, so plugins (for example the AI summary) can read the article text without knowing the theme's internals.
 - A theme must render the components registered by plugins with `useSlots(name)` from `@vuemo/core/client`, and call `runEnhanceApps(ctx)` in its `enhanceApp`.
 - A theme must reflect dark mode through VitePress `isDark`, so plugins (for example comments) can sync their appearance.
+- `@vuemo/core` is a peer dependency of a theme, never a `dependency`; its range is the contract version the theme supports (while 0.x, a contract change is a core minor release; see the "Theme contract" section of CHANGELOG.md). `vitepress` is a peer dependency with range `^1.6.0`.
+- Theme-specific options go at the top level of `themeConfig`, must not reuse the names core owns (`nav`, `footer`, `logo`, `socialLinks`, `postsPerPage`, `summary`, `paths`, `search`, `lastUpdated`), and are typed and validated (`console.warn`) by the theme itself; core has no API for them.
+- `vuemo check-theme` checks the contract against a fixture build; `docs/theme-authoring.md` is the guide for theme authors.
 - To customize a theme, use VitePress's native `extends` plus slots. Do not invent a custom inheritance mechanism.
 
 ### Plugin interface
@@ -170,6 +176,7 @@ Official features are plugins that core loads by their config key. Core has no d
 2. **Plugins** (done): implement `defineBlogConfig`, the plugin interface and the theme's standard slots; finish plugin-comments (Giscus, Utterances) and plugin-ai-summary.
 3. **Scaffolding** (done): build `create-vuemo`, which generates a clean project with only `posts/`, `public/` and the config.
 4. **Documentation** (done): guides for getting started, configuration, building themes, writing plugins and deployment, in `docs/`.
+5. **Foundation and theme ecosystem** (done): the default theme styles VitePress Markdown extensions and has local search, summaries, taxonomy links, last updated and a compact archive; `theme` accepts a package name or an entry path with actionable errors; pages under `posts/` default to the `post` layout; `vuemo check-theme`; `create-vuemo --theme` and `--template theme` (theme starter); `docs/theme-authoring.md`. Not part of this stage: the Trigger rewrite.
 
 Do one stage at a time, and verify that build and deployment still work at the end of each stage.
 
