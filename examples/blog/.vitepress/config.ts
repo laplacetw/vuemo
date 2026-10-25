@@ -14,7 +14,6 @@ export default defineBlogConfig({
   // theme
   theme: '@vuemo/theme-default',
   logo: '/logo.svg',
-  socialLinks: [{ icon: 'github', link: 'https://github.com/laplacetw/vuemo' }],
   postsPerPage: 2,
   nav: [
     { text: 'Home', link: '/' },
