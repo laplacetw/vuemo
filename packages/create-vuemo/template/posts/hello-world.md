@@ -7,7 +7,9 @@ tags:
 description: My first post
 ---
 
-Welcome to your new blog. Edit this file or run `pnpm new <filename>` to write more.
+Welcome to your new blog. Edit this file or run `pnpm new <filename>` to write more. Math in the excerpt works too: $a^2 + b^2 = c^2$.
+
+---
 
 Math works out of the box: an inline formula such as $E = mc^2$ and a display formula:
 

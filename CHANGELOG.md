@@ -46,6 +46,13 @@
 - docs: CLAUDE.md records the final status of every original Trigger feature and the contract friction found by the `vuemo-theme-trigger` 2.0.0-alpha rewrite (unknown layouts under `extends`; resolved by relaxing the dispatch rule)
 
 ### Fixes
+- types: `@vuemo/core/client` and `@vuemo/core/theme` reference the `virtual:vuemo/*` declarations, and the client code no longer pulls in `@types/node` (`NavItem`, `SocialLink`, `FooterConfig`, `VuemoThemeConfig` moved to a node-free module; the public exports are unchanged); `core`, `plugin-comments` and `plugin-ai-summary` also set top-level `types`
+- `create-vuemo` blogs get a `tsconfig.json`; project names must be lowercase valid npm names; the starter post has math in its excerpt; the `vue` peer range is `^3.5.0` (VitePress 1.6 depends on `^3.5.13`); `engines.node` is `>=18.3`
+- JSON-LD: `<` is escaped as `\u003c` so a title cannot close the script tag; an invalid `date` omits the JSON-LD instead of failing the build
+- `vuemo new`: date and time come from the same local clock, names with path separators or `..` are rejected, and the title is quoted safely in YAML
+- AI summary: a request per page that is aborted on navigation, times out after 30 s and never shows a stale result; the box is `aria-live="polite"`; README notes that CORS does not protect your quota from non-browser clients
+- comments: the Utterances `issue-term: title` embed waits for the page title to update before it mounts
+- `@vuemo/theme-default` builds its CSS on `prepack`
 - sitemap URLs include the site `base` (`https://example.com/vuemo/posts/a`), like the feed and the JSON-LD; before, `base` was dropped and the listed URLs returned 404 under a sub-path
 - `defineBlogConfig` no longer warns about a missing RSS feed on every build of a blog without `hostname`; it warns only when `rss` (`true` or `{ limit }`, now allowed in the type) was set without a `hostname`
 - default theme: search keeps keystrokes typed right after opening (the modal chunk is preloaded when the page is idle, and characters typed before it mounts are handed to it), and a result no longer repeats a heading that equals its title ("Second post | Second post")

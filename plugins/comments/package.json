@@ -4,6 +4,7 @@
   "description": "Comments for Vuemo blogs: Giscus and Utterances",
   "type": "module",
   "license": "MIT",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -20,7 +21,7 @@
   "peerDependencies": {
     "@vuemo/core": "workspace:^",
     "vitepress": "^1.6.0",
-    "vue": "^3.3.0"
+    "vue": "^3.5.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
@@ -51,6 +52,6 @@
     "access": "public"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=18.3"
   }
 }

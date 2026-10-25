@@ -7,6 +7,7 @@ export function postJsonLd(page: PageData, hostname: string | undefined, base = 
   if (!isPostPath(page.relativePath) || !fm.title || !fm.date) return
   const path = normalizeBase(base) + page.relativePath.replace(/\.md$/, '')
   const published = new Date(fm.date).getTime()
+  if (!Number.isFinite(published)) return
   // lastUpdated is NaN for untracked files, 0 for missing ones and undefined when the feature is off
   const updated = page.lastUpdated
   const dateModified = Number.isFinite(updated) && updated! > 0 ? new Date(Math.max(published, updated!)).toISOString() : undefined
@@ -20,5 +21,5 @@ export function postJsonLd(page: PageData, hostname: string | undefined, base = 
     ...(fm.tags?.length && { keywords: fm.tags.join(', ') }),
     ...(hostname && { url: hostname.replace(/\/$/, '') + path })
   }
-  return ['script', { type: 'application/ld+json' }, JSON.stringify(jsonLd)]
+  return ['script', { type: 'application/ld+json' }, JSON.stringify(jsonLd).replace(/</g, '\\u003c')]
 }

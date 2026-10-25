@@ -77,6 +77,6 @@ export default {
 
 ## CORS
 
-The browser calls the Worker directly, so the Worker must answer the preflight `OPTIONS` request and send `Access-Control-Allow-Origin` with your blog's origin (scheme + host, no path, no trailing slash). During `pnpm dev` the origin is `http://localhost:5173`; change `ALLOWED_ORIGIN` temporarily, or return the request's `Origin` when it is on an allowlist. Avoid `*` in production: anyone could spend your AI quota.
+The browser calls the Worker directly, so the Worker must answer the preflight `OPTIONS` request and send `Access-Control-Allow-Origin` with your blog's origin (scheme + host, no path, no trailing slash). During `pnpm dev` the origin is `http://localhost:5173`; change `ALLOWED_ORIGIN` temporarily, or return the request's `Origin` when it is on an allowlist. Avoid `*` in production: any website could then call the Worker from a visitor's browser. Note that CORS only restricts browsers: `curl` or a script ignores it, so it does not protect your quota. Use AI Gateway rate limits (below) or a check in the Worker for that.
 
 Also consider rate limits on AI Gateway, since the endpoint is public.

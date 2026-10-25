@@ -70,6 +70,8 @@ Publishing is hard to undo (`npm unpublish` only works for 72 hours and with res
 
 ## Later releases
 
+Alpha peer ranges such as `@vuemo/core: ^0.1.0-alpha.0` accept every later `0.1.0-alpha.N` and the `0.1.x` releases (semver allows prereleases of the same `major.minor.patch` that are greater than the base), so themes and plugins need no peer bump per alpha. They do not accept `0.2.0`.
+
 All packages share one version. During the alpha, bump the prerelease number (`0.1.0-alpha.1`, `0.1.0-alpha.2`, ...) for every release, breaking or not.
 
 1. Set the new version in all five `package.json` files: `pnpm -r exec npm version 0.1.0-alpha.1 --no-git-tag-version`. (`create-vuemo` reads the other versions when it is built, so the projects it generates always depend on the matching release.)

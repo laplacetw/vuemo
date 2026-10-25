@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useData } from 'vitepress'
 import { createAdapter } from './adapters'
 import type { CommentsConfig } from './adapters/types'
@@ -18,7 +18,8 @@ function remount() {
 
 onMounted(() => {
   remount()
-  watch(() => page.value.relativePath, remount)
+  // wait a tick so providers that key on the page title (Utterances `issue-term: title`) see the new one
+  watch(() => page.value.relativePath, () => nextTick(remount))
   watch(isDark, (value) => adapter.setTheme(value))
 })
 

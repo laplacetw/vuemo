@@ -149,7 +149,7 @@ export interface ThemeAnswers {
 
 /** The `package.json` of a theme starter: core, vitepress and vue are peers (and dev dependencies for the example). */
 export function themePackageJson(a: ThemeAnswers): string {
-  const peers = { '@vuemo/core': VERSIONS.core, vitepress: '^1.6.0', vue: '^3.3.0' }
+  const peers = { '@vuemo/core': VERSIONS.core, vitepress: '^1.6.0', vue: '^3.5.0' }
   return JSON.stringify(
     {
       name: a.name,
@@ -179,8 +179,9 @@ export function hasThemePrefix(name: string): boolean {
   return /^(@[^/]+\/)?vuemo-theme-./.test(name)
 }
 
+/** A project directory name that is also a valid (unscoped, lowercase) npm package name. */
 export function validName(name: string): boolean {
-  return /^[a-z0-9][a-z0-9._-]*$/i.test(name)
+  return !name.includes('/') && validPackageName(name)
 }
 
 /**

@@ -1,3 +1,4 @@
+/// <reference path="./virtual.d.ts" />
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useData, useRoute, useRouter } from 'vitepress'
 import { slots, enhanceApps } from 'virtual:vuemo/plugins'
@@ -8,7 +9,7 @@ import { groupByCategory, groupByTag, groupByYear } from '../group'
 import { findPost, findPrevNext, paginate, stripBase } from '../pagination'
 import { taxonomyHref } from '../taxonomy'
 import { onAfterRouteChange, readQueryParam, withQueryParam, type RouteHookHost } from '../query'
-import type { VuemoThemeConfig } from '../config'
+import type { VuemoThemeConfig } from '../types'
 
 export type { Post, Frontmatter } from '../schema'
 

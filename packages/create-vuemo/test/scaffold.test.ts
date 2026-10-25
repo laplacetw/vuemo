@@ -66,5 +66,8 @@ describe('blog template', () => {
     expect(existsSync(join(target, '_gitignore'))).toBe(false)
     expect(readFileSync(join(target, '.vitepress/config.ts'), 'utf8')).toContain("title: 'T'")
     expect(JSON.parse(readFileSync(join(target, 'package.json'), 'utf8')).name).toBe('blog')
+    const tsconfig = JSON.parse(readFileSync(join(target, 'tsconfig.json'), 'utf8'))
+    expect(tsconfig.compilerOptions).toMatchObject({ module: 'ESNext', moduleResolution: 'Bundler', target: 'ES2022', strict: true, noEmit: true, skipLibCheck: true })
+    expect(tsconfig.include).toEqual(['.vitepress/**/*.ts'])
   })
 })

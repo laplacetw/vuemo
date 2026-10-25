@@ -69,6 +69,8 @@ VitePress bundles the config with esbuild, so builds never type-check it. For `t
 /// <reference types="@vuemo/plugin-ai-summary" />
 ```
 
+If you remove a plugin package from `package.json`, also remove its `/// <reference types="..." />` line, or `tsc` fails with TS2688 ("Cannot find type definition file"). The generated `tsconfig.json` covers `.vitepress/**/*.ts`, so `npx tsc` checks the config.
+
 Without them an editor reports `comments` / `aiSummary` as unknown properties, although the build works.
 
 Their packages (`@vuemo/plugin-comments`, `@vuemo/plugin-ai-summary`) must be installed; `create-vuemo` installs both. Options are documented in the plugin READMEs: [comments](../plugins/comments/README.md), [AI summary](../plugins/ai-summary/README.md).

@@ -3,6 +3,7 @@ import { parsePost } from '../src/schema'
 import { groupByTag, groupByYear, groupByCategory } from '../src/group'
 import { findPost, findPrevNext, paginate, stripBase } from '../src/pagination'
 import { postJsonLd } from '../src/seo'
+import { localDateTime, postTemplate, validPostName, yamlString } from '../src/newpost'
 import { isPostPath } from '../src/schema'
 import { taxonomyHref } from '../src/taxonomy'
 import { searchRender } from '../src/search'
@@ -547,5 +548,32 @@ describe('onAfterRouteChange', () => {
     stop()
     await host.onAfterRouteChange('/a')
     expect(calls).toEqual(['later'])
+  })
+})
+
+describe('json-ld hardening', () => {
+  it('escapes < so a title cannot close the script tag', () => {
+    const out = postJsonLd({ relativePath: 'posts/a.md', frontmatter: { title: '</script><b>', date: '2024-01-02' } } as any, undefined)![2] as string
+    expect(out).not.toContain('<')
+    expect(JSON.parse(out).headline).toBe('</script><b>')
+  })
+  it('skips an invalid date instead of throwing', () => {
+    expect(postJsonLd({ relativePath: 'posts/a.md', frontmatter: { title: 'A', date: 'nope' } } as any, undefined)).toBeUndefined()
+  })
+})
+
+describe('vuemo new helpers', () => {
+  it('rejects names that leave posts/', () => {
+    for (const n of ['../x', 'a/b', 'a\\b', '..', 'a..b', '', ' ']) expect(validPostName(n), n).toBe(false)
+    expect(validPostName('my-post')).toBe(true)
+  })
+  it('formats date and time from local components of one Date', () => {
+    expect(localDateTime(new Date(2025, 0, 5, 3, 4, 9))).toBe('2025-01-05 03:04:09')
+    expect(localDateTime(new Date(2025, 11, 31, 23, 59, 59))).toBe('2025-12-31 23:59:59')
+  })
+  it('quotes the title as a YAML string', () => {
+    expect(yamlString('a: b # c "d"')).toBe('"a: b # c \\"d\\""')
+    expect(postTemplate('note-x', new Date(2025, 0, 5, 1, 2, 3))).toContain('title: "Note x"\ndate: 2025-01-05 01:02:03\n')
+    expect(postTemplate("it's: [odd]", new Date())).toContain('title: "It\'s: [odd]"')
   })
 })

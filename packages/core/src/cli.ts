@@ -2,6 +2,7 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { parseArgs } from 'node:util'
+import { postTemplate, validPostName } from './newpost'
 
 const USAGE = 'Usage:\n  vuemo new <filename>\n  vuemo check-theme [theme] [--keep]'
 const [command, ...rest] = process.argv.slice(2)
@@ -35,9 +36,10 @@ async function checkThemeCommand(args: string[]) {
 
 function newPost(filename: string) {
   const name = filename.replace(/\.md$/, '')
-  const title = name.replaceAll('-', ' ').replace(/^./, (c) => c.toUpperCase())
-  const now = new Date()
-  const time = now.toLocaleTimeString('en-US', { hourCycle: 'h23' })
+  if (!validPostName(name)) {
+    console.error(`[ERROR]: "${filename}" is not a valid post name (no path separators or "..")`)
+    process.exit(1)
+  }
   const target = join(process.cwd(), 'posts', `${name}.md`)
 
   if (existsSync(target)) {
@@ -46,21 +48,6 @@ function newPost(filename: string) {
   }
 
   mkdirSync(dirname(target), { recursive: true })
-  writeFileSync(
-    target,
-    `---
-title: ${title}
-date: ${now.toISOString().slice(0, 10)} ${time}
-category:
-tags:
-  -
-description:
----
-
-write excerpt here
-
----
-`
-  )
+  writeFileSync(target, postTemplate(name, new Date()))
   console.log(`[INFO]: Created ${target}`)
 }

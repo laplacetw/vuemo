@@ -34,6 +34,10 @@ describe('generate', () => {
     expect(configTs({ ...base, title: "Tom's \\ blog" })).toContain("title: 'Tom\\'s \\\\ blog',")
     expect(validName('my-blog')).toBe(true)
     expect(validName('../x')).toBe(false)
+    expect(validName('MyBlog')).toBe(false)
+    expect(validName('@s/blog')).toBe(false)
+    expect(validName('.hidden')).toBe(false)
+    expect(validName('a'.repeat(215))).toBe(false)
   })
 })
 
@@ -108,7 +112,7 @@ describe('themePackageJson', () => {
     expect(pkg.scripts.check).toBe('vuemo check-theme ./src/index.ts')
   })
   it('has core, vitepress and vue as peers (and dev dependencies), never as dependencies', () => {
-    expect(pkg.peerDependencies).toEqual({ '@vuemo/core': VERSIONS.core, vitepress: '^1.6.0', vue: '^3.3.0' })
+    expect(pkg.peerDependencies).toEqual({ '@vuemo/core': VERSIONS.core, vitepress: '^1.6.0', vue: '^3.5.0' })
     expect(pkg.devDependencies).toMatchObject(pkg.peerDependencies)
     expect(pkg.devDependencies).toHaveProperty('vitest')
     expect(pkg.dependencies).toBeUndefined()
