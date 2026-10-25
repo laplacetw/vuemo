@@ -4,14 +4,15 @@ import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
 import { createInterface } from 'node:readline/promises'
-import { configTs, packageJson, validName, type Answers, type CommentsProvider } from './generate'
+import { DEFAULT_THEME, configTs, packageJson, parseThemeSpec, validName, type Answers, type CommentsProvider } from './generate'
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
   options: {
     yes: { type: 'boolean', short: 'y' },
     comments: { type: 'string' },
-    'ai-summary': { type: 'boolean' }
+    'ai-summary': { type: 'boolean' },
+    theme: { type: 'string' }
   }
 })
 
@@ -28,10 +29,16 @@ async function ask(): Promise<Answers> {
   const title = await prompt('Blog title', name)
   const comments = (values.comments ?? (await prompt('Comments [none/giscus/utterances]', 'none'))) as CommentsProvider
   const aiSummary = values['ai-summary'] ?? /^y/i.test(await prompt('Add AI summary plugin? [y/N]', 'N'))
+  const theme = values.theme ?? (await prompt('Theme package', DEFAULT_THEME))
   rl?.close()
 
   if (!PROVIDERS.includes(comments)) fail(`Unknown comments provider "${comments}". Use: ${PROVIDERS.join(', ')}`)
-  return { name, title, comments, aiSummary }
+  try {
+    parseThemeSpec(theme)
+  } catch (error) {
+    fail((error as Error).message)
+  }
+  return { name, title, comments, aiSummary, theme }
 }
 
 function fail(message: string): never {

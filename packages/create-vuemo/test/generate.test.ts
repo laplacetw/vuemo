@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { configTs, packageJson, quote, validName } from '../src/generate'
+import { DEFAULT_THEME, VERSIONS, configTs, packageJson, parseThemeSpec, quote, validName } from '../src/generate'
 
 const base = { name: 'b', title: 'My "Blog"', comments: 'none', aiSummary: false } as const
 
@@ -43,5 +43,45 @@ describe('quote', () => {
       expect(quote(text)).toMatch(/^'/)
       expect(new Function(`return ${quote(text)}`)()).toBe(text)
     }
+  })
+})
+
+describe('parseThemeSpec', () => {
+  it('splits a version or range at the last @ after index 0', () => {
+    expect(parseThemeSpec('vuemo-theme-x')).toEqual({ name: 'vuemo-theme-x', range: 'latest' })
+    expect(parseThemeSpec('vuemo-theme-x@latest')).toEqual({ name: 'vuemo-theme-x', range: 'latest' })
+    expect(parseThemeSpec('vuemo-theme-x@^1.0.0')).toEqual({ name: 'vuemo-theme-x', range: '^1.0.0' })
+    expect(parseThemeSpec('@scope/vuemo-theme-x')).toEqual({ name: '@scope/vuemo-theme-x', range: 'latest' })
+    expect(parseThemeSpec('@scope/vuemo-theme-x@^1.2.0')).toEqual({ name: '@scope/vuemo-theme-x', range: '^1.2.0' })
+    expect(parseThemeSpec('@scope/x@2.0.0-alpha.1')).toEqual({ name: '@scope/x', range: '2.0.0-alpha.1' })
+  })
+  it('rejects invalid package names and empty ranges', () => {
+    for (const spec of ['', 'Upper', '@scope', '@scope/', 'a b', '../x', '/abs', '_x', '.x', 'x@', '@scope/x@', 'x@1 2', 'http://x/y']) {
+      expect(() => parseThemeSpec(spec), spec).toThrow()
+    }
+    expect(() => parseThemeSpec('a'.repeat(215))).toThrow()
+  })
+})
+
+describe('theme option', () => {
+  const deps = (a: Parameters<typeof packageJson>[0]) => JSON.parse(packageJson(a)).dependencies
+  it('keeps the default output when no theme or the default theme is chosen', () => {
+    expect(deps(base)['@vuemo/theme-default']).toBe(VERSIONS.theme)
+    expect(packageJson({ ...base, theme: DEFAULT_THEME })).toBe(packageJson(base))
+    expect(configTs({ ...base, theme: DEFAULT_THEME })).toBe(configTs(base))
+    expect(configTs(base)).toContain("  // theme\n  theme: '@vuemo/theme-default',\n  postsPerPage: 5,")
+  })
+  it('replaces the default theme dependency with the chosen theme', () => {
+    const d = deps({ ...base, theme: '@scope/vuemo-theme-x@^1.2.0' })
+    expect(d).not.toHaveProperty('@vuemo/theme-default')
+    expect(d['@scope/vuemo-theme-x']).toBe('^1.2.0')
+    expect(Object.keys(d)[1]).toBe('@scope/vuemo-theme-x')
+    expect(d['@vuemo/core']).toBe(VERSIONS.core)
+    expect(deps({ ...base, theme: 'vuemo-theme-y' })['vuemo-theme-y']).toBe('latest')
+  })
+  it('writes an explicit theme line only for another theme', () => {
+    const cfg = configTs({ ...base, theme: 'vuemo-theme-y@^1.0.0' })
+    expect(cfg).toContain("  // theme\n  theme: 'vuemo-theme-y',\n  postsPerPage: 5,")
+    expect(cfg).not.toContain('@vuemo/theme-default')
   })
 })
