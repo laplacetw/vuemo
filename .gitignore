@@ -1,6 +1,7 @@
 node_modules
 dist
 cache
+.vuemo-check
 .vitepress/dist
 .vitepress/cache
 *.log

@@ -1,9 +1,9 @@
 import { defineConfig } from 'tsup'
 
 export default defineConfig({
-  entry: ['src/index.ts', 'src/cli.ts'],
+  entry: { index: 'src/index.ts', cli: 'src/cli.ts', check: 'src/check/index.ts' },
   format: ['esm'],
-  dts: { entry: ['src/index.ts'] },
+  dts: { entry: { index: 'src/index.ts', check: 'src/check/index.ts' } },
   clean: true,
   external: ['vitepress', 'vue']
 })

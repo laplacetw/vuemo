@@ -12,7 +12,8 @@
     "dev": "pnpm --filter blog dev",
     "release": "pnpm test && pnpm build && pnpm -r publish --tag alpha",
     "test:site": "pnpm --filter blog test:site",
-    "verify": "pnpm build && pnpm test && pnpm test:site"
+    "test:contract": "pnpm --filter @vuemo/theme-default test:contract",
+    "verify": "pnpm build && pnpm test && pnpm test:site && pnpm test:contract"
   },
   "devDependencies": {
     "typescript": "^5.6.0",

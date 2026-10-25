@@ -12,6 +12,10 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./check": {
+      "types": "./dist/check.d.ts",
+      "default": "./dist/check.js"
+    },
     "./client": "./src/client/index.ts",
     "./posts.data": "./src/posts.data.ts",
     "./theme": "./src/theme.ts"

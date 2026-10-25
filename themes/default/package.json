@@ -14,7 +14,8 @@
   ],
   "scripts": {
     "build": "tailwindcss -i src/style.css -o dist/style.css --minify",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:contract": "node ../../packages/core/dist/cli.js check-theme ./src/index.ts"
   },
   "dependencies": {
     "minisearch": "^7.1.1"
