@@ -16,7 +16,8 @@ export default defineConfig({
       aiSummary: range('../../plugins/ai-summary/package.json'),
       vitepress: '^1.6.4',
       vue: '^3.5.0',
-      mathjax: '^4.3.2'
+      mathjax: '^4.3.2',
+      vitest: '^3.0.0'
     })
   }
 })

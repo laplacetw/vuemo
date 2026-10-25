@@ -1,0 +1,6 @@
+node_modules
+dist
+.vuemo-check
+example/.vitepress/dist
+example/.vitepress/cache
+.DS_Store

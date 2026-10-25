@@ -9,7 +9,8 @@
   },
   "files": [
     "dist",
-    "template"
+    "template",
+    "template-theme"
   ],
   "engines": {
     "node": ">=18"

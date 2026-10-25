@@ -1,0 +1,90 @@
+/* Plain CSS, no build step. Colors are CSS variables; `html.dark` (set by VitePress `isDark`) swaps them. */
+:root {
+  --bg: #ffffff;
+  --text: #222222;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --accent: #2563eb;
+  --code-bg: #f3f4f6;
+}
+
+html.dark {
+  --bg: #16181d;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --border: #2d3139;
+  --accent: #60a5fa;
+  --code-bg: #20242b;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.7 system-ui, sans-serif;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.site-header, main, .site-footer {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.site-header nav { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; align-items: center; }
+.site-title { color: var(--text); font-size: 1.2rem; font-weight: 700; }
+
+/* the toggle shows the moon in light mode and the sun in dark mode */
+.site-header button { border: 0; background: none; color: inherit; font-size: 1.1rem; cursor: pointer; }
+.icon-sun, html.dark .icon-moon { display: none; }
+html.dark .icon-sun { display: inline; }
+
+.site-footer { color: var(--muted); font-size: 0.85rem; text-align: center; }
+
+.meta { color: var(--muted); font-size: 0.9rem; }
+
+.post-list { list-style: none; padding: 0; }
+.post-list li { margin-bottom: 1.5rem; }
+.post-title { font-size: 1.25rem; font-weight: 600; }
+
+.archive-list { list-style: none; padding: 0; }
+.archive-list time { margin-right: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
+.chips button, .pagination button {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: none;
+  color: inherit;
+  padding: 0.15rem 0.8rem;
+  cursor: pointer;
+}
+.chips button[aria-pressed='true'], .pagination button[aria-current='page'] {
+  background: var(--text);
+  color: var(--bg);
+}
+
+.pagination { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-top: 2rem; }
+.prev-next { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; justify-content: space-between; margin-top: 2.5rem; font-size: 0.9rem; }
+
+/* Markdown output of the post body */
+.vuemo-content img { max-width: 100%; }
+.vuemo-content pre { overflow-x: auto; padding: 1rem; border-radius: 6px; background: var(--code-bg); }
+.vuemo-content :not(pre) > code { padding: 0.1rem 0.3rem; border-radius: 4px; background: var(--code-bg); }
+/* VitePress adds a language label and a copy button to code blocks; this theme shows neither */
+.vuemo-content .lang, .vuemo-content button.copy { display: none; }
+/* VitePress code blocks colour tokens with variables: pick the dark ones in dark mode */
+html.dark .shiki, html.dark .shiki span { color: var(--shiki-dark) !important; background-color: var(--shiki-dark-bg) !important; }
+.vuemo-content blockquote { margin-left: 0; padding-left: 1rem; border-left: 3px solid var(--border); color: var(--muted); }

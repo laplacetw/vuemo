@@ -38,6 +38,7 @@ interface Versions {
   vitepress: string
   vue: string
   mathjax: string
+  vitest: string
 }
 
 /** Injected from the workspace packages at build time (see tsup.config.ts). */
@@ -46,7 +47,7 @@ declare const __VERSIONS__: Versions | undefined
 /** Dependency ranges of the generated project. */
 export const VERSIONS: Versions =
   typeof __VERSIONS__ === 'undefined'
-    ? { core: '*', theme: '*', comments: '*', aiSummary: '*', vitepress: '*', vue: '*', mathjax: '*' }
+    ? { core: '*', theme: '*', comments: '*', aiSummary: '*', vitepress: '*', vue: '*', mathjax: '*', vitest: '*' }
     : __VERSIONS__
 
 /** The chosen theme package; the default theme (with the version released together with this scaffolder) when none is given. */
@@ -136,6 +137,43 @@ ${themeLine}  postsPerPage: 5,
   aiSummary: ${aiSummary}
 })
 `
+}
+
+export interface ThemeAnswers {
+  /** Package name: `vuemo-theme-<name>` or `@scope/vuemo-theme-<name>`. */
+  name: string
+}
+
+/** The `package.json` of a theme starter: core, vitepress and vue are peers (and dev dependencies for the example). */
+export function themePackageJson(a: ThemeAnswers): string {
+  const peers = { '@vuemo/core': VERSIONS.core, vitepress: '^1.6.0', vue: '^3.3.0' }
+  return JSON.stringify(
+    {
+      name: a.name,
+      version: '0.0.0',
+      type: 'module',
+      description: 'A Vuemo theme',
+      license: 'MIT',
+      exports: { '.': './src/index.ts' },
+      files: ['src'],
+      keywords: ['vuemo-theme'],
+      scripts: {
+        dev: 'vitepress dev example',
+        'build:example': 'vitepress build example',
+        check: 'vuemo check-theme ./src/index.ts',
+        test: 'vitest run'
+      },
+      peerDependencies: peers,
+      devDependencies: { ...peers, vitest: VERSIONS.vitest }
+    },
+    null,
+    2
+  ) + '\n'
+}
+
+/** A name without the `vuemo-theme-` prefix is valid but gets a hint. */
+export function hasThemePrefix(name: string): boolean {
+  return /^(@[^/]+\/)?vuemo-theme-./.test(name)
 }
 
 export function validName(name: string): boolean {

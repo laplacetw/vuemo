@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_THEME, VERSIONS, configTs, packageJson, parseThemeSpec, quote, validName } from '../src/generate'
+import { DEFAULT_THEME, VERSIONS, configTs, hasThemePrefix, packageJson, parseThemeSpec, quote, themePackageJson, validName, validPackageName } from '../src/generate'
 
 const base = { name: 'b', title: 'My "Blog"', comments: 'none', aiSummary: false } as const
 
@@ -83,5 +83,35 @@ describe('theme option', () => {
     const cfg = configTs({ ...base, theme: 'vuemo-theme-y@^1.0.0' })
     expect(cfg).toContain("  // theme\n  theme: 'vuemo-theme-y',\n  postsPerPage: 5,")
     expect(cfg).not.toContain('@vuemo/theme-default')
+  })
+})
+
+describe('themePackageJson', () => {
+  const pkg = JSON.parse(themePackageJson({ name: '@me/vuemo-theme-x' }))
+  it('is a publishable theme package', () => {
+    expect(pkg).toMatchObject({
+      name: '@me/vuemo-theme-x',
+      version: '0.0.0',
+      type: 'module',
+      exports: { '.': './src/index.ts' },
+      files: ['src'],
+      keywords: ['vuemo-theme']
+    })
+    expect(Object.keys(pkg.scripts)).toEqual(['dev', 'build:example', 'check', 'test'])
+    expect(pkg.scripts.check).toBe('vuemo check-theme ./src/index.ts')
+  })
+  it('has core, vitepress and vue as peers (and dev dependencies), never as dependencies', () => {
+    expect(pkg.peerDependencies).toEqual({ '@vuemo/core': VERSIONS.core, vitepress: '^1.6.0', vue: '^3.3.0' })
+    expect(pkg.devDependencies).toMatchObject(pkg.peerDependencies)
+    expect(pkg.devDependencies).toHaveProperty('vitest')
+    expect(pkg.dependencies).toBeUndefined()
+  })
+  it('suggests the vuemo-theme- prefix', () => {
+    expect(hasThemePrefix('vuemo-theme-x')).toBe(true)
+    expect(hasThemePrefix('@me/vuemo-theme-x')).toBe(true)
+    expect(hasThemePrefix('my-theme')).toBe(false)
+    expect(hasThemePrefix('vuemo-theme-')).toBe(false)
+    expect(validPackageName('@me/vuemo-theme-x')).toBe(true)
+    expect(validPackageName('My Theme')).toBe(false)
   })
 })

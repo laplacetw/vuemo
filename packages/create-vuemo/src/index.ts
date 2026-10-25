@@ -1,15 +1,25 @@
 #!/usr/bin/env node
-import { cpSync, existsSync, mkdirSync, readdirSync, renameSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync } from 'node:fs'
 import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
 import { createInterface } from 'node:readline/promises'
-import { DEFAULT_THEME, configTs, packageJson, parseThemeSpec, validName, type Answers, type CommentsProvider } from './generate'
+import {
+  DEFAULT_THEME,
+  hasThemePrefix,
+  parseThemeSpec,
+  validName,
+  validPackageName,
+  type Answers,
+  type CommentsProvider
+} from './generate'
+import { scaffoldBlog, scaffoldTheme } from './scaffold'
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
   options: {
     yes: { type: 'boolean', short: 'y' },
+    template: { type: 'string' },
     comments: { type: 'string' },
     'ai-summary': { type: 'boolean' },
     theme: { type: 'string' }
@@ -17,14 +27,30 @@ const { values, positionals } = parseArgs({
 })
 
 const PROVIDERS = ['none', 'giscus', 'utterances']
+const TEMPLATES = ['blog', 'theme']
 
-async function ask(): Promise<Answers> {
-  const dirArg = positionals[0]
-  const interactive = !values.yes && process.stdin.isTTY
-  const rl = interactive ? createInterface({ input: process.stdin, output: process.stdout }) : undefined
-  const prompt = async (question: string, fallback: string) =>
-    ((await rl?.question(`${question} (${fallback}) `)) ?? '').trim() || fallback
+const dirArg = positionals[0]
+const interactive = !values.yes && process.stdin.isTTY
+const rl = interactive ? createInterface({ input: process.stdin, output: process.stdout }) : undefined
+const prompt = async (question: string, fallback: string) =>
+  ((await rl?.question(`${question} (${fallback}) `)) ?? '').trim() || fallback
 
+function fail(message: string): never {
+  console.error(`[ERROR]: ${message}`)
+  process.exit(1)
+}
+
+/** Creates the target directory; refuses a non-empty one. */
+function prepare(dir: string): string {
+  const target = resolve(process.cwd(), dir)
+  if (existsSync(target) && readdirSync(target).length) fail(`${target} is not empty`)
+  mkdirSync(target, { recursive: true })
+  return target
+}
+
+const here = dirname(fileURLToPath(import.meta.url))
+
+async function blog() {
   const name = dirArg ?? (await prompt('Project name', 'my-blog'))
   const title = await prompt('Blog title', name)
   const comments = (values.comments ?? (await prompt('Comments [none/giscus/utterances]', 'none'))) as CommentsProvider
@@ -38,33 +64,43 @@ async function ask(): Promise<Answers> {
   } catch (error) {
     fail((error as Error).message)
   }
-  return { name, title, comments, aiSummary, theme }
-}
+  const answers: Answers = { name, title, comments, aiSummary, theme }
 
-function fail(message: string): never {
-  console.error(`[ERROR]: ${message}`)
-  process.exit(1)
-}
+  const projectName = basename(resolve(process.cwd(), name))
+  if (!validName(projectName)) fail(`"${projectName}" is not a valid project name`)
+  scaffoldBlog(join(here, '../template'), prepare(name), { ...answers, name: projectName })
 
-const answers = await ask()
-const target = resolve(process.cwd(), answers.name)
-const projectName = basename(target)
-
-if (!validName(projectName)) fail(`"${projectName}" is not a valid project name`)
-if (existsSync(target) && readdirSync(target).length) fail(`${target} is not empty`)
-
-mkdirSync(target, { recursive: true })
-cpSync(join(dirname(fileURLToPath(import.meta.url)), '../template'), target, { recursive: true })
-// npm drops .gitignore from published packages, so the template ships it under another name
-renameSync(join(target, '_gitignore'), join(target, '.gitignore'))
-writeFileSync(join(target, 'package.json'), packageJson({ ...answers, name: projectName }))
-writeFileSync(join(target, '.vitepress/config.ts'), configTs(answers))
-
-console.log(`
+  console.log(`
 Created ${projectName}. Next:
 
-  cd ${answers.name}
+  cd ${name}
   pnpm install   # or npm install
   pnpm dev
   pnpm new my-first-post
 `)
+}
+
+async function theme() {
+  // the package name: `vuemo-theme-<name>` or `@scope/vuemo-theme-<name>`; a scoped name creates the directory `vuemo-theme-<name>`
+  const name = dirArg ?? (await prompt('Theme package name', 'vuemo-theme-my-theme'))
+  rl?.close()
+
+  if (!validPackageName(name)) fail(`"${name}" is not a valid npm package name`)
+  scaffoldTheme(join(here, '../template-theme'), prepare(basename(name)), name)
+
+  if (!hasThemePrefix(name)) {
+    console.log(`Hint: theme packages are named vuemo-theme-<name> or @scope/vuemo-theme-<name> so people can find them.`)
+  }
+  console.log(`
+Created ${name}. Next:
+
+  cd ${basename(name)}
+  pnpm install
+  pnpm dev     # the example blog
+  pnpm check   # check the theme against the Vuemo theme contract
+`)
+}
+
+const template = values.template ?? (await prompt('What do you want to create? [blog/theme]', 'blog'))
+if (!TEMPLATES.includes(template)) fail(`Unknown template "${template}". Use: ${TEMPLATES.join(', ')}`)
+await (template === 'theme' ? theme() : blog())

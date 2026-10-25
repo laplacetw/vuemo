@@ -1,0 +1,51 @@
+# __NAME__
+
+A [Vuemo](https://github.com/laplacetw/vuemo) theme. A Vuemo theme is a plain VitePress theme (`{ Layout, enhanceApp }`) that renders the data `@vuemo/core` provides. It never reads the file system.
+
+## Files
+
+| File | What it is |
+| --- | --- |
+| `src/index.ts` | The theme entry: `{ Layout, enhanceApp }`. `enhanceApp` calls `runEnhanceApps(ctx)`. |
+| `src/Layout.vue` | Header, footer, dark mode toggle and the dispatch on `frontmatter.layout`. Validates the theme options. |
+| `src/layouts/*.vue` | The six required layouts: `home`, `post`, `archive`, `tag`, `category`, `page`. |
+| `src/components/PluginSlot.vue` | Renders the components plugins registered for a standard slot. |
+| `src/types.ts` | The typed theme options (`MyThemeConfig`). |
+| `src/style.css` | Plain CSS. Dark mode swaps CSS variables under `html.dark`. |
+| `example/` | A blog to try the theme: `pnpm dev`. Its `theme` option is the path of `src/index.ts`. |
+| `test/contract.test.ts` | Runs the contract check with vitest. |
+
+## The contract in six points
+
+1. Implement the layouts `home`, `post`, `archive`, `tag`, `category` and `page`, and choose one only from `frontmatter.layout`. A missing or unknown layout is `page`. Never look at the file path (core sets `layout: post` for pages under `posts/`).
+2. In the `post` layout provide the slots `post-before-content`, `post-after-content` and `post-comments`, each as a `<slot>` plus `<PluginSlot name="...">`.
+3. Put the class `vuemo-content` on the post body (`<Content class="vuemo-content" />`).
+4. Call `runEnhanceApps(ctx)` from `@vuemo/core/client` in `enhanceApp`.
+5. Follow VitePress `isDark` for dark mode (`useData().isDark`).
+6. Only consume data from `@vuemo/core/client` (`usePosts`, `usePagination`, `usePost`, `usePrevNext`, `useTags`, `useCategories`, `useArchives`, `useQueryParam`, `useTaxonomyLinks`). No `node:fs` or `node:path` in theme sources.
+
+## Develop
+
+```sh
+pnpm install
+pnpm dev             # the example blog with hot reload
+pnpm build:example   # builds the example
+pnpm check           # vuemo check-theme: builds a fixture blog and checks the contract
+pnpm test            # the same check, as a vitest test
+```
+
+`pnpm check` prints one line per check (layouts, `vuemo-content`, slots, `enhanceApp`, peer dependencies, no file system access). `is-dark` has to be verified by hand: toggle the mode in `pnpm dev`.
+
+## Publish
+
+- Name the package `vuemo-theme-<name>` or `@scope/vuemo-theme-<name>` and keep the `vuemo-theme` keyword.
+- `@vuemo/core`, `vitepress` and `vue` are **peer dependencies**. Never put `@vuemo/core` in `dependencies`: two copies of core would not share the posts data. They are also in `devDependencies` so the example and the tests work.
+- The `@vuemo/core` peer range is the contract version you support.
+- The package ships `src` (the `exports` point at `src/index.ts`; VitePress compiles it). If you add a build step for CSS, add its output to `files` and `exports`.
+- Run `pnpm check` and `pnpm test`, then `npm publish`.
+
+Users install the theme and set it in `.vitepress/config.ts`:
+
+```ts
+export default defineBlogConfig({ theme: '__NAME__' })
+```
