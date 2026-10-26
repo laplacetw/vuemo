@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.1.0-alpha.1
+
 ### Features
 - `@vuemo/plugin-ai-summary`: stable class hooks (`vuemo-ai-summary-button`, `-dots`, `-dot`, `-result`, `-error`), a three-dot loading indicator (respects `prefers-reduced-motion`), the new `resultPrefix` option, and a bordered-box-free, `:where()`-based base style that themes override; documented as the styling contract in the plugin README
 - monorepo scaffold: `@vuemo/core`, `@vuemo/theme-default`, `examples/blog`

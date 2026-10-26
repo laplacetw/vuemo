@@ -10,7 +10,7 @@
     "build": "pnpm -r --filter \"./packages/*\" --filter \"./themes/*\" --filter \"./plugins/*\" build && pnpm -r --filter \"./examples/*\" build",
     "test": "pnpm -r test",
     "dev": "pnpm --filter blog dev",
-    "release": "pnpm test && pnpm build && pnpm -r publish --tag alpha",
+    "release": "pnpm build && pnpm test && pnpm -r --filter '!create-vuemo' publish --tag alpha && pnpm --filter create-vuemo publish --tag alpha",
     "test:site": "pnpm --filter blog test:site",
     "test:contract": "pnpm --filter @vuemo/theme-default test:contract",
     "verify": "pnpm build && pnpm test && pnpm test:site && pnpm test:contract"

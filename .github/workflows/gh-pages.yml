@@ -28,10 +28,10 @@ jobs:
           cache: pnpm
       - uses: actions/configure-pages@v6
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test
       - run: pnpm build
         env:
           BASE: /vuemo/
+      - run: pnpm test
       - run: pnpm test:site
         env:
           BASE: /vuemo/

@@ -1,6 +1,6 @@
 {
   "name": "@vuemo/plugin-ai-summary",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "description": "AI post summary for Vuemo blogs with Cloudflare Workers AI",
   "type": "module",
   "license": "MIT",

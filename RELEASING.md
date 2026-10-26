@@ -46,7 +46,7 @@ Publishing is hard to undo (`npm unpublish` only works for 72 hours and with res
    pnpm release
    ```
 
-   This runs the tests, builds, and runs `pnpm -r publish`, which publishes in dependency order (core first). npm asks for a one-time 2FA code for each package. A code lasts about 30 seconds; if one expires, run the command again: versions that are already published are skipped. The `publishConfig.access = public` in each package makes the scoped packages public (they are private by default).
+   This builds, runs the tests, publishes core, the theme and the plugins in dependency order (core first), and `create-vuemo` last (a separate `pnpm publish`, because it has no dependency on the others). npm asks for a one-time 2FA code for each package. A code lasts about 30 seconds; if one expires, run the command again: versions that are already published are skipped. The `publishConfig.access = public` in each package makes the scoped packages public (they are private by default).
 
 5. Check the result in a clean directory:
 
@@ -67,6 +67,16 @@ Publishing is hard to undo (`npm unpublish` only works for 72 hours and with res
 
 - **Bump every package before a release that changes the API.** The theme starter (`create-vuemo --template theme`) and the generated blogs pin `@vuemo/core` to the version in the workspace when `create-vuemo` is built. The published `0.1.0-alpha.0` lacks `@vuemo/core/check`, `vuemo check-theme` and absolute-path themes, so a starter that pins it breaks. Release at least `0.1.0-alpha.1` (see "Later releases") before anyone runs `npm create vuemo` for a theme.
 - **Never publish `create-vuemo` before `@vuemo/core`** (and the theme and plugins). `pnpm release` publishes in dependency order; if you publish by hand, publish `create-vuemo` last, then check with `npm create vuemo@alpha x -- --template theme` that the pinned `@vuemo/core` version exists on npm.
+
+## Publishing a theme (for example `vuemo-theme-trigger`)
+
+Publish the theme after `@vuemo/core` is on npm. `create-vuemo --theme <name>` with no version writes `"<name>": "latest"`, and publishing with `--tag alpha` creates no `latest` tag, so add it once after the first publish:
+
+```sh
+npm dist-tag add vuemo-theme-trigger@2.0.0-alpha.0 latest
+```
+
+Before that, replace the theme's `link:` devDependencies with `^0.1.0-alpha.1`, run `pnpm install` and commit the lockfile.
 
 ## Later releases
 
