@@ -14,8 +14,23 @@ export default defineBlogConfig({
 | --- | --- |
 | `api` | Required. URL of your Worker. |
 | `buttonText` | Label of the button. Default `🤖 AI Summary`. |
+| `resultPrefix` | Text before the summary. Default `🤖 AI Summary : `. |
 
 The theme must mark the article body with the class `vuemo-content` (the default theme does). Code blocks and footnotes are removed before sending.
+
+## Styling contract
+
+The plugin is theme-neutral: it ships no theme or utility classes and only a minimal base style, written with `:where()` so its specificity is 0 and any theme rule wins. Themes style these stable class names:
+
+| Class | Element |
+| --- | --- |
+| `.vuemo-ai-summary` | root wrapper (`is-loading` is added while a request runs) |
+| `.vuemo-ai-summary-button` | the button (the label is `buttonText`) |
+| `.vuemo-ai-summary-dots` | loading indicator inside the button, containing three `.vuemo-ai-summary-dot` spans |
+| `.vuemo-ai-summary-result` | the `<p>` with `resultPrefix` + the summary (replaces the button) |
+| `.vuemo-ai-summary-error` | the `<p>` with the error message |
+
+Custom properties: `--vuemo-ai-summary-dot-size` (default `0.5rem`) and `--vuemo-ai-summary-dot-gap` (default `0.5rem`). The dots bounce with a CSS animation that is turned off under `prefers-reduced-motion: reduce`. Put theme rules outside any CSS layer (or after the plugin) so they win over the base style.
 
 ## API contract
 

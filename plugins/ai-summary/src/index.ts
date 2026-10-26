@@ -6,11 +6,16 @@ export interface AiSummaryOptions {
   api: string
   /** Default: `🤖 AI Summary`. */
   buttonText?: string
+  /** Text shown before the summary. Default: `🤖 AI Summary : `. */
+  resultPrefix?: string
 }
 
 export default function aiSummary(options: AiSummaryOptions): VuemoPlugin {
   if (!options?.api) throw new Error('[vuemo] plugin-ai-summary: "api" is required')
-  const client = { api: options.api, buttonText: options.buttonText ?? '🤖 AI Summary' }
+  const client = {
+    api: options.api, buttonText: options.buttonText ?? '🤖 AI Summary',
+    resultPrefix: options.resultPrefix ?? '🤖 AI Summary : '
+  }
   return {
     name: '@vuemo/plugin-ai-summary',
     vite: { define: { __VUEMO_AI_SUMMARY__: JSON.stringify(client) } },

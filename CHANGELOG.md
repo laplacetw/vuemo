@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Features
+- `@vuemo/plugin-ai-summary`: stable class hooks (`vuemo-ai-summary-button`, `-dots`, `-dot`, `-result`, `-error`), a three-dot loading indicator (respects `prefers-reduced-motion`), the new `resultPrefix` option, and a bordered-box-free, `:where()`-based base style that themes override; documented as the styling contract in the plugin README
 - monorepo scaffold: `@vuemo/core`, `@vuemo/theme-default`, `examples/blog`
 - `defineBlogConfig` has no `theme` option; themes are enabled with `.vitepress/theme/index.ts` (`export { default } from '@vuemo/theme-default'`), VitePress's native mechanism (superseded below: the `theme` option exists again, resolved through a virtual module, and the entry file is `export { default } from '@vuemo/core/theme'`)
 - `VuemoPlugin` interface and `defineBlogConfig({ plugins })`: merges `markdown`, `vite`, `head`, `transformPost` (posts loader), `enhanceApp` and `slots`
