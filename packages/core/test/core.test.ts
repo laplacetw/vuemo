@@ -42,7 +42,7 @@ describe('pagination', () => {
   })
   it('finds prev/next', () => {
     const posts = [mk(3), mk(2), mk(1)]
-    expect(findPrevNext(posts, '/posts/p2.html')).toEqual({ prev: posts[0], next: posts[2] })
+    expect(findPrevNext(posts, '/posts/p2.html')).toEqual({ prev: posts[2], next: posts[0] })
     expect(findPrevNext(posts, '/nope')).toEqual({})
   })
 })

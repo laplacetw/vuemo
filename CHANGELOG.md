@@ -47,6 +47,7 @@
 - docs: CLAUDE.md records the final status of every original Trigger feature and the contract friction found by the `vuemo-theme-trigger` 2.0.0-alpha rewrite (unknown layouts under `extends`; resolved by relaxing the dispatch rule)
 
 ### Fixes
+- **Breaking:** `usePrevNext()` follows reading order: `prev` is the older post and `next` the newer one (it was the other way round). Themes that only render `prev`/`next` need no change.
 - types: `@vuemo/core/client` and `@vuemo/core/theme` reference the `virtual:vuemo/*` declarations, and the client code no longer pulls in `@types/node` (`NavItem`, `SocialLink`, `FooterConfig`, `VuemoThemeConfig` moved to a node-free module; the public exports are unchanged); `core`, `plugin-comments` and `plugin-ai-summary` also set top-level `types`
 - `create-vuemo` blogs get a `tsconfig.json`; project names must be lowercase valid npm names; the starter post has math in its excerpt; the `vue` peer range is `^3.5.0` (VitePress 1.6 depends on `^3.5.13`); `engines.node` is `>=18.3`
 - JSON-LD: `<` is escaped as `\u003c` so a title cannot close the script tag; an invalid `date` omits the JSON-LD instead of failing the build

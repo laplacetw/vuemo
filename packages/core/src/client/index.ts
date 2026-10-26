@@ -73,7 +73,7 @@ export function usePagination(perPage = 5, list = data) {
   return { page, goPage }
 }
 
-/** prev = newer post, next = older post. Defaults to the current route. */
+/** prev = older post, next = newer post (chronological order). Defaults to the current route. */
 export function usePrevNext(url?: string) {
   const route = useRoute()
   const { site } = useData()

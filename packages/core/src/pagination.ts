@@ -32,10 +32,10 @@ export function findPost<T extends { url: string }>(posts: T[], url: string): T 
   return posts.find((p) => normalize(p.url) === target)
 }
 
-/** `posts` must be sorted newest first. prev = newer, next = older. */
+/** `posts` must be sorted newest first. prev = older, next = newer (chronological reading order). */
 export function findPrevNext<T extends { url: string }>(posts: T[], url: string): { prev?: T; next?: T } {
   const target = normalize(url)
   const i = posts.findIndex((p) => normalize(p.url) === target)
   if (i === -1) return {}
-  return { prev: posts[i - 1], next: posts[i + 1] }
+  return { prev: posts[i + 1], next: posts[i - 1] }
 }

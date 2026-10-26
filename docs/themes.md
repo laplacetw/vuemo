@@ -109,7 +109,7 @@ The default theme's `archive` layout shows the post count, a count per year and 
 | `usePagination(perPage?)` | `{ page, goPage }`; the page number lives in `?page=` (built on `useQueryParam`, so links to the same path and Back/Forward are followed) |
 | `usePost(url?)` | the normalized `Post` at the current route, or `undefined` for pages that are not posts |
 | `useQueryParam(key, { history? })` | a writable ref that follows the URL's `?key=` (`''` when absent): read on mount, on link navigation, also to the same path, and on Back/Forward. Assigning updates the URL with `history.replaceState` (`history: 'push'` adds an entry; `''` removes the param). Empty on the server; its listener is removed on unmount. The default theme's tag and category layouts use it |
-| `usePrevNext(url?)` | `{ prev, next }` for the current post (`prev` = newer, `next` = older) |
+| `usePrevNext(url?)` | `{ prev, next }` for the current post (`prev` = older, `next` = newer) |
 | `useTaxonomyLinks()` | `{ tagLink(name), categoryLink(name) }`: URLs of the tag and category pages (`themeConfig.paths`, with `base`) that preselect the item through `?tag=` / `?category=`. The tag and category layouts read that query and re-read it when the route changes |
 | `useSlots(name)` | components plugins registered for a slot |
 | `runEnhanceApps(ctx)` | runs the plugins' `enhanceApp` modules |
