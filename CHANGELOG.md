@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Features
+- `theme` is resolved by one pure function, `resolveThemeSource(theme, root)` (exported from `@vuemo/core`), in this order: a path (`./x`, `../x`, absolute; a file or a folder), `themes/<name>/` in the project (a single wrapping subfolder from a zip is entered), the installed package `vuemo-theme-<name>` (short names), the installed package `<name>` (also `@scope/name`). Entries come from `package.json` (`exports["."]`, `main`), then `index.*`, then `src/index.*`. A name with a `/` (other than a scope's) or a `..` segment is rejected: a path must start with `.` or be absolute. Errors list what was tried and how to fix it. `defineBlogConfig` bundles `vuemo-theme-<name>` for a short name.
+- `vuemo check-theme trigger` accepts the same names, through the same function.
+- docs: using a theme from npm or a zip in `themes/`, and how to ship a theme as a zip
+
+### Changed
+- the error for a theme that cannot be found now reads `[vuemo] theme "X" was not found. Looked in: ...`; a missing path reads `theme path "X" does not exist`
+
 ### Breaking (new scaffolds only)
 - `create-vuemo`: new projects keep all settings in `vuemo.config.ts` at the project root (`export default defineBlogConfig({...})`, with the plugin `/// <reference types>` lines); `.vitepress/config.ts` (`export { default } from '../vuemo.config'`) and `.vitepress/theme/index.ts` are generated one-line boilerplate, so users never need to open `.vitepress/`. The theme starter's `example/` follows the same layout, and the generated `tsconfig.json` includes `vuemo.config.ts`.
 - Existing projects are unaffected: a `.vitepress/config.ts` that calls `defineBlogConfig` directly keeps working (covered by a build test).

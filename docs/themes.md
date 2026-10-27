@@ -4,37 +4,84 @@
 
 ## Using a theme
 
-Set `theme` in `defineBlogConfig` (default `@vuemo/theme-default`) and install the package. `theme` is a package name or the absolute path of a theme entry file (handy while you develop a theme: `theme: '/path/to/my-theme/src/index.ts'`). The settings live in `vuemo.config.ts` at the project root. The files in `.vitepress/` are VitePress's own entries; `create-vuemo` writes them as one-line boilerplate (`.vitepress/config.ts` re-exports `../vuemo.config`), so you never open that folder. The theme entry is:
+Set `theme` in `vuemo.config.ts` (default `@vuemo/theme-default`). The name is looked up in this order, and the first match wins:
+
+1. **A path**: `./x`, `../x` or an absolute path, to the theme's entry file or to its folder (handy while you develop a theme: `theme: './my-theme/src/index.ts'`). A path must start with `./`, `../` or be absolute; a name with a `/` that does not (`a/b`) is rejected, and so is a name with a `..` segment.
+2. **A folder in your project**: `themes/<name>/` next to `posts/`.
+3. **An installed package** `vuemo-theme-<name>`: the short name, so `theme: 'trigger'` finds `vuemo-theme-trigger`.
+4. **An installed package** named exactly `<name>`, a full or scoped name (`'@vuemo/theme-default'`, `'@scope/my-theme'`).
+
+Only your files and `node_modules` are read; nothing is downloaded when the blog builds. The settings live in `vuemo.config.ts` at the project root. The files in `.vitepress/` are VitePress's own entries; `create-vuemo` writes them as one-line boilerplate (`.vitepress/config.ts` re-exports `../vuemo.config`), so you never open that folder. The theme entry is:
 
 ```ts
 export { default } from '@vuemo/core/theme'
 ```
 
-Behind the scenes `theme` is resolved through a Vite virtual module, from your project's root as an `import` written in your project would be, so no VitePress internals are involved.
+Behind the scenes `theme` is resolved through a Vite virtual module, so no VitePress internals are involved. The theme's own imports (`vue`, `vitepress`, `@vuemo/core/client`) are resolved from your project's `node_modules`.
 
 ### Switching themes
 
-1. Install the new theme: `pnpm add vuemo-theme-x` (a theme is a package; `@vuemo/theme-default` can stay installed or be removed).
-2. Set it in `defineBlogConfig`: `theme: 'vuemo-theme-x'`.
-3. Read the theme's README for its own options; they go in `themeConfig`.
+There are two ways to get a theme; both end with changing one line.
 
-For a new blog, `create-vuemo` does both steps:
+**A. From npm (recommended).** Install the package and use its short name:
 
 ```sh
-npm create vuemo@alpha my-blog -- --theme vuemo-theme-x
+npm install vuemo-theme-trigger          # or: pnpm add vuemo-theme-trigger
+```
+
+```ts
+// vuemo.config.ts
+export default defineBlogConfig({
+  theme: 'trigger',
+  // ...
+})
+```
+
+Update it like any package: `npm install vuemo-theme-trigger@latest`. (A theme that only has prereleases needs its tag or range: `npm install vuemo-theme-trigger@alpha`.)
+
+**B. From a zip file.** Download the theme's zip (themes usually attach one to their GitHub Release), unzip it into a `themes/` folder in your project, and use the folder's name:
+
+```
+my-blog/
+├── posts/
+├── public/
+├── themes/
+│   └── trigger/              # the unzipped theme, named after the theme
+│       ├── package.json
+│       ├── src/
+│       │   └── index.ts
+│       ├── dist/             # precompiled styles, no build step for you
+│       └── README.md
+└── vuemo.config.ts           # theme: 'trigger'
+```
+
+`themes/trigger/` must hold the theme's `package.json` (or `index.ts`) directly. If your unzip tool added one more folder (`themes/trigger/trigger/package.json`) and that is the only folder, Vuemo looks one level down for you; anything deeper does not work. A theme in `themes/` takes precedence over an installed package of the same name.
+
+Then, for both ways, read the theme's README for its own options (they go in `themeConfig`) and check it with `npx vuemo check-theme trigger`.
+
+For a new blog, `create-vuemo` does both steps for the npm way:
+
+```sh
+npm create vuemo@alpha my-blog -- --theme trigger
+npm create vuemo@alpha my-blog -- --theme vuemo-theme-trigger@^2.0.0
 npm create vuemo@alpha my-blog -- --theme @scope/vuemo-theme-x@^1.2.0
 ```
 
-`--theme <package>[@version-or-range]` puts that package into the dependencies instead of `@vuemo/theme-default` (without a version it is `latest`; `latest` needs a stable `latest` dist-tag: a theme that only has prerelease versions needs an explicit range (`--theme my-theme@^1.0.0-alpha.0`).) and writes `theme: '<package>'` into `vuemo.config.ts`. For a scoped name the version is what follows the last `@` after the first character. An invalid package name exits with code 1. The prompt "Theme package" asks for it too.
+`--theme <name>[@version-or-range]` puts the package into the dependencies instead of `@vuemo/theme-default`: a short name (`trigger`) installs `vuemo-theme-trigger` and writes `theme: 'trigger'`; a full name is installed as written and written as is. Without a version it is `latest` (`latest` needs a stable `latest` dist-tag: a theme that only has prerelease versions needs an explicit range, `--theme trigger@^2.0.0-alpha.0`). For a scoped name the version is what follows the last `@` after the first character. An invalid package name exits with code 1. The prompt "Theme" asks for it too.
 
 Your posts, the flat options (`nav`, `footer`, `search`, ...) and the plugins keep working, because they belong to Vuemo and not to the theme. `themeConfig` keys that belonged to the old theme stay in your config and are ignored by the new one. Whether the new theme supports every flat option is up to it: see its README.
 
 ### Theme errors
 
-| Message | Cause and fix |
+| Message or symptom | Cause and fix |
 | --- | --- |
-| ``[vuemo] theme "X" could not be resolved from <root>. Install it (npm i X / pnpm add X) or fix the `theme` option.`` | The package is not installed in your project (or the name in `theme` is wrong). Install it, or correct the option. |
-| ``[vuemo] theme file "/path/theme.ts" does not exist. Fix the path in the `theme` option.`` | `theme` is an absolute path and nothing is there. A path must be absolute and point at the theme's entry file. |
+| `[vuemo] theme "X" was not found. Looked in: ...` | None of the four places has it. The message lists each place it looked. Install it (`npm install vuemo-theme-X`), unzip it into `themes/X/`, or fix the name. |
+| `the folder themes/X/ exists but holds no theme entry` | The folder has no `package.json` with an entry, no `index.ts` and no `src/index.ts`: the zip was unzipped one level too deep, or into the wrong place, or the folder is empty. Move the theme's files up so that `themes/X/package.json` exists. Two or more subfolders are never guessed at. |
+| `themes/X/X/package.json` (the zip nested one level too deep) | Works by itself when the inner folder is the only one. With extra folders beside it, or two levels, move the files up. |
+| `theme path "./x" does not exist` | The path starts with `.` or is absolute and nothing is there. It is relative to the project root (where `vuemo.config.ts` is). |
+| `"a/b" is not a valid theme name` | A name with a `/` (other than a scope's) or a `..` segment is not looked up. A path to a theme must start with `./`, `../` or be absolute. |
+| `the package "vuemo-theme-X" is installed but has no theme entry` | The package has no usable `exports["."]` / `main` / `index.*` (for example an unbuilt `dist/`). Reinstall it, or ask the author. |
+| ``[vuemo] theme "X" could not be resolved`` after you changed the name | Restart `vuemo dev`/`vitepress dev`: a new `themes/` folder or package is noticed on restart. |
 | `[vuemo] theme "X" does not default-export a VitePress theme ({ Layout, enhanceApp })` | The module was found, but its default export is not a theme: it has no `Layout`, not even through an `extends` chain. Check that the entry file does `export default { Layout, enhanceApp }` (or `{ extends, ... }`), and that `theme` points at that file rather than at some other module. |
 
 `themeConfig` keys that belong to a theme you switched away from stay in your config and are ignored by the new one.

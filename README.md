@@ -23,6 +23,7 @@ Vuemo is a thin layer on top of [VitePress](https://vitepress.dev). VitePress st
 my-blog/
 ├── posts/                    # Markdown posts
 ├── public/                   # static assets
+├── themes/                   # only when you unzip a theme here
 ├── vuemo.config.ts           # all settings live here
 └── .vitepress/               # boilerplate, you never open it
     ├── config.ts             # export { default } from '../vuemo.config'
@@ -42,7 +43,7 @@ export default defineBlogConfig({
   hostname: 'https://example.com',
 
   // theme
-  theme: '@vuemo/theme-default',
+  theme: '@vuemo/theme-default',   // or a short name: 'trigger' (themes/trigger/ or vuemo-theme-trigger)
   postsPerPage: 5,
   nav: [{ text: 'Home', link: '/' }],
 
@@ -85,7 +86,7 @@ A theme is a regular VitePress theme that consumes data from `@vuemo/core/client
 
 To customize a theme, use VitePress's own `extends` and slots.
 
-Switch themes with the `theme` option (`create-vuemo --theme <package>` for a new blog); see [Themes](./docs/themes.md). To build your own, start from `npm create vuemo@alpha vuemo-theme-mine -- --template theme`, check it with `vuemo check-theme`, and read [Theme authoring](./docs/theme-authoring.md).
+Switch themes by changing the `theme` option. `npm install vuemo-theme-trigger` and `theme: 'trigger'` is the whole job; or unzip a downloaded theme into `themes/` (`theme: 'trigger'` finds `themes/trigger/` first). `create-vuemo --theme trigger` does it for a new blog. See [Themes](./docs/themes.md). To build your own, start from `npm create vuemo@alpha vuemo-theme-mine -- --template theme`, check it with `vuemo check-theme`, and read [Theme authoring](./docs/theme-authoring.md).
 
 ## Plugins
 

@@ -190,7 +190,18 @@ What you get:
 
 Scripts: `pnpm dev` (the example blog), `pnpm build:example`, `pnpm check` (`vuemo check-theme ./src/index.ts`), `pnpm test`. The generated README explains the rest.
 
-While you develop, a blog can use a local theme through the absolute path of its entry file: `theme: '/path/to/my-theme/src/index.ts'`.
+While you develop, a blog can use a local theme through the path of its entry file or folder: `theme: '/path/to/my-theme/src/index.ts'` or `theme: '../my-theme'` (a path starts with `./`, `../` or is absolute).
+
+## Shipping a theme
+
+Publish to npm (the main way; users run `npm install vuemo-theme-<name>` and set `theme: '<name>'`). Name the package `vuemo-theme-<name>` so the short name works. You can also attach a zip to a GitHub Release, for users who prefer to unzip a theme into their project's `themes/` folder. Both use the same files, so a theme that works as a package works as a zip if:
+
+- **It ships precompiled assets.** The user has no build tools for your theme: compile Tailwind or any CSS to a file (such as `dist/style.css`) and import that file from the theme's entry. Do not rely on the user running a bundler step, a postinstall script or a CSS preprocessor.
+- **It has an entry by the convention.** Vuemo looks in `package.json` (`exports["."]`, then `main`), then `index.{ts,mts,js,mjs}`, then `src/index.*`. The entry's default export is the theme. Entries that are `.ts` or `.vue` sources are fine: Vite compiles them.
+- **Its dependencies are the user's.** `vue`, `vitepress` and `@vuemo/core` are peers, found in the user's `node_modules`. Other packages the theme imports must be listed in its `package.json` `dependencies`; for a zip they are not installed, so keep a zip theme free of them or bundle them.
+- **The zip has one top-level folder named after the theme's short name**: `trigger/package.json`, `trigger/src/`, `trigger/dist/`, `trigger/README.md`, `trigger/LICENSE`. The user unzips it into `themes/`, which gives `themes/trigger/`. (A zip that wraps the folder once more is tolerated, but name the top-level folder so it needs no renaming.)
+
+The starter's `pnpm package` writes `dist-zip/<name>-<version>.zip` in that layout (see the generated README); upload it to the GitHub Release of the tag.
 
 ## `vuemo check-theme`
 
@@ -198,7 +209,7 @@ While you develop, a blog can use a local theme through the absolute path of its
 vuemo check-theme [theme] [--keep]
 ```
 
-It builds a small fixture blog (three posts, a home, archive, tag, category and about page, plus probe plugins that fill the three standard slots and register an `enhanceApp`) with your theme, then reads the generated HTML. `theme` is a path to the theme entry or a package name that resolves from the current directory; without it, the `exports["."]` (or `main`) of the `package.json` in the current directory is used. The fixture lives in `.vuemo-check/` and is deleted afterwards; `--keep` keeps it (it is in the starter's `.gitignore`). `pnpm check` and `pnpm test` use the same `.vuemo-check/` directory, so do not run them at the same time. The same check is available from code:
+It builds a small fixture blog (three posts, a home, archive, tag, category and about page, plus probe plugins that fill the three standard slots and register an `enhanceApp`) with your theme, then reads the generated HTML. `theme` is anything `defineBlogConfig` accepts, resolved from the current directory: a path, a folder in `themes/`, a short name (`trigger`) or a package name; without it, the `exports["."]` (or `main`) of the `package.json` in the current directory is used. The fixture lives in `.vuemo-check/` and is deleted afterwards; `--keep` keeps it (it is in the starter's `.gitignore`). `pnpm check` and `pnpm test` use the same `.vuemo-check/` directory, so do not run them at the same time. The same check is available from code:
 
 ```ts
 import { checkTheme } from '@vuemo/core/check'

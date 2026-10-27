@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { parsePost } from '../src/schema'
 import { groupByTag, groupByYear, groupByCategory } from '../src/group'
 import { findPost, findPrevNext, paginate, stripBase } from '../src/pagination'
@@ -231,6 +233,10 @@ describe('defineBlogConfig', () => {
   it('points the theme module at the configured theme', async () => {
     const cfg: any = await defineBlogConfig({ theme: '@x/theme' })
     expect(cfg.vite.ssr.noExternal).toContain('@x/theme')
+    // a short name may be the package vuemo-theme-<name>; a path or a themes/ folder is not a package
+    expect(((await defineBlogConfig({ theme: 'trigger' })) as any).vite.ssr.noExternal).toEqual([/^@vuemo\//, 'trigger', 'vuemo-theme-trigger'])
+    expect(((await defineBlogConfig({ theme: 'vuemo-theme-x' })) as any).vite.ssr.noExternal).toEqual([/^@vuemo\//, 'vuemo-theme-x'])
+    expect(((await defineBlogConfig({ theme: './themes/x' })) as any).vite.ssr.noExternal).toEqual([/^@vuemo\//])
     const code = buildThemeModule('@x/theme')
     expect(code).toContain('import theme from "@x/theme"')
     expect(code).toContain('export default theme')
@@ -260,22 +266,39 @@ describe('theme module', () => {
   it('quotes the theme name safely in the message', () => {
     expect(() => run(buildThemeModule('a"b'), {})).toThrow('theme "a"b" does not')
   })
-  it('resolves from the project root and loads the resolved id', async () => {
+  const mkdir = () => mkdtempSync(join(tmpdir(), 'vuemo-theme-'))
+  const err = (m: string): never => { throw new Error(m) }
+  it('imports an installed package through the bundler resolution, from the project root', async () => {
+    const root = mkdir()
+    mkdirSync(join(root, 'node_modules/vuemo-theme-x'), { recursive: true })
+    writeFileSync(join(root, 'node_modules/vuemo-theme-x/index.ts'), 'export default {}')
     const calls: any[] = []
-    const ctx = { resolve: async (id: string, importer?: string) => (calls.push([id, importer]), { id: '/p/node_modules/@x/theme/index.ts' }), error: (m: string): never => { throw new Error(m) } }
-    const out = await loadThemeModule(ctx, '@x/theme', '/p')
-    expect(calls).toEqual([['@x/theme', join('/p', 'index.html')]])
-    expect(out).toContain('import theme from "/p/node_modules/@x/theme/index.ts"')
+    const ctx = { resolve: async (id: string, importer?: string) => (calls.push([id, importer]), { id: '/resolved/theme.ts' }), error: err }
+    const out = await loadThemeModule(ctx, 'x', root)
+    expect(calls).toEqual([['vuemo-theme-x', join(root, 'index.html')]])
+    expect(out).toContain('import theme from "/resolved/theme.ts"')
+    // when the bundler cannot resolve it, the entry found on disk is used
+    const out2 = await loadThemeModule({ resolve: async () => null, error: err }, 'x', root)
+    expect(out2).toContain('index.ts"')
+  })
+  it('imports a local folder or a path by its absolute entry, without the bundler', async () => {
+    const root = mkdir()
+    mkdirSync(join(root, 'themes/t'), { recursive: true })
+    writeFileSync(join(root, 'themes/t/index.ts'), 'export default {}')
+    const ctx = { resolve: async () => { throw new Error('must not resolve') }, error: err }
+    expect(await loadThemeModule(ctx, 't', root)).toContain(JSON.stringify(join(root, 'themes/t/index.ts')))
+    expect(await loadThemeModule(ctx, './themes/t', root)).toContain(JSON.stringify(join(root, 'themes/t/index.ts')))
   })
   it('explains a theme that cannot be resolved', async () => {
-    const ctx = { resolve: async () => null, error: (m: string): never => { throw new Error(m) } }
-    await expect(loadThemeModule(ctx, 'nope-theme', '/p')).rejects.toThrow(
-      '[vuemo] theme "nope-theme" could not be resolved from /p. Install it (npm i nope-theme / pnpm add nope-theme) or fix the `theme` option.'
-    )
+    const root = mkdir()
+    const ctx = { resolve: async () => null, error: err }
+    const e = await loadThemeModule(ctx, 'nope', root).catch((x) => x as Error)
+    expect(e.message).toContain('[vuemo] theme "nope" was not found')
+    expect(e.message).toContain('npm install vuemo-theme-nope')
   })
-  it('says an absolute theme path does not exist', async () => {
-    const ctx = { resolve: async () => null, error: (m: string): never => { throw new Error(m) } }
-    await expect(loadThemeModule(ctx, '/abs/theme.ts', '/p')).rejects.toThrow('theme file "/abs/theme.ts" does not exist')
+  it('says a theme path does not exist', async () => {
+    const ctx = { resolve: async () => null, error: err }
+    await expect(loadThemeModule(ctx, '/abs/theme.ts', '/p')).rejects.toThrow('theme path "/abs/theme.ts" does not exist')
   })
   it('limits the extends chain so a cycle cannot hang', () => {
     expect(buildThemeModule('x')).toContain('i < 10')
@@ -284,7 +307,7 @@ describe('theme module', () => {
     const plugin: any = virtualPlugin([], 'nope-theme')
     plugin.configResolved({ root: '/proj' })
     const ctx = { resolve: async () => null, error: (m: string): never => { throw new Error(m) } }
-    await expect(plugin.load.call(ctx, '\0virtual:vuemo/theme')).rejects.toThrow('from /proj.')
+    await expect(plugin.load.call(ctx, '\0virtual:vuemo/theme')).rejects.toThrow(join('/proj', 'themes', 'nope-theme'))
   })
 })
 

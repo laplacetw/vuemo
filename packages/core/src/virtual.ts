@@ -1,5 +1,6 @@
-import { isAbsolute, join } from 'node:path'
+import { join } from 'node:path'
 import { STANDARD_SLOTS, type VuemoPlugin } from './plugin'
+import { resolveThemeSource, type ThemeSource } from './theme-source'
 
 export const VIRTUAL_ID = 'virtual:vuemo/plugins'
 export const THEME_ID = 'virtual:vuemo/theme'
@@ -40,11 +41,6 @@ export interface ThemeResolver {
   error(message: string): never
 }
 
-export const themeResolveError = (theme: string, root: string) =>
-  isAbsolute(theme)
-    ? `[vuemo] theme file "${theme}" does not exist. Fix the path in the \`theme\` option.`
-    : `[vuemo] theme "${theme}" could not be resolved from ${root}. Install it (npm i ${theme} / pnpm add ${theme}) or fix the \`theme\` option.`
-
 export const themeShapeError = (theme: string) =>
   `[vuemo] theme "${theme}" does not default-export a VitePress theme ({ Layout, enhanceApp })`
 
@@ -61,11 +57,18 @@ export default theme
 `
 }
 
-/** Resolves `theme` like an import written in the user's project would be, and builds the theme module. */
-export async function loadThemeModule(ctx: ThemeResolver, theme: string, root: string): Promise<string> {
-  const resolved = await ctx.resolve(theme, join(root, 'index.html'))
-  if (!resolved) ctx.error(themeResolveError(theme, root))
-  return buildThemeModule(theme, resolved!.id)
+/**
+ * Resolves `theme` (see `resolveThemeSource`) and builds the theme module. A path or a folder in `themes/` is imported by its
+ * absolute entry; an installed package is resolved like an import written in the user's project would be, so the bundler's
+ * own resolution (symlinks, dedupe) applies, with the package file we found as the fallback.
+ */
+export async function loadThemeModule(ctx: ThemeResolver, theme: string, root: string, source: typeof resolveThemeSource = resolveThemeSource): Promise<string> {
+  const found = source(theme, root)
+  if (!found.ok) ctx.error(found.error)
+  const s = found as Extract<ThemeSource, { ok: true }>
+  if (s.kind !== 'package') return buildThemeModule(theme, s.entry)
+  const resolved = await ctx.resolve(s.packageName ?? theme, join(root, 'index.html'))
+  return buildThemeModule(theme, resolved?.id ?? s.entry)
 }
 
 export function virtualPlugin(plugins: VuemoPlugin[], theme: string) {

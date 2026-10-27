@@ -10,12 +10,17 @@ import { buildRss } from './rss'
 import { searchRender } from './search'
 import { isPostPath, type Post } from './schema'
 import { virtualPlugin } from './virtual'
+import { isExplicitThemePath, THEME_PREFIX } from './theme-source'
 import type { FooterConfig, NavItem, SocialLink, VuemoThemeConfig } from './types'
 
 export type { FooterConfig, NavItem, SocialLink, VuemoThemeConfig }
 
 export interface BlogConfig extends Omit<UserConfig, 'lastUpdated'>, Partial<OfficialFeatures> {
-  /** Theme package name, or the absolute path of a theme entry file. Default: `@vuemo/theme-default`. */
+  /**
+   * The theme, resolved in this order: a path (`./x`, `../x` or absolute; a file or a folder), a folder `themes/<name>/` in the project,
+   * the installed package `vuemo-theme-<name>` (short name), the installed package `<name>` (also `@scope/name`).
+   * Default: `@vuemo/theme-default`.
+   */
   theme?: string
   /** Site origin, e.g. https://example.com. Used by sitemap and JSON-LD. */
   hostname?: string
@@ -49,6 +54,10 @@ const defined = <T extends object>(o?: T) => Object.fromEntries(Object.entries(o
 /** Site origin plus base with a trailing slash: `https://example.com/vuemo/`. */
 export const sitemapHostname = (hostname: string, base?: string) => hostname.replace(/\/+$/, '') + normalizeBase(base)
 
+/** Package names the theme can be: what was written, and `vuemo-theme-<name>` for a short name (they must be bundled, like @vuemo/*). Paths and `themes/` folders are not in node_modules and need nothing. */
+export const themePackageNames = (theme: string): string[] =>
+  isExplicitThemePath(theme) || theme.includes('/') && !theme.startsWith('@') ? [] : theme.startsWith('@') || theme.startsWith(THEME_PREFIX) ? [theme] : [theme, THEME_PREFIX + theme]
+
 export const DEFAULT_THEME = '@vuemo/theme-default'
 
 /** `importer` only exists so tests don't need real plugin packages. */
@@ -68,7 +77,7 @@ export async function defineBlogConfig(config: BlogConfig = {}, importer?: Impor
   // Vuemo packages ship .ts/.vue sources that Vite must process.
   vite = mergeConfig(
     vite as any,
-    { plugins: [virtualPlugin(all, theme)], ssr: { noExternal: [/^@vuemo\//, theme] } } as any,
+    { plugins: [virtualPlugin(all, theme)], ssr: { noExternal: [/^@vuemo\//, ...themePackageNames(theme)] } } as any,
     false
   )
 

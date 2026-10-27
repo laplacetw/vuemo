@@ -26,7 +26,7 @@ export default defineBlogConfig({
 
 | Option | Description |
 | --- | --- |
-| `theme` | Theme package name, or the absolute path of a theme entry file. Default `@vuemo/theme-default`. A theme that cannot be resolved or is not a VitePress theme fails the build with an explanation; see [Themes](./themes.md). |
+| `theme` | The theme: a short name (`'trigger'` finds `themes/trigger/` in the project, else the installed `vuemo-theme-trigger`), a package name (`'@vuemo/theme-default'`, `'@scope/name'`), or a path that starts with `./`, `../` or is absolute (a file or a folder). Default `@vuemo/theme-default`. See [Themes](./themes.md) for the lookup order. A theme that cannot be resolved or is not a VitePress theme fails the build with an explanation; see [Themes](./themes.md). |
 | `hostname` | Site origin. Used by the sitemap, the JSON-LD of posts and the RSS feed; the site `base` is added to every URL. |
 | `nav` | `{ text, link }[]` navigation links. Becomes `themeConfig.nav`. |
 | `footer` | HTML for the footer: a string (the message) or `{ message?, copyright? }`. Becomes `themeConfig.footer`, always as an object (a string turns into `{ message }`). |

@@ -1,5 +1,6 @@
 export { defineBlogConfig, DEFAULT_THEME, type BlogConfig, type FooterConfig, type NavItem, type SocialLink, type VuemoThemeConfig } from './config'
 export type { OfficialFeatures } from './features'
+export { resolveThemeSource, type ThemeSource } from './theme-source'
 export { createPostsLoader } from './loader'
 export { parsePost, type Frontmatter, type Post } from './schema'
 export { groupByYear, groupByCategory, groupByTag } from './group'

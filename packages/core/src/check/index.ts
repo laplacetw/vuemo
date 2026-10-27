@@ -1,17 +1,17 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { readFile, rm } from 'node:fs/promises'
-import { createRequire } from 'node:module'
 import { dirname, extname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import type { VuemoPlugin } from '../plugin'
 import { runAssertions, type CheckResult, type PageHtml } from './assert'
 import { FIXTURE_DIR, FIXTURE_PAGES, writeFixture } from './fixture'
 import { staticChecks, type PackageJsonLike } from './static'
+import { isExplicitThemePath, probeEntry, requireThemeSource } from '../theme-source'
 
 export type { CheckResult } from './assert'
 
 export interface CheckOptions {
-  /** Path to the theme entry, or a package name resolvable from `cwd`. Default: the `exports['.']` / `main` of `cwd`'s package.json. */
+  /** Anything `theme` accepts in `defineBlogConfig`, resolved from `cwd`: a path, a folder in `themes/`, a short name, a package name. Default: the package in `cwd`. */
   theme?: string
   /** Where the fixture is written and the theme is resolved from. Default: `process.cwd()`. */
   cwd?: string
@@ -38,42 +38,17 @@ export function probePlugin(): VuemoPlugin {
   }
 }
 
-function entryOf(pkgDir: string): string {
-  const pkg = JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf8'))
-  const dot = pkg.exports?.['.'] ?? pkg.exports
-  const pick = (v: unknown): string | undefined =>
-    typeof v === 'string' ? v : v && typeof v === 'object' ? pick((v as any).default ?? (v as any).import) : undefined
-  const entry = pick(dot) ?? pkg.main
-  if (!entry) throw new Error(`no theme given and ${join(pkgDir, 'package.json')} has neither exports["."] nor main`)
-  return resolve(pkgDir, entry)
-}
-
-/** An absolute path to the theme entry file. */
+/** An absolute path to the theme entry file. Without `theme`, the package in `cwd` itself is the theme. */
 function resolveTheme(theme: string | undefined, cwd: string): string {
-  if (!theme) return entryOf(cwd)
+  if (!theme) {
+    const entry = probeEntry(cwd)
+    if (!entry) throw new Error(`no theme given and ${cwd} has no theme entry (package.json exports["."] / main, index.ts or src/index.ts)`)
+    return entry
+  }
+  // a file that exists relative to cwd is a path even without `./` (`src/index.ts`)
   const asPath = resolve(cwd, theme)
-  const isFile = (p: string) => existsSync(p) && statSync(p).isFile()
-  if (theme.startsWith('.') || isAbsolute(theme) || isFile(asPath)) {
-    if (!existsSync(asPath)) throw new Error(`theme entry ${asPath} does not exist`)
-    return statSync(asPath).isDirectory() ? entryOf(asPath) : asPath
-  }
-  // a package: find <name>/package.json up the node_modules chain and read its entry ourselves (require.resolve ignores import-only `exports`)
-  for (let d = cwd; ; d = dirname(d)) {
-    const dir = join(d, 'node_modules', theme)
-    if (existsSync(join(dir, 'package.json'))) {
-      try {
-        return entryOf(dir)
-      } catch {
-        break
-      }
-    }
-    if (dirname(d) === d) break
-  }
-  try {
-    return createRequire(join(cwd, 'package.json')).resolve(theme)
-  } catch {
-    throw new Error(`theme "${theme}" is neither a file nor a package resolvable from ${cwd}`)
-  }
+  if (!isExplicitThemePath(theme) && existsSync(asPath) && statSync(asPath).isFile()) return asPath
+  return requireThemeSource(theme, cwd).entry
 }
 
 const SKIP_DIRS = new Set(['node_modules', 'dist', 'test', 'tests', 'example', 'examples'])
