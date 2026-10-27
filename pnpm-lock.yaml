@@ -26,6 +26,9 @@ importers:
       '@vuemo/plugin-comments':
         specifier: workspace:^
         version: link:../../plugins/comments
+      '@vuemo/plugin-gallery':
+        specifier: workspace:^
+        version: link:../../plugins/gallery
       '@vuemo/theme-default':
         specifier: workspace:^
         version: link:../../themes/default

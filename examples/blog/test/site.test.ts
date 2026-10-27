@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { execFileSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { gzipSync } from 'node:zlib'
 import { createRequire } from 'node:module'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -327,5 +328,55 @@ describe('search', () => {
     for (const f of ['index.html', 'posts/hello-vuemo.html', 'about.html']) {
       expect(page(f), f).toContain('aria-haspopup="dialog"')
     }
+  })
+})
+
+describe('gallery', () => {
+  // gallery/ holds the demo data (storage 'local': the variants are in public/gallery)
+  const manifest = JSON.parse(readFileSync(resolve(root, 'gallery/manifest.json'), 'utf8'))
+  const shapes = manifest.photos.filter((p: { album: string }) => p.album === 'shapes')
+  const key = (p: { album: string; id: string }, w: number) => `gallery/albums/${p.album}/${p.id}/${w}.webp`
+
+  it('lists the albums with links and covers on /gallery', () => {
+    const html = page('gallery.html')
+    expect(html).toContain('vuemo-gallery__albums')
+    expect(html).toContain('href="?album=shapes"')
+    expect(html).toContain('href="?album=gradients"')
+    expect(html).toContain('Gradients')
+    expect(html).toContain(`src="${base}gallery/albums/shapes/`)
+  })
+
+  it('renders the first perPage photos of a pinned album as list items with links, sizes and dimensions', () => {
+    const html = page('album-shapes.html')
+    const items = html.match(/<li class="vuemo-gallery__item"/g) ?? []
+    expect(items).toHaveLength(6) // perPage is 6 in the example config, the album has 8
+    expect(html).toContain('role="list"')
+    expect(html).toContain(`<a href="?photo=${shapes[0].id}"`)
+    expect(html).toMatch(/<img src="[^"]+\/(320|640)\.webp" srcset="[^"]+ \d+w[^"]*" sizes="[^"]+" width="\d+" height="\d+" alt="[^"]+"/)
+    expect(html).toContain('fetchpriority="high"')
+    expect(html).toContain('Load more (2 left)')
+  })
+
+  it('ships the generated variants and no GPS data', () => {
+    for (const p of manifest.photos) {
+      for (const w of p.variants) expect(existsSync(resolve(root, 'public', key(p, w)))).toBe(true)
+      expect(JSON.stringify(p)).not.toMatch(/gps|latitude|longitude/i)
+    }
+  })
+
+  it('keeps PhotoSwipe and the album data out of the initial gallery script (<= 10 KB gzip)', () => {
+    const lean = readFileSync(resolve(dist, 'assets', readdirSync(resolve(dist, 'assets')).find((f) => /^gallery\.md\..+\.lean\.js$/.test(f))!), 'utf8')
+    expect(page('gallery.html')).not.toMatch(/modulepreload[^>]*photoswipe/)
+    expect(lean).not.toContain('photoswipe')
+    const chunks = readdirSync(resolve(dist, 'assets/chunks'))
+    const own = chunks.filter((f) => /^(Gallery|lightbox|thumbhash|shapes|gradients)\./.test(f))
+    expect(own.length).toBe(5)
+    const gz = own.reduce((n, f) => n + gzipSync(readFileSync(resolve(dist, 'assets/chunks', f))).length, 0)
+    expect(gz).toBeLessThanOrEqual(10 * 1024)
+    expect(chunks.some((f) => f.startsWith('photoswipe'))).toBe(true)
+  })
+
+  it('links the gallery in the nav', () => {
+    expect(page('index.html')).toContain(`href="${base}gallery"`)
   })
 })

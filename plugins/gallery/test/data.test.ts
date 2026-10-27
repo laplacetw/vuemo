@@ -50,7 +50,7 @@ describe('virtual modules', () => {
   it('lists albums with covers and loaders', () => {
     const src = buildListModule(root, 'gallery')
     expect(src).toContain('"slug":"a"')
-    expect(src).toContain('"cover":{"id":"3f9a1c0d2b7e"')
+    expect(src).toContain('"cover":{"id":"3f9a1c0d2b7e","album":"a"')
     expect(src).toContain('import("virtual:vuemo-gallery/album/b")')
   })
   it('builds one album chunk', () => {

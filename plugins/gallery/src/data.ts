@@ -47,7 +47,7 @@ export function summarize(albums: Album[], photos: Photo[]): AlbumSummary[] {
     return {
       ...rest,
       count: own.length,
-      ...(c && { cover: { id: c.id, w: c.w, h: c.h, color: c.color, alt: c.alt, variants: c.variants, formats: c.formats } })
+      ...(c && { cover: { id: c.id, album: c.album, w: c.w, h: c.h, color: c.color, alt: c.alt, variants: c.variants, formats: c.formats } })
     }
   })
 }

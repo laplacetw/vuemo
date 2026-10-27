@@ -72,5 +72,5 @@ export interface Album {
 
 export interface AlbumSummary extends Omit<Album, 'cover'> {
   count: number
-  cover?: Pick<Photo, 'id' | 'w' | 'h' | 'color' | 'alt' | 'variants' | 'formats'>
+  cover?: Pick<Photo, 'id' | 'album' | 'w' | 'h' | 'color' | 'alt' | 'variants' | 'formats'>
 }

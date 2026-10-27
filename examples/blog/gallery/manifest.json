@@ -1,0 +1,197 @@
+{
+  "version": 1,
+  "photos": [
+    {
+      "id": "38d3465c183f",
+      "album": "gradients",
+      "w": 420,
+      "h": 640,
+      "color": "#6841b8",
+      "thumbhash": "3yQGDQaPeI+Id4iIeHeId3BwBwiI",
+      "variants": [
+        320,
+        420
+      ],
+      "formats": [
+        "webp"
+      ],
+      "alt": "Soft gradient 2"
+    },
+    {
+      "id": "3d725918bf16",
+      "album": "gradients",
+      "w": 640,
+      "h": 420,
+      "color": "#375fb8",
+      "thumbhash": "35QFDYZ/iHh/d4h3iIiHiI+PBwh4",
+      "variants": [
+        320,
+        640
+      ],
+      "formats": [
+        "webp"
+      ],
+      "alt": "Soft gradient 1"
+    },
+    {
+      "id": "944087e045f6",
+      "album": "gradients",
+      "w": 600,
+      "h": 600,
+      "color": "#993db1",
+      "thumbhash": "4LUGFwR/eIiPd4d3d4d3d3eICAiHgIAI",
+      "variants": [
+        320,
+        600
+      ],
+      "formats": [
+        "webp"
+      ],
+      "alt": "Soft gradient 3"
+    },
+    {
+      "id": "ce4b01f441fb",
+      "album": "gradients",
+      "w": 640,
+      "h": 360,
+      "color": "#b83673",
+      "thumbhash": "oAcHHIB/iIh/h4h3iIiAgPj3dw==",
+      "variants": [
+        320,
+        640
+      ],
+      "formats": [
+        "webp"
+      ],
+      "alt": "Soft gradient 4"
+    },
+    {
+      "id": "2a7a5f054a0e",
+      "album": "shapes",
+      "w": 640,
+      "h": 426,
+      "color": "#4f6bbf",
+      "thumbhash": "I6UJFYYNqIiKeYiDfMVXhguIAwZ3",
+      "variants": [
+        320,
+        640
+      ],
+      "formats": [
+        "webp"
+      ],
+      "alt": "Abstract shape 6 on a coloured gradient"
+    },
+    {
+      "id": "2d48432ca187",
+      "album": "shapes",
+      "w": 600,
+      "h": 600,
+      "color": "#77c85e",
+      "thumbhash": "I2oFFwQMqIiJeYiCfMVXaIh46fuoDosC",
+      "variants": [
+        320,
+        600
+      ],
+      "formats": [
+        "webp"
+      ],
+      "alt": "Abstract shape 3 on a coloured gradient"
+    },
+    {
+      "id": "7a6700fcd67e",
+      "album": "shapes",
+      "w": 640,
+      "h": 420,
+      "color": "#7e52c1",
+      "thumbhash": "4TQGFYYXj5RulnihS0epeDB1IwmY",
+      "variants": [
+        320,
+        640
+      ],
+      "formats": [
+        "webp"
+      ],
+      "alt": "Abstract shape 7 on a coloured gradient"
+    },
+    {
+      "id": "896fcb071f7c",
+      "album": "shapes",
+      "w": 480,
+      "h": 640,
+      "color": "#60b9b8",
+      "thumbhash": "plYFFQZcSJaYCZfWd3eYeF+bMwY4",
+      "variants": [
+        320,
+        480
+      ],
+      "formats": [
+        "webp"
+      ],
+      "alt": "Abstract shape 5 on a coloured gradient"
+    },
+    {
+      "id": "a4edbc344644",
+      "album": "shapes",
+      "w": 420,
+      "h": 640,
+      "color": "#a9c366",
+      "thumbhash": "5uoFFQRdSJeYCZfWd3eYeKp//dZo",
+      "variants": [
+        320,
+        420
+      ],
+      "formats": [
+        "webp"
+      ],
+      "alt": "Abstract shape 2 on a coloured gradient"
+    },
+    {
+      "id": "ce616717854d",
+      "album": "shapes",
+      "w": 640,
+      "h": 360,
+      "color": "#4ac189",
+      "thumbhash": "YQgFHIIXj6NtlmiiS5V/fyegFw==",
+      "variants": [
+        320,
+        640
+      ],
+      "formats": [
+        "webp"
+      ],
+      "alt": "Abstract shape 4 on a coloured gradient"
+    },
+    {
+      "id": "d1d37d9ab60d",
+      "album": "shapes",
+      "w": 420,
+      "h": 640,
+      "color": "#b666ba",
+      "thumbhash": "JpYGFQRbSJWYCZfGd3eYeHJwFYv2",
+      "variants": [
+        320,
+        420
+      ],
+      "formats": [
+        "webp"
+      ],
+      "alt": "Abstract shape 8 on a coloured gradient"
+    },
+    {
+      "id": "e6462ab45dcd",
+      "album": "shapes",
+      "w": 640,
+      "h": 420,
+      "color": "#c29a4d",
+      "thumbhash": "42oGFYYGj5RtlnihTEepeNaA/eiI",
+      "variants": [
+        320,
+        640
+      ],
+      "formats": [
+        "webp"
+      ],
+      "alt": "Abstract shape 1 on a coloured gradient"
+    }
+  ]
+}

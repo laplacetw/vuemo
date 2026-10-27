@@ -1,0 +1,11 @@
+# Demo albums: generated images (see scripts/make-demo-gallery.mjs), not photos
+- slug: shapes
+  title: Shapes
+  description: Eight generated images, enough to show the justified rows and Load more
+  order: 1
+  date: 2026-01-01
+- slug: gradients
+  title: Gradients
+  description: A second album, to show the album list
+  order: 2
+  date: 2026-01-02
