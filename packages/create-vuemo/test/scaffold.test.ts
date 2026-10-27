@@ -31,6 +31,7 @@ describe('theme starter template', () => {
       'src/env.d.ts',
       'src/components/PluginSlot.vue',
       ...['Home', 'Post', 'Archive', 'Tag', 'Category', 'Page'].map((n) => `src/layouts/${n}.vue`),
+      'example/vuemo.config.ts',
       'example/.vitepress/config.ts',
       'example/.vitepress/theme/index.ts',
       ...['index', 'archives', 'tags', 'category', 'about'].map((n) => `example/${n}.md`),
@@ -64,10 +65,14 @@ describe('blog template', () => {
     scaffoldBlog(templates('template'), target, { name: 'blog', title: 'T', comments: 'none', aiSummary: false })
     expect(existsSync(join(target, '.gitignore'))).toBe(true)
     expect(existsSync(join(target, '_gitignore'))).toBe(false)
-    expect(readFileSync(join(target, '.vitepress/config.ts'), 'utf8')).toContain("title: 'T'")
+    expect(readFileSync(join(target, 'vuemo.config.ts'), 'utf8')).toContain("title: 'T'")
     expect(JSON.parse(readFileSync(join(target, 'package.json'), 'utf8')).name).toBe('blog')
+    // settings live in the root file; .vitepress/ holds one-line boilerplate the user never opens
+    expect(readFileSync(join(target, 'vuemo.config.ts'), 'utf8')).toContain("import { defineBlogConfig } from '@vuemo/core'")
+    expect(readFileSync(join(target, '.vitepress/config.ts'), 'utf8')).toBe("// boilerplate, edit vuemo.config.ts instead\nexport { default } from '../vuemo.config'\n")
+    expect(readFileSync(join(target, '.vitepress/theme/index.ts'), 'utf8')).toBe("// boilerplate, edit vuemo.config.ts instead\nexport { default } from '@vuemo/core/theme'\n")
     const tsconfig = JSON.parse(readFileSync(join(target, 'tsconfig.json'), 'utf8'))
     expect(tsconfig.compilerOptions).toMatchObject({ module: 'ESNext', moduleResolution: 'Bundler', target: 'ES2022', strict: true, noEmit: true, skipLibCheck: true })
-    expect(tsconfig.include).toEqual(['.vitepress/**/*.ts'])
+    expect(tsconfig.include).toEqual(['vuemo.config.ts', '.vitepress/**/*.ts'])
   })
 })

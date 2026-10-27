@@ -4,7 +4,7 @@
 
 ## Using a theme
 
-Set `theme` in `defineBlogConfig` (default `@vuemo/theme-default`) and install the package. `theme` is a package name or the absolute path of a theme entry file (handy while you develop a theme: `theme: '/path/to/my-theme/src/index.ts'`). The file `.vitepress/theme/index.ts` is VitePress's own theme entry; Vuemo makes it a fixed one-liner, so you never edit it:
+Set `theme` in `defineBlogConfig` (default `@vuemo/theme-default`) and install the package. `theme` is a package name or the absolute path of a theme entry file (handy while you develop a theme: `theme: '/path/to/my-theme/src/index.ts'`). The settings live in `vuemo.config.ts` at the project root. The files in `.vitepress/` are VitePress's own entries; `create-vuemo` writes them as one-line boilerplate (`.vitepress/config.ts` re-exports `../vuemo.config`), so you never open that folder. The theme entry is:
 
 ```ts
 export { default } from '@vuemo/core/theme'
@@ -25,7 +25,7 @@ npm create vuemo@alpha my-blog -- --theme vuemo-theme-x
 npm create vuemo@alpha my-blog -- --theme @scope/vuemo-theme-x@^1.2.0
 ```
 
-`--theme <package>[@version-or-range]` puts that package into the dependencies instead of `@vuemo/theme-default` (without a version it is `latest`; `latest` needs a stable `latest` dist-tag: a theme that only has prerelease versions needs an explicit range (`--theme my-theme@^1.0.0-alpha.0`).) and writes `theme: '<package>'` into `.vitepress/config.ts`. For a scoped name the version is what follows the last `@` after the first character. An invalid package name exits with code 1. The prompt "Theme package" asks for it too.
+`--theme <package>[@version-or-range]` puts that package into the dependencies instead of `@vuemo/theme-default` (without a version it is `latest`; `latest` needs a stable `latest` dist-tag: a theme that only has prerelease versions needs an explicit range (`--theme my-theme@^1.0.0-alpha.0`).) and writes `theme: '<package>'` into `vuemo.config.ts`. For a scoped name the version is what follows the last `@` after the first character. An invalid package name exits with code 1. The prompt "Theme package" asks for it too.
 
 Your posts, the flat options (`nav`, `footer`, `search`, ...) and the plugins keep working, because they belong to Vuemo and not to the theme. `themeConfig` keys that belonged to the old theme stay in your config and are ignored by the new one. Whether the new theme supports every flat option is up to it: see its README.
 

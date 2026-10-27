@@ -2,7 +2,7 @@
 
 Comments for any Vuemo theme. Renders in the `post-comments` slot and follows the theme's `isDark`.
 
-Enable it in `.vitepress/config.ts`; remove the key or set it to `false` to turn it off:
+Enable it in `vuemo.config.ts`; remove the key or set it to `false` to turn it off:
 
 ```ts
 export default defineBlogConfig({

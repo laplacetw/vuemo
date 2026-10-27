@@ -23,15 +23,16 @@ Vuemo is a thin layer on top of [VitePress](https://vitepress.dev). VitePress st
 my-blog/
 ├── posts/                    # Markdown posts
 ├── public/                   # static assets
-└── .vitepress/
-    ├── config.ts             # all settings live here
-    └── theme/index.ts        # boilerplate: export { default } from '@vuemo/core/theme'
+├── vuemo.config.ts           # all settings live here
+└── .vitepress/               # boilerplate, you never open it
+    ├── config.ts             # export { default } from '../vuemo.config'
+    └── theme/index.ts        # export { default } from '@vuemo/core/theme'
 ```
 
 All settings are in one place, `defineBlogConfig`. VitePress options keep working as usual.
 
 ```ts
-// .vitepress/config.ts
+// vuemo.config.ts
 import { defineBlogConfig } from '@vuemo/core'
 
 export default defineBlogConfig({

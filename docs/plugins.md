@@ -71,7 +71,7 @@ declare module '@vuemo/core' {
 }
 ```
 
-The augmentation is part of the package's `dist/index.d.ts`, which only enters a user's TypeScript program when something refers to the package. A config that imports only `@vuemo/core` would therefore report the key as an unknown property under `tsc` / `vue-tsc` / the editor (VitePress's own build is not affected). Tell users to add a triple-slash reference at the top of `.vitepress/config.ts`, as `create-vuemo` does for the official plugins:
+The augmentation is part of the package's `dist/index.d.ts`, which only enters a user's TypeScript program when something refers to the package. A config that imports only `@vuemo/core` would therefore report the key as an unknown property under `tsc` / `vue-tsc` / the editor (VitePress's own build is not affected). Tell users to add a triple-slash reference at the top of `vuemo.config.ts`, as `create-vuemo` does for the official plugins:
 
 ```ts
 /// <reference types="@vuemo/plugin-comments" />

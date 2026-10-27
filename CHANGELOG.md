@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Breaking (new scaffolds only)
+- `create-vuemo`: new projects keep all settings in `vuemo.config.ts` at the project root (`export default defineBlogConfig({...})`, with the plugin `/// <reference types>` lines); `.vitepress/config.ts` (`export { default } from '../vuemo.config'`) and `.vitepress/theme/index.ts` are generated one-line boilerplate, so users never need to open `.vitepress/`. The theme starter's `example/` follows the same layout, and the generated `tsconfig.json` includes `vuemo.config.ts`.
+- Existing projects are unaffected: a `.vitepress/config.ts` that calls `defineBlogConfig` directly keeps working (covered by a build test).
+
 ## 0.1.0-alpha.1
 
 ### Features

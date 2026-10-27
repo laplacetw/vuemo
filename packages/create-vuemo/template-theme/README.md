@@ -48,7 +48,7 @@ pnpm test            # the same check, as a vitest test
 - The package ships `src` (the `exports` point at `src/index.ts`; VitePress compiles it). If you add a build step for CSS, add its output to `files` and `exports`.
 - Run `pnpm check` and `pnpm test`, then `npm publish`.
 
-Users install the theme and set it in `.vitepress/config.ts`:
+Users install the theme and set it in `vuemo.config.ts`:
 
 ```ts
 export default defineBlogConfig({ theme: '__NAME__' })

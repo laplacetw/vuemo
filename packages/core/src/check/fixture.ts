@@ -29,7 +29,7 @@ layout: ${layout}
 ---
 `
 
-/** Files of the fixture blog, relative to its root. `theme` is the absolute path (or specifier) of the theme. */
+/** Files of the fixture blog, relative to its root. It keeps the classic layout (defineBlogConfig called in .vitepress/config), so contract checks also cover projects that predate the root vuemo.config.ts. `theme` is the absolute path (or specifier) of the theme. */
 export function fixtureFiles(theme: string): Record<string, string> {
   return {
     '.vitepress/config.mjs': `import { defineBlogConfig } from '@vuemo/core'

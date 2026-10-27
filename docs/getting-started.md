@@ -26,10 +26,11 @@ node packages/create-vuemo/dist/index.js my-blog
 my-blog/
 ├── posts/                    # Markdown posts
 ├── public/                   # static assets
-└── .vitepress/
-    ├── config.ts             # all settings live here
-    └── theme/index.ts        # boilerplate, you never edit it
+├── vuemo.config.ts           # all settings live here
+└── .vitepress/               # boilerplate (config.ts, theme/index.ts), you never open it
 ```
+
+Projects created before this layout keep working: a `.vitepress/config.ts` that calls `defineBlogConfig` directly is still fully supported.
 
 `create-vuemo` asks for a name, a title, whether to enable comments (Giscus or Utterances) and the AI summary. For scripts, skip the prompts: `create-vuemo my-blog --yes --comments=utterances --ai-summary`.
 

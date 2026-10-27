@@ -11,7 +11,7 @@ export function scaffoldBlog(templateDir: string, target: string, answers: Answe
   cpSync(templateDir, target, { recursive: true })
   restoreGitignore(target)
   writeFileSync(join(target, 'package.json'), packageJson(answers))
-  writeFileSync(join(target, '.vitepress/config.ts'), configTs(answers))
+  writeFileSync(join(target, 'vuemo.config.ts'), configTs(answers))
 }
 
 /** `name` is the package name (it may be scoped); the README shows it. */

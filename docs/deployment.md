@@ -9,7 +9,7 @@ The output is a normal VitePress site: `pnpm build` writes it to `.vitepress/dis
 A project site lives under `/<repo>/`, so set `base` or the CSS and JS will 404 and the page will render without the theme. `examples/blog` reads it from an environment variable, which keeps local dev at `/`:
 
 ```ts
-// .vitepress/config.ts
+// vuemo.config.ts
 base: process.env.BASE ?? '/'
 ```
 

@@ -1,0 +1,37 @@
+/// <reference types="@vuemo/plugin-comments" />
+/// <reference types="@vuemo/plugin-ai-summary" />
+import { defineBlogConfig } from '@vuemo/core'
+
+export default defineBlogConfig({
+  // site
+  title: 'Vuemo Blog',
+  description: 'A blog powered by Vuemo',
+  lang: 'en',
+  // GitHub Pages serves the example under /vuemo/; the workflow sets BASE
+  base: process.env.BASE ?? '/',
+  hostname: 'https://example.com',
+
+  // theme
+  theme: '@vuemo/theme-default',
+  logo: '/logo.svg',
+  postsPerPage: 2,
+  nav: [
+    { text: 'Home', link: '/' },
+    { text: 'Archives', link: '/archives' },
+    { text: 'Category', link: '/category' },
+    { text: 'Tags', link: '/tags' },
+    { text: 'About', link: '/about' }
+  ],
+  lastUpdated: true,
+  search: true,
+  markdown: { lineNumbers: true, math: true },
+  footer: {
+    message:
+      'Powered by <a href="https://vitepress.dev">VitePress</a> · <a href="https://github.com/laplacetw/vuemo">Vuemo</a>',
+    copyright: `Copyright © ${new Date().getFullYear()} Vuemo Blog`
+  },
+
+  // features: set a key to enable it, remove it or use `false` to disable it
+  comments: { provider: 'utterances', repo: 'laplacetw/vuemo-comments' },
+  aiSummary: false
+})
