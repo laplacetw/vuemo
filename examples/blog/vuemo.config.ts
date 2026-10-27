@@ -13,7 +13,7 @@ export default defineBlogConfig({
 
   // theme
   theme: '@vuemo/theme-default',
-  logo: '/logo.svg',
+  logo: '/avatar.png',
   postsPerPage: 2,
   nav: [
     { text: 'Home', link: '/' },
