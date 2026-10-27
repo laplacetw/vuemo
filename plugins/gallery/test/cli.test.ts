@@ -1,0 +1,142 @@
+import { beforeAll, describe, expect, it } from 'vitest'
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import sharp from 'sharp'
+import exifr from 'exifr'
+import { add, remove, sync, verify, type Context } from '../src/cli/commands'
+import { LocalStorage, R2Storage } from '../src/cli/storage'
+import { loadEnv } from '../src/cli/env'
+import { serializeManifest } from '../src/cli/manifest'
+import { processImage } from '../src/cli/process'
+import { resolveConfig } from '../src/config'
+
+// a JPEG with EXIF (camera, GPS) made by sharp + a hand-written EXIF block through exifr-compatible tags
+async function fixture(color: string, w = 900, h = 600) {
+  return sharp({ create: { width: w, height: h, channels: 3, background: color } })
+    .jpeg()
+    .withExif({ IFD0: { Make: 'ACME', Model: 'Cam 1' }, IFD3: { GPSLatitudeRef: 'N', GPSLatitude: '25/1 2/1 3/1', GPSLongitudeRef: 'E', GPSLongitude: '121/1 30/1 0/1' } })
+    .toBuffer()
+}
+
+function setup() {
+  const root = mkdtempSync(join(tmpdir(), 'galcli-'))
+  const photos = join(root, 'photos')
+  mkdirSync(photos)
+  const logs: string[] = []
+  const cfg = resolveConfig({ storage: 'local' })
+  const ctx: Context = { root, cfg, storage: new LocalStorage(join(root, 'public/gallery')), log: { info: (m) => logs.push(m), warn: (m) => logs.push('! ' + m) } }
+  return { root, photos, ctx, logs }
+}
+
+describe('image pipeline', () => {
+  it('keeps the allow-listed EXIF and strips GPS from the manifest and from the outputs', async () => {
+    const original = await fixture('#336699')
+    expect((await exifr.parse(original, { gps: true }))?.latitude).toBeCloseTo(25.0342, 3) // the fixture really has GPS
+    const { photo, variants } = await processImage(original, resolveConfig({ storage: 'local' }))
+    expect(photo.exif).toEqual({ camera: 'ACME Cam 1' })
+    expect(JSON.stringify(photo)).not.toMatch(/latitude|longitude|GPS/i)
+    expect(photo.variants).toEqual([400, 800, 900])
+    expect(photo.color).toMatch(/^#[0-9a-f]{6}$/)
+    for (const v of variants) {
+      const out = await exifr.parse(v.data, { gps: true, tiff: true, exif: true }).catch(() => undefined)
+      expect(out?.latitude).toBeUndefined()
+      expect(out?.Make).toBeUndefined()
+      expect((await sharp(v.data).metadata()).exif).toBeUndefined()
+    }
+  })
+})
+
+describe('add / sync / verify / remove (local storage)', () => {
+  it('is idempotent', async () => {
+    const { photos, ctx, root } = setup()
+    writeFileSync(join(photos, 'a.jpg'), await fixture('#aa0000'))
+    writeFileSync(join(photos, 'b.jpg'), await fixture('#00aa00', 600, 900))
+    const first = await add(ctx, photos, 'trip')
+    expect(first).toMatchObject({ added: 2, skipped: 0 })
+    const manifest1 = readFileSync(join(root, 'gallery/manifest.json'), 'utf8')
+    const second = await add(ctx, photos, 'trip')
+    expect(second).toMatchObject({ added: 0, skipped: 2, uploaded: 0 })
+    expect(readFileSync(join(root, 'gallery/manifest.json'), 'utf8')).toBe(manifest1)
+    expect(readFileSync(join(root, 'gallery/albums.yaml'), 'utf8')).toBe('- slug: trip\n  title: Trip\n')
+    expect((await verify(ctx)).errors).toEqual([])
+    expect((await verify(ctx)).warnings).toHaveLength(2) // no alt
+    expect(await sync(ctx)).toMatchObject({ missing: [], extra: [] })
+  })
+
+  it('restores deleted files, prunes unlisted ones and removes a photo', async () => {
+    const { photos, ctx } = setup()
+    writeFileSync(join(photos, 'a.jpg'), await fixture('#aa0000'))
+    await add(ctx, photos, 'trip')
+    const keys = await ctx.storage.list('albums/')
+    await ctx.storage.delete(keys[0])
+    expect((await sync(ctx)).missing).toEqual([keys[0]])
+    expect((await verify(ctx)).errors).toHaveLength(1)
+    expect(await add(ctx, photos, 'trip')).toMatchObject({ added: 0, skipped: 0, uploaded: 1 })
+    await ctx.storage.put('albums/trip/ffffffffffff/400.webp', new Uint8Array([1]), 'image/webp')
+    expect(await sync(ctx, true)).toMatchObject({ extra: ['albums/trip/ffffffffffff/400.webp'], deleted: 1 })
+    const id = keys[0].split('/')[2]
+    expect(await remove(ctx, id)).toBe(true)
+    expect(await ctx.storage.list('albums/')).toEqual([])
+    expect(await remove(ctx, id)).toBe(false)
+  })
+})
+
+describe('R2 storage with a mocked fetch', () => {
+  it('signs requests, HEADs first and only uploads what is missing', async () => {
+    const store = new Map<string, { body: Uint8Array; headers: Headers }>()
+    const calls: string[] = []
+    const fetchMock = (async (req: Request) => {
+      const key = decodeURIComponent(new URL(req.url).pathname.replace(/^\/bucket\//, ''))
+      calls.push(`${req.method} ${key}`)
+      expect(req.url.startsWith('https://acct.r2.cloudflarestorage.com/bucket')).toBe(true)
+      expect(req.headers.get('authorization')).toMatch(/^AWS4-HMAC-SHA256 Credential=AKID\/\d{8}\/auto\/s3\/aws4_request/)
+      if (req.method === 'HEAD') return new Response(null, { status: store.has(key) ? 200 : 404 })
+      if (req.method === 'PUT') {
+        store.set(key, { body: new Uint8Array(await req.arrayBuffer()), headers: req.headers })
+        return new Response(null, { status: 200 })
+      }
+      if (req.method === 'GET') {
+        const prefix = new URL(req.url).searchParams.get('prefix')!
+        return new Response(`<ListBucketResult>${[...store.keys()].filter((k) => k.startsWith(prefix)).map((k) => `<Contents><Key>${k}</Key></Contents>`).join('')}<IsTruncated>false</IsTruncated></ListBucketResult>`)
+      }
+      return new Response(null, { status: 204 })
+    }) as typeof fetch
+    const { photos, root, logs } = setup()
+    const ctx: Context = {
+      root,
+      cfg: resolveConfig({ storage: 'r2', baseUrl: 'https://img.example.com' }),
+      storage: new R2Storage({ accountId: 'acct', accessKeyId: 'AKID', secretAccessKey: 'secret', bucket: 'bucket' }, fetchMock),
+      log: { info: (m) => logs.push(m), warn: (m) => logs.push(m) }
+    }
+    writeFileSync(join(photos, 'a.jpg'), await fixture('#aa0000'))
+    expect(await add(ctx, photos, 'trip')).toMatchObject({ added: 1, uploaded: 3 })
+    const puts = calls.filter((c) => c.startsWith('PUT')).length
+    expect(puts).toBe(3)
+    const [first] = [...store.values()]
+    expect(first.headers.get('cache-control')).toBe('public, max-age=31536000, immutable')
+    expect(first.headers.get('content-type')).toBe('image/webp')
+    calls.length = 0
+    expect(await add(ctx, photos, 'trip')).toMatchObject({ added: 0, skipped: 1, uploaded: 0 })
+    expect(calls.every((c) => c.startsWith('HEAD'))).toBe(true)
+    expect(await sync(ctx)).toMatchObject({ missing: [], extra: [] })
+  })
+})
+
+describe('manifest and env', () => {
+  it('serializes stably regardless of input order', () => {
+    const p = (id: string, album: string, takenAt?: string) => ({ id, album, w: 1, h: 1, color: '#000000', variants: [1], formats: ['webp'], ...(takenAt && { takenAt }) }) as any
+    const a = serializeManifest({ version: 1, photos: [p('bbbbbbbbbbbb', 'x'), p('aaaaaaaaaaaa', 'x', '2020-01-01T00:00:00.000Z'), p('cccccccccccc', 'a')] })
+    const b = serializeManifest({ version: 1, photos: [p('cccccccccccc', 'a'), p('bbbbbbbbbbbb', 'x'), p('aaaaaaaaaaaa', 'x', '2020-01-01T00:00:00.000Z')] })
+    expect(a).toBe(b)
+    expect(a.indexOf('cccccccccccc')).toBeLessThan(a.indexOf('aaaaaaaaaaaa'))
+    expect(a.indexOf('aaaaaaaaaaaa')).toBeLessThan(a.indexOf('bbbbbbbbbbbb'))
+  })
+  it('loads .env without overriding the environment', () => {
+    const root = mkdtempSync(join(tmpdir(), 'galenv-'))
+    writeFileSync(join(root, '.env'), '# c\nR2_BUCKET="b"\nexport R2_ACCOUNT_ID=acct\nR2_ACCESS_KEY_ID=file\n')
+    const env: Record<string, string | undefined> = { R2_ACCESS_KEY_ID: 'shell' }
+    expect(loadEnv(root, env)).toBe(true)
+    expect(env).toEqual({ R2_ACCESS_KEY_ID: 'shell', R2_BUCKET: 'b', R2_ACCOUNT_ID: 'acct' })
+  })
+})

@@ -35,13 +35,15 @@ export async function openLightbox(o: LightboxOptions): Promise<LightboxHandle> 
     index: o.index,
     returnFocus: true,
     // no motion for people who ask for less of it
-    ...(reduced && { showHideAnimationType: 'none' as const, showAnimationDuration: 0, hideAnimationDuration: 0, zoomAnimationDuration: 0, easing: 'linear' }),
-    getThumbBoundsFn(index) {
-      const img = document.querySelector<HTMLElement>(`[data-photo-id="${o.photos[index]?.id}"] img`)
-      if (!img) return undefined
-      const r = img.getBoundingClientRect()
-      return { x: r.left, y: r.top + window.scrollY, w: r.width }
-    }
+    ...(reduced && { showHideAnimationType: 'none' as const, showAnimationDuration: 0, hideAnimationDuration: 0, zoomAnimationDuration: 0, easing: 'linear' })
+  })
+
+  // zoom from and back to the thumbnail
+  pswp.addFilter('thumbBounds', (bounds, _data, index) => {
+    const img = document.querySelector<HTMLElement>(`[data-photo-id="${o.photos[index]?.id}"] img`)
+    if (!img) return bounds as any
+    const r = img.getBoundingClientRect()
+    return { x: r.left, y: r.top + window.scrollY, w: r.width }
   })
 
   pswp.on('uiRegister', () => {
