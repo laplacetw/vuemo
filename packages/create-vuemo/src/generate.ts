@@ -7,7 +7,10 @@ export interface Answers {
   title: string
   comments: CommentsProvider
   aiSummary: boolean
-  /** Theme package, optionally with a version or range (`name`, `name@^1.2.0`, `@scope/name@latest`). Default: `@vuemo/theme-default`. */
+  /**
+   * A theme, optionally with a version or range. A short name (`trigger`, `trigger@^2`) is the package `vuemo-theme-trigger`;
+   * a full name (`vuemo-theme-trigger`, `@scope/name@latest`) is the package itself. Default: `@vuemo/theme-default`.
+   */
   theme?: string
 }
 
@@ -52,12 +55,21 @@ export const VERSIONS: Versions =
     ? { core: '*', theme: '*', comments: '*', aiSummary: '*', vitepress: '*', vue: '*', mathjax: '*', vitest: '*' }
     : __VERSIONS__
 
-/** The chosen theme package; the default theme (with the version released together with this scaffolder) when none is given. */
-function themeOf(a: Answers): { name: string; range: string } {
-  if (!a.theme?.trim()) return { name: DEFAULT_THEME, range: VERSIONS.theme }
+export const THEME_PREFIX = 'vuemo-theme-'
+
+/** A short name has no scope and no `vuemo-theme-` prefix: `theme: 'trigger'` finds the package `vuemo-theme-trigger` (or `themes/trigger/`). */
+export const isShortThemeName = (name: string) => !name.startsWith('@') && !name.startsWith(THEME_PREFIX)
+
+/**
+ * The chosen theme: `name` is what `theme:` says in the config, `pkg` the package to install.
+ * The default theme (with the version released together with this scaffolder) when none is given.
+ */
+function themeOf(a: Answers): { name: string; pkg: string; range: string } {
+  if (!a.theme?.trim()) return { name: DEFAULT_THEME, pkg: DEFAULT_THEME, range: VERSIONS.theme }
   const spec = a.theme.trim()
   const { name, range } = parseThemeSpec(spec)
-  return name === DEFAULT_THEME && !spec.includes('@', 1) ? { name, range: VERSIONS.theme } : { name, range }
+  if (name === DEFAULT_THEME && !spec.includes('@', 1)) return { name, pkg: name, range: VERSIONS.theme }
+  return { name, pkg: isShortThemeName(name) ? THEME_PREFIX + name : name, range }
 }
 
 export function packageJson(a: Answers): string {
@@ -65,7 +77,7 @@ export function packageJson(a: Answers): string {
   // Official plugins are always installed, so turning a feature on only takes a config edit.
   const dependencies: Record<string, string> = {
     '@vuemo/core': VERSIONS.core,
-    [theme.name]: theme.range,
+    [theme.pkg]: theme.range,
     '@vuemo/plugin-comments': VERSIONS.comments,
     '@vuemo/plugin-ai-summary': VERSIONS.aiSummary,
     'markdown-it-mathjax3': VERSIONS.mathjax,
@@ -104,7 +116,6 @@ export function quote(text: string): string {
 }
 
 export function configTs(a: Answers): string {
-  // written explicitly only for a theme other than the default one
   const { name } = themeOf(a)
   const themeLine = name === DEFAULT_THEME ? "  theme: '@vuemo/theme-default',\n" : `  theme: ${quote(name)},\n`
   const aiSummary = a.aiSummary ? "{ api: 'https://YOUR-WORKER.workers.dev' } // see the plugin README" : 'false'
@@ -122,6 +133,7 @@ export default defineBlogConfig({
   hostname: 'https://example.com',
 
   // theme
+  // to switch: npm install vuemo-theme-<name> (or unzip a theme into themes/), then change this name
 ${themeLine}  postsPerPage: 5,
   search: true, // local full-text search
   nav: [
@@ -164,6 +176,7 @@ export function themePackageJson(a: ThemeAnswers): string {
         dev: 'vitepress dev example',
         'build:example': 'vitepress build example',
         check: 'vuemo check-theme ./src/index.ts',
+        package: 'node scripts/package.mjs',
         test: 'vitest run'
       },
       peerDependencies: peers,

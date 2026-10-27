@@ -56,7 +56,7 @@ async function blog() {
   const title = await prompt('Blog title', name)
   const comments = (values.comments ?? (await prompt('Comments [none/giscus/utterances]', 'none'))) as CommentsProvider
   const aiSummary = values['ai-summary'] ?? /^y/i.test(await prompt('Add AI summary plugin? [y/N]', 'N'))
-  const theme = values.theme ?? (await prompt('Theme package', DEFAULT_THEME))
+  const theme = values.theme ?? (await prompt('Theme (short name like trigger, or a package)', DEFAULT_THEME))
   rl?.close()
 
   if (!PROVIDERS.includes(comments)) fail(`Unknown comments provider "${comments}". Use: ${PROVIDERS.join(', ')}`)

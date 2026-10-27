@@ -2,6 +2,9 @@ import { existsSync, mkdtempSync, readFileSync, readdirSync, statSync } from 'no
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { execFileSync } from 'node:child_process'
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { inflateRawSync } from 'node:zlib'
 import { describe, expect, it } from 'vitest'
 import { scaffoldBlog, scaffoldTheme } from '../src/scaffold'
 
@@ -35,7 +38,8 @@ describe('theme starter template', () => {
       'example/.vitepress/config.ts',
       'example/.vitepress/theme/index.ts',
       ...['index', 'archives', 'tags', 'category', 'about'].map((n) => `example/${n}.md`),
-      'test/contract.test.ts'
+      'test/contract.test.ts',
+      'scripts/package.mjs'
     ]) {
       expect(existsSync(join(target, f)), f).toBe(true)
     }
@@ -56,6 +60,73 @@ describe('theme starter template', () => {
       expect(src('src/layouts/Post.vue')).toContain(`<PluginSlot name="${slot}" />`)
     }
     expect(src('src/index.ts')).toContain('runEnhanceApps(ctx)')
+  })
+})
+
+/** Reads a zip's central directory: { name: content }. Fails on a wrong CRC or size. */
+function readZip(buf: Buffer): Record<string, Buffer> {
+  const end = buf.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]))
+  const count = buf.readUInt16LE(end + 10)
+  let p = buf.readUInt32LE(end + 16)
+  const out: Record<string, Buffer> = {}
+  for (let i = 0; i < count; i++) {
+    expect(buf.readUInt32LE(p)).toBe(0x02014b50)
+    const method = buf.readUInt16LE(p + 10)
+    const crc = buf.readUInt32LE(p + 16)
+    const size = buf.readUInt32LE(p + 24)
+    const nameLen = buf.readUInt16LE(p + 28)
+    const local = buf.readUInt32LE(p + 42)
+    const name = buf.toString('utf8', p + 46, p + 46 + nameLen)
+    const dataStart = local + 30 + buf.readUInt16LE(local + 26) + buf.readUInt16LE(local + 28)
+    const body = buf.subarray(dataStart, dataStart + buf.readUInt32LE(p + 20))
+    const data = method === 8 ? inflateRawSync(body) : body
+    expect(data.length, name).toBe(size)
+    expect(zlibCrc(data), name).toBe(crc)
+    out[name] = data
+    p += 46 + nameLen
+  }
+  return out
+}
+const zlibCrc = (data: Buffer) => {
+  let c = 0xffffffff
+  for (const b of data) {
+    c ^= b
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1
+  }
+  return (c ^ 0xffffffff) >>> 0
+}
+
+describe('theme starter: pnpm package', () => {
+  const target = join(tmp(), 'my-theme')
+  scaffoldTheme(templates('template-theme'), target, '@me/vuemo-theme-x')
+  const run = () => execFileSync(process.execPath, ['scripts/package.mjs'], { cwd: target, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
+
+  it('ignores dist-zip in git', () => {
+    expect(readFileSync(join(target, '.gitignore'), 'utf8')).toContain('dist-zip')
+  })
+  it('writes dist-zip/<name>-<version>.zip with a top-level folder named after the short name', () => {
+    mkdirSync(join(target, 'dist'))
+    writeFileSync(join(target, 'dist/style.css'), 'a{color:red}'.repeat(50))
+    writeFileSync(join(target, 'LICENSE'), 'MIT')
+    mkdirSync(join(target, 'node_modules/x'), { recursive: true })
+    writeFileSync(join(target, 'node_modules/x/i.js'), '')
+    const out = run()
+    expect(out).toContain('themes/x/')
+    const zip = join(target, 'dist-zip/vuemo-theme-x-0.0.0.zip')
+    expect(existsSync(zip)).toBe(true)
+    const entries = readZip(readFileSync(zip))
+    const names = Object.keys(entries)
+    expect(names.every((n) => n.startsWith('x/'))).toBe(true)
+    for (const f of ['x/package.json', 'x/README.md', 'x/LICENSE', 'x/src/index.ts', 'x/src/Layout.vue', 'x/dist/style.css']) expect(names, f).toContain(f)
+    expect(names.some((n) => /node_modules|dist-zip|example|test\//.test(n))).toBe(false)
+    expect(entries['x/dist/style.css'].toString()).toBe('a{color:red}'.repeat(50))
+    expect(JSON.parse(entries['x/package.json'].toString()).name).toBe('@me/vuemo-theme-x')
+    // the system unzip, when there is one, accepts it
+    try {
+      execFileSync('unzip', ['-tq', zip], { stdio: 'pipe' })
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw e
+    }
   })
 })
 

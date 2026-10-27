@@ -80,7 +80,7 @@ describe('theme option', () => {
     expect(deps(base)['@vuemo/theme-default']).toBe(VERSIONS.theme)
     expect(packageJson({ ...base, theme: DEFAULT_THEME })).toBe(packageJson(base))
     expect(configTs({ ...base, theme: DEFAULT_THEME })).toBe(configTs(base))
-    expect(configTs(base)).toContain("  // theme\n  theme: '@vuemo/theme-default',\n  postsPerPage: 5,")
+    expect(configTs(base)).toContain("  // theme\n  // to switch: npm install vuemo-theme-<name> (or unzip a theme into themes/), then change this name\n  theme: '@vuemo/theme-default',\n  postsPerPage: 5,")
   })
   it('replaces the default theme dependency with the chosen theme', () => {
     const d = deps({ ...base, theme: '@scope/vuemo-theme-x@^1.2.0' })
@@ -92,8 +92,35 @@ describe('theme option', () => {
   })
   it('writes an explicit theme line only for another theme', () => {
     const cfg = configTs({ ...base, theme: 'vuemo-theme-y@^1.0.0' })
-    expect(cfg).toContain("  // theme\n  theme: 'vuemo-theme-y',\n  postsPerPage: 5,")
+    expect(cfg).toContain("  theme: 'vuemo-theme-y',\n  postsPerPage: 5,")
     expect(cfg).not.toContain('@vuemo/theme-default')
+  })
+})
+
+describe('short theme names', () => {
+  const base = { name: 'b', title: 'B', comments: 'none', aiSummary: false } as const
+  const deps = (theme: string) => JSON.parse(packageJson({ ...base, theme })).dependencies
+  it('parses a short name with and without a range', () => {
+    expect(parseThemeSpec('trigger')).toEqual({ name: 'trigger', range: 'latest' })
+    expect(parseThemeSpec('trigger@^2')).toEqual({ name: 'trigger', range: '^2' })
+  })
+  it('installs vuemo-theme-<name> and writes the short name', () => {
+    expect(deps('trigger')['vuemo-theme-trigger']).toBe('latest')
+    expect(deps('trigger@^2')['vuemo-theme-trigger']).toBe('^2')
+    expect(deps('trigger')).not.toHaveProperty('trigger')
+    expect(deps('trigger')).not.toHaveProperty('@vuemo/theme-default')
+    expect(configTs({ ...base, theme: 'trigger@^2' })).toContain("  theme: 'trigger',\n  postsPerPage: 5,")
+  })
+  it('keeps full and scoped names as written', () => {
+    expect(deps('vuemo-theme-trigger@^2')['vuemo-theme-trigger']).toBe('^2')
+    expect(configTs({ ...base, theme: 'vuemo-theme-trigger' })).toContain("  theme: 'vuemo-theme-trigger',")
+    expect(deps('@scope/trigger')['@scope/trigger']).toBe('latest')
+    expect(configTs({ ...base, theme: '@scope/trigger' })).toContain("  theme: '@scope/trigger',")
+    expect(deps('@vuemo/theme-default')['@vuemo/theme-default']).toBe(VERSIONS.theme)
+  })
+  it('rejects an invalid short name', () => {
+    expect(() => parseThemeSpec('Trigger')).toThrow()
+    expect(() => parseThemeSpec('a/b')).toThrow()
   })
 })
 
@@ -108,8 +135,9 @@ describe('themePackageJson', () => {
       files: ['src'],
       keywords: ['vuemo-theme']
     })
-    expect(Object.keys(pkg.scripts)).toEqual(['dev', 'build:example', 'check', 'test'])
+    expect(Object.keys(pkg.scripts)).toEqual(['dev', 'build:example', 'check', 'package', 'test'])
     expect(pkg.scripts.check).toBe('vuemo check-theme ./src/index.ts')
+    expect(pkg.scripts.package).toBe('node scripts/package.mjs')
   })
   it('has core, vitepress and vue as peers (and dev dependencies), never as dependencies', () => {
     expect(pkg.peerDependencies).toEqual({ '@vuemo/core': VERSIONS.core, vitepress: '^1.6.0', vue: '^3.5.0' })

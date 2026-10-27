@@ -5,6 +5,8 @@
 ### Features
 - `theme` is resolved by one pure function, `resolveThemeSource(theme, root)` (exported from `@vuemo/core`), in this order: a path (`./x`, `../x`, absolute; a file or a folder), `themes/<name>/` in the project (a single wrapping subfolder from a zip is entered), the installed package `vuemo-theme-<name>` (short names), the installed package `<name>` (also `@scope/name`). Entries come from `package.json` (`exports["."]`, `main`), then `index.*`, then `src/index.*`. A name with a `/` (other than a scope's) or a `..` segment is rejected: a path must start with `.` or be absolute. Errors list what was tried and how to fix it. `defineBlogConfig` bundles `vuemo-theme-<name>` for a short name.
 - `vuemo check-theme trigger` accepts the same names, through the same function.
+- `create-vuemo --theme trigger`: a short name installs `vuemo-theme-trigger` and writes `theme: 'trigger'`; full and scoped names work as before (a name without `@` scope or `vuemo-theme-` prefix is now short). The generated config explains how to switch themes.
+- theme starter: `pnpm package` writes `dist-zip/<name>-<version>.zip` (top-level folder named after the short name; Node only) for a GitHub Release
 - docs: using a theme from npm or a zip in `themes/`, and how to ship a theme as a zip
 
 ### Changed
