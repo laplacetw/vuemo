@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.1.0-alpha.2
+
 ### Features
 - `theme` is resolved by one pure function, `resolveThemeSource(theme, root)` (exported from `@vuemo/core`), in this order: a path (`./x`, `../x`, absolute; a file or a folder), `themes/<name>/` in the project (a single wrapping subfolder from a zip is entered), the installed package `vuemo-theme-<name>` (short names), the installed package `<name>` (also `@scope/name`). Entries come from `package.json` (`exports["."]`, `main`), then `index.*`, then `src/index.*`. A name with a `/` (other than a scope's) or a `..` segment is rejected: a path must start with `.` or be absolute. Errors list what was tried and how to fix it. `defineBlogConfig` bundles `vuemo-theme-<name>` for a short name.
 - `vuemo check-theme trigger` accepts the same names, through the same function.
