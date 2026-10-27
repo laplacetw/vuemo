@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, watch } from 'vue'
 import { useData } from 'vitepress'
+import { useQueryParam } from '@vuemo/core/client'
 import { albums } from 'virtual:vuemo-gallery'
 import type { Photo } from './types'
 import { aspect, sizesAttr } from './layout'
+import type { LightboxHandle } from './lightbox'
 import { MIME, photoUrl, resolveBaseUrl, srcset } from './urls'
 
 const props = defineProps<{ slug: string; photos: Photo[]; canGoBack?: boolean }>()
@@ -12,6 +14,50 @@ const emit = defineEmits<{ back: [] }>()
 const { site } = useData()
 const cfg = computed(() => ({ ...__VUEMO_GALLERY__, baseUrl: resolveBaseUrl(__VUEMO_GALLERY__.baseUrl, site.value.base) }))
 const album = computed(() => albums.find((a) => a.slug === props.slug))
+
+const photoParam = useQueryParam('photo')
+let lightbox: LightboxHandle | undefined
+let opening = false
+
+// ?photo=<id> (a click, a deep link, Back/Forward) opens the lightbox; clearing it closes it
+async function sync(id: string) {
+  const index = props.photos.findIndex((p) => p.id === id)
+  if (index < 0) {
+    lightbox?.close()
+    return
+  }
+  if (lightbox || opening) return
+  opening = true
+  try {
+    const { openLightbox } = await import('./lightbox')
+    // the param may have changed while PhotoSwipe was loading
+    if (photoParam.value !== id) return
+    lightbox = await openLightbox({
+      photos: props.photos,
+      index,
+      cfg: cfg.value,
+      onChange: (current) => {
+        if (photoParam.value !== current) photoParam.value = current
+      },
+      onClose: () => {
+        lightbox = undefined
+        photoParam.value = ''
+      }
+    })
+  } finally {
+    opening = false
+  }
+}
+watch(photoParam, sync, { flush: 'post' })
+onBeforeUnmount(() => lightbox?.close())
+
+function open(id: string, e: MouseEvent) {
+  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button) return
+  e.preventDefault()
+  photoParam.value = id
+}
+// in the album list mode the URL also names the album
+const photoHref = (id: string) => (props.canGoBack ? `?album=${props.slug}&photo=${id}` : `?photo=${id}`)
 
 const FIRST = 6 // above the fold: not lazy, high priority
 
@@ -47,8 +93,8 @@ const src = (p: Photo) => photoUrl(cfg.value, p, p.variants[Math.min(1, p.varian
     </header>
     <p v-if="!photos.length" class="vuemo-gallery__empty">No photos in this album yet.</p>
     <ul v-else class="vuemo-gallery__grid" role="list">
-      <li v-for="(p, i) in photos" :key="p.id" class="vuemo-gallery__item" :style="itemStyle(p)">
-        <a :href="`?photo=${p.id}`" :aria-label="label(p, i)">
+      <li v-for="(p, i) in photos" :key="p.id" class="vuemo-gallery__item" :data-photo-id="p.id" :style="itemStyle(p)">
+        <a :href="photoHref(p.id)" :aria-label="label(p, i)" @click="open(p.id, $event)">
           <picture>
             <source v-for="f in sources(p)" :key="f" :type="MIME[f]" :srcset="srcset(cfg, p, f)" :sizes="sizesAttr(p.w, p.h)" />
             <img
