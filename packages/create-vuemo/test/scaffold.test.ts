@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execFileSync } from 'node:child_process'
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, symlinkSync, utimesSync, writeFileSync } from 'node:fs'
 import { inflateRawSync } from 'node:zlib'
 import { describe, expect, it } from 'vitest'
 import { scaffoldBlog, scaffoldTheme } from '../src/scaffold'
@@ -127,6 +127,81 @@ describe('theme starter: pnpm package', () => {
     } catch (e) {
       if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw e
     }
+  })
+})
+
+describe('theme starter: pnpm package, hardening', () => {
+  const fresh = () => {
+    const target = join(tmp(), 'my-theme')
+    scaffoldTheme(templates('template-theme'), target, '@me/vuemo-theme-x')
+    return target
+  }
+  const run = (cwd: string, env: Record<string, string> = {}) =>
+    execFileSync(process.execPath, ['scripts/package.mjs'], { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, ...env } })
+  const zipOf = (cwd: string) => join(cwd, 'dist-zip/vuemo-theme-x-0.0.0.zip')
+  const setPkg = (cwd: string, patch: Record<string, unknown>) => {
+    const file = join(cwd, 'package.json')
+    writeFileSync(file, JSON.stringify({ ...JSON.parse(readFileSync(file, 'utf8')), ...patch }))
+  }
+  const fails = (cwd: string) => {
+    try {
+      run(cwd)
+    } catch (e) {
+      return String((e as { stderr?: string }).stderr)
+    }
+    throw new Error('expected the script to fail')
+  }
+
+  it('skips dotfiles and symbolic links', () => {
+    const t = fresh()
+    writeFileSync(join(t, 'src/.env'), 'SECRET')
+    mkdirSync(join(t, 'src/.hidden'))
+    writeFileSync(join(t, 'src/.hidden/a.ts'), '')
+    writeFileSync(join(t, 'src/.DS_Store'), '')
+    writeFileSync(join(t, 'outside.txt'), 'x')
+    symlinkSync(join(t, 'outside.txt'), join(t, 'src/link.txt'))
+    run(t)
+    const names = Object.keys(readZip(readFileSync(zipOf(t))))
+    expect(names.some((n) => /\/\./.test(n))).toBe(false)
+    expect(names).not.toContain('x/src/link.txt')
+    expect(names).toContain('x/src/index.ts')
+  })
+
+  it('honors package.json "files"', () => {
+    const t = fresh()
+    mkdirSync(join(t, 'dist'))
+    writeFileSync(join(t, 'dist/style.css'), 'a{}')
+    mkdirSync(join(t, 'extra'))
+    writeFileSync(join(t, 'extra/a.txt'), 'a')
+    setPkg(t, { files: ['src'] })
+    run(t)
+    const names = Object.keys(readZip(readFileSync(zipOf(t))))
+    expect(names).toContain('x/src/index.ts')
+    expect(names).toContain('x/package.json')
+    expect(names).not.toContain('x/dist/style.css')
+    expect(names).not.toContain('x/extra/a.txt')
+  })
+
+  it('fails when "files" leaves out the entry', () => {
+    const t = fresh()
+    setPkg(t, { files: ['dist'] })
+    mkdirSync(join(t, 'dist'))
+    expect(fails(t)).toMatch(/entry .*src\/index\.ts.* is not in the zip/)
+    expect(existsSync(zipOf(t))).toBe(false)
+  })
+
+  it('is deterministic: same bytes twice, whatever the mtimes; SOURCE_DATE_EPOCH changes the stamp', () => {
+    const t = fresh()
+    run(t)
+    const first = readFileSync(zipOf(t))
+    utimesSync(join(t, 'src/index.ts'), new Date(2030, 5, 5), new Date(2030, 5, 5))
+    run(t)
+    expect(readFileSync(zipOf(t)).equals(first)).toBe(true)
+    // the first entry's DOS date: 1980-01-01 is (0 << 9) | (1 << 5) | 1
+    const dateAt = (buf: Buffer) => buf.readUInt16LE(12)
+    expect(dateAt(first)).toBe(33)
+    run(t, { SOURCE_DATE_EPOCH: '1700000000' })
+    expect(dateAt(readFileSync(zipOf(t)))).not.toBe(33)
   })
 })
 

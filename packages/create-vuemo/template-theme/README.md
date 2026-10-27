@@ -50,7 +50,7 @@ Two ways to give the theme to people. Both use the same files; npm is the main o
 - Name the package `vuemo-theme-<name>` or `@scope/vuemo-theme-<name>` and keep the `vuemo-theme` keyword. With the plain `vuemo-theme-<name>` name, users can write the short name `theme: '<name>'`.
 - `@vuemo/core`, `vitepress` and `vue` are **peer dependencies**. Never put `@vuemo/core` in `dependencies`: two copies of core would not share the posts data. They are also in `devDependencies` so the example and the tests work.
 - The `@vuemo/core` peer range is the contract version you support.
-- The package ships `src` (the `exports` point at `src/index.ts`; VitePress compiles it). If you add a build step for CSS, add its output to `files` and `exports`.
+- The package ships `src` and `dist` (the `exports` point at `src/index.ts`; VitePress compiles it; put compiled CSS in `dist/` and add it to `exports`). `pnpm package` follows `files`: whatever it lists goes into the zip, plus `package.json`, `README.md` and `LICENSE`; dotfiles and symbolic links are never included, and it fails if the entry is not in the zip. Set `SOURCE_DATE_EPOCH` to stamp the zip's files with a date; by default they get 1980-01-01, so the same files give the same zip.
 - Run `pnpm check` and `pnpm test`, then `npm publish`.
 
 Users run `npm install <package>` and set it in `vuemo.config.ts`:

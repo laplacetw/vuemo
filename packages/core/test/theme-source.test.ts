@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve, sep } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -109,8 +109,15 @@ describe('resolveThemeSource: order', () => {
     const root = put(project(), { 'node_modules/vuemo-theme-trigger/index.ts': '', 'node_modules/trigger/index.ts': '' })
     expect(ok('trigger', root)).toMatchObject({ kind: 'package', packageName: 'vuemo-theme-trigger' })
   })
-  it('falls back to a package named exactly <name>', () => {
-    const root = put(project(), { 'node_modules/trigger/index.ts': '' })
+  it('falls back to a package named exactly <name> only when package.json lists it', () => {
+    const files = { 'node_modules/trigger/index.ts': '' }
+    expect(bad('trigger', put(project(), files)).error).toContain('was not found')
+    expect(bad('trigger', put(project(), { ...files, 'package.json': pkg({ dependencies: { other: '1' } }) })).error).toContain('was not found')
+    for (const field of ['dependencies', 'devDependencies']) {
+      const listed = put(project(), { ...files, 'package.json': pkg({ [field]: { trigger: '^1' } }) })
+      expect(ok('trigger', listed)).toMatchObject({ packageName: 'trigger' })
+    }
+    const root = put(project(), { ...files, 'package.json': pkg({ dependencies: { trigger: '^1' } }) })
     expect(ok('trigger', root)).toMatchObject({ kind: 'package', packageName: 'trigger', entry: join(root, 'node_modules', 'trigger', 'index.ts') })
   })
   it('does not add the prefix to full or scoped names', () => {
@@ -126,9 +133,16 @@ describe('resolveThemeSource: order', () => {
     expect(scoped).toMatchObject({ kind: 'package', packageName: '@vuemo/theme-default' })
     expect(scoped.tried.some((t) => t.includes(`vuemo-theme-@`))).toBe(false)
   })
-  it('walks node_modules up from the root, like a monorepo', () => {
+  it('does not look in node_modules above the project root', () => {
     const base = put(project(), { 'node_modules/vuemo-theme-up/index.js': '', 'apps/blog/.keep': '' })
-    expect(ok('up', join(base, 'apps', 'blog'))).toMatchObject({ kind: 'package', entry: join(base, 'node_modules', 'vuemo-theme-up', 'index.js') })
+    const r = bad('up', join(base, 'apps', 'blog'))
+    expect(r.tried.every((t) => t.startsWith(join(base, 'apps', 'blog')))).toBe(true)
+    expect(ok('up', base).kind).toBe('package')
+  })
+  it('aliases default to @vuemo/theme-default, but a themes/default/ folder wins', () => {
+    const files = { 'node_modules/@vuemo/theme-default/index.ts': '', 'node_modules/vuemo-theme-default/index.ts': '' }
+    expect(ok('default', put(project(), files))).toMatchObject({ kind: 'package', packageName: '@vuemo/theme-default' })
+    expect(ok('default', put(project(), { ...files, 'themes/default/index.ts': '' })).kind).toBe('local')
   })
   it('a themes/ folder is not looked at for scoped names', () => {
     const root = put(project(), { 'themes/@s/n/index.ts': '', 'node_modules/@s/n/index.ts': '' })
@@ -179,12 +193,14 @@ describe('resolveThemeSource: not found', () => {
     expect(r.error).toContain('[vuemo] theme "trigger" was not found. Looked in:')
     expect(r.error).toContain(join(root, 'themes', 'trigger'))
     expect(r.error).toContain(join(root, 'node_modules', 'vuemo-theme-trigger'))
-    expect(r.error).toContain(join(root, 'node_modules', 'trigger'))
+    expect(r.error).not.toContain(join(root, 'node_modules', 'trigger'))
+    expect(r.error).toContain('check the package name')
+    expect(r.error).toContain('not GitHub\'s "Source code (zip)"')
     expect(r.error).toContain('npm install vuemo-theme-trigger')
     expect(r.error).toContain('unzip it into themes/trigger/')
     expect(r.error).toContain('one more folder level')
     expect(r.error).toContain('correct the name')
-    expect(r.tried.length).toBeGreaterThan(2)
+    expect(r.tried.length).toBe(2)
   })
   it('suggests the scoped name as written and the short name for a prefixed one', () => {
     const root = project()
@@ -192,6 +208,11 @@ describe('resolveThemeSource: not found', () => {
     const full = bad('vuemo-theme-trigger', root).error
     expect(full).toContain('npm install vuemo-theme-trigger')
     expect(full).toContain('themes/trigger/')
+  })
+  it('lists the existing folders of themes/', () => {
+    const root = put(project(), { 'themes/alpha/index.ts': '', 'themes/beta/index.ts': '', 'themes/.hidden/x': '', 'themes/README.md': '' })
+    expect(bad('gamma', root).error).toContain('Folders in themes/: alpha, beta.')
+    expect(bad('gamma', project()).error).not.toContain('Folders in themes/')
   })
   it('requireThemeSource throws the same message', () => {
     const root = project()
@@ -210,5 +231,47 @@ describe('separators', () => {
     const root = put(project(), { 'my/theme.ts': '' })
     expect(bad('my\\theme.ts', root).error).toContain('not a valid theme name')
     expect(isExplicitThemePath('.\\my\\theme.ts')).toBe(true)
+  })
+})
+
+describe('resolveThemeSource: names', () => {
+  const root = project()
+  it.each(['x?raw', 'a:b', '@../x', '../x/y/..', 'a b', 'a\\b', 'a/b', '@s/n/x', '.hidden', 'x#y', 'a%2fb'])('rejects %s', (name) => {
+    const r = resolveThemeSource(name, root)
+    expect(r.ok).toBe(false)
+  })
+  it('says why for a name that is not a path and not a name', () => {
+    expect(bad('x?raw', root).error).toContain('not a valid theme name')
+    expect(bad('.hidden', root).error).toContain('not a valid theme name')
+    expect(bad('a:b', root).error).toContain('not a valid theme name')
+  })
+  it('treats only ./, ../, . , .. and absolute paths as paths', () => {
+    for (const p of ['.', '..', './x', '../x', '.\\x', '..\\x', resolve('/x')]) expect(isExplicitThemePath(p), p).toBe(true)
+    for (const p of ['.hidden', '..x', 'x']) expect(isExplicitThemePath(p), p).toBe(false)
+  })
+  it('accepts capitals in a themes/ folder name but not in a package name', () => {
+    const r = put(project(), { 'themes/MyTheme/index.ts': '', 'node_modules/vuemo-theme-mytheme/index.ts': '' })
+    expect(ok('MyTheme', r)).toMatchObject({ kind: 'local', entry: join(r, 'themes', 'MyTheme', 'index.ts') })
+    // no package lookup for a name with capitals
+    const none = bad('Other', project())
+    expect(none.tried.some((t) => t.includes('node_modules'))).toBe(false)
+  })
+  it('accepts a symlinked themes/<name>', () => {
+    const base = put(project(), { 'real/index.ts': '' })
+    mkdirSync(join(base, 'themes'))
+    symlinkSync(join(base, 'real'), join(base, 'themes', 'linked'), 'dir')
+    expect(ok('linked', base)).toMatchObject({ kind: 'local' })
+    expect(bad('gamma', base).error).toContain('Folders in themes/: linked.')
+  })
+  it('warns about a folder that differs only in case, and still uses it', () => {
+    const r = put(project(), { 'themes/Trigger/index.ts': '' })
+    const found = ok('trigger', r)
+    expect(found.kind).toBe('local')
+    expect(found.entry).toBe(join(r, 'themes', 'Trigger', 'index.ts'))
+    expect(found.warnings?.[0]).toContain('themes/Trigger/')
+    expect(ok('Trigger', r).warnings).toBeUndefined()
+  })
+  it('lists a themes/ folder with a trailing separator', () => {
+    expect(bad('zzz', project()).tried[0].endsWith(sep)).toBe(true)
   })
 })

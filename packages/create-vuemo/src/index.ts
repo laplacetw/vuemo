@@ -8,6 +8,7 @@ import {
   DEFAULT_THEME,
   hasThemePrefix,
   parseThemeSpec,
+  themeInstall,
   themeTarget,
   validName,
   validPackageName,
@@ -66,6 +67,8 @@ async function blog() {
     fail((error as Error).message)
   }
   const answers: Answers = { name, title, comments, aiSummary, theme }
+  const install = themeInstall(theme)
+  if (install) console.log(`installing ${install.pkg} (from --theme ${theme})`)
 
   const projectName = basename(resolve(process.cwd(), name))
   if (!validName(projectName)) fail(`"${projectName}" is not a valid project name`)

@@ -8,10 +8,15 @@
 - docs: using a theme from npm or a zip in `themes/`, and how to ship a theme as a zip
 - `create-vuemo --theme trigger`: a short name installs `vuemo-theme-trigger` and writes `theme: 'trigger'`; full and scoped names work as before (a name without `@` scope or `vuemo-theme-` prefix is now short). The generated config explains how to switch themes.
 - theme starter: `pnpm package` writes `dist-zip/<name>-<version>.zip` (top-level folder named after the short name; Node only) for a GitHub Release
-- `defineBlogConfig` always excludes `themes/**` from the pages (VitePress `srcExclude`), so a README.md inside an unzipped theme is not built as a page; a `srcExclude` of your own keeps that entry or a zip in `themes/`, and how to ship a theme as a zip
+- `defineBlogConfig` always excludes `themes/**` from the pages (VitePress `srcExclude`), so a README.md inside an unzipped theme is not built as a page; a `srcExclude` of your own keeps that entry
+- `theme: 'default'` is an alias of `@vuemo/theme-default` (also `create-vuemo --theme default`); a bare short name only falls back to a package named exactly `<name>` when `package.json` lists it; `vuemo check-theme themes/trigger` accepts a bare existing folder
+- dev server: a theme folder created in `themes/` or a package installed while `dev` runs is picked up (the page reloads)
+- the theme shape error names the resolved entry file
+- theme starter: `pnpm package` follows `files`, skips dotfiles and symbolic links, fails when the entry is missing from the zip, and is reproducible (`SOURCE_DATE_EPOCH`, else 1980-01-01); `files` of the starter now lists `dist` too
+- `create-vuemo`: the blog's `.gitignore` ignores `.vuemo-check`
 
 ### Changed
-- the error for a theme that cannot be found now reads `[vuemo] theme "X" was not found. Looked in: ...`; a missing path reads `theme path "X" does not exist`
+- the error for a theme that cannot be found now reads `[vuemo] theme "X" was not found. Looked in: ...`; a missing path reads `theme path "X" does not exist`. Only the project's own `node_modules` is searched for theme packages (not the folders above it), and theme names follow the npm naming rules (a `themes/` folder name may have capitals)
 
 ### Breaking (new scaffolds only)
 - `create-vuemo`: new projects keep all settings in `vuemo.config.ts` at the project root (`export default defineBlogConfig({...})`, with the plugin `/// <reference types>` lines); `.vitepress/config.ts` (`export { default } from '../vuemo.config'`) and `.vitepress/theme/index.ts` are generated one-line boilerplate, so users never need to open `.vitepress/`. The theme starter's `example/` follows the same layout, and the generated `tsconfig.json` includes `vuemo.config.ts`.

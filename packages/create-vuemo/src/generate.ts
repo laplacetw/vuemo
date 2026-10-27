@@ -28,7 +28,9 @@ export function validPackageName(name: string): boolean {
 export function parseThemeSpec(spec: string): { name: string; range: string } {
   const text = spec.trim()
   const at = text.lastIndexOf('@')
-  const name = at > 0 ? text.slice(0, at) : text
+  const written = at > 0 ? text.slice(0, at) : text
+  // `default` is the theme that ships with Vuemo
+  const name = written === 'default' ? DEFAULT_THEME : written
   const range = at > 0 ? text.slice(at + 1) : 'latest'
   if (!validPackageName(name)) throw new Error(`"${name}" is not a valid npm package name (theme "${spec}")`)
   if (!range.trim() || /[\x00-\x1f\x7f]/.test(range)) throw new Error(`"${range}" is not a valid version or range (theme "${spec}")`)
@@ -60,6 +62,13 @@ export const THEME_PREFIX = 'vuemo-theme-'
 /** A short name has no scope and no `vuemo-theme-` prefix: `theme: 'trigger'` finds the package `vuemo-theme-trigger` (or `themes/trigger/`). */
 export const isShortThemeName = (name: string) => !name.startsWith('@') && !name.startsWith(THEME_PREFIX)
 
+/** The package a `--theme` value installs, when it is not the one written (a short name): `trigger` is `vuemo-theme-trigger`. */
+export function themeInstall(spec: string | undefined): { name: string; pkg: string } | undefined {
+  if (!spec?.trim()) return undefined
+  const t = themeOf({ name: '', title: '', comments: 'none', aiSummary: false, theme: spec })
+  return t.pkg !== t.name ? { name: t.name, pkg: t.pkg } : undefined
+}
+
 /**
  * The chosen theme: `name` is what `theme:` says in the config, `pkg` the package to install.
  * The default theme (with the version released together with this scaffolder) when none is given.
@@ -68,7 +77,7 @@ function themeOf(a: Answers): { name: string; pkg: string; range: string } {
   if (!a.theme?.trim()) return { name: DEFAULT_THEME, pkg: DEFAULT_THEME, range: VERSIONS.theme }
   const spec = a.theme.trim()
   const { name, range } = parseThemeSpec(spec)
-  if (name === DEFAULT_THEME && !spec.includes('@', 1)) return { name, pkg: name, range: VERSIONS.theme }
+  if (name === DEFAULT_THEME && !/^(?:@vuemo\/theme-default|default)@/.test(spec)) return { name, pkg: name, range: VERSIONS.theme }
   return { name, pkg: isShortThemeName(name) ? THEME_PREFIX + name : name, range }
 }
 
@@ -170,7 +179,7 @@ export function themePackageJson(a: ThemeAnswers): string {
       description: 'A Vuemo theme',
       license: 'MIT',
       exports: { '.': './src/index.ts' },
-      files: ['src'],
+      files: ['src', 'dist'],
       keywords: ['vuemo-theme'],
       scripts: {
         dev: 'vitepress dev example',

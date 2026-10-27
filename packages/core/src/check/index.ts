@@ -45,9 +45,12 @@ function resolveTheme(theme: string | undefined, cwd: string): string {
     if (!entry) throw new Error(`no theme given and ${cwd} has no theme entry (package.json exports["."] / main, index.ts or src/index.ts)`)
     return entry
   }
-  // a file that exists relative to cwd is a path even without `./` (`src/index.ts`)
+  // a file or a folder that exists relative to cwd is a path even without `./` (`src/index.ts`, `themes/trigger`)
   const asPath = resolve(cwd, theme)
-  if (!isExplicitThemePath(theme) && existsSync(asPath) && statSync(asPath).isFile()) return asPath
+  if (!isExplicitThemePath(theme) && existsSync(asPath)) {
+    if (statSync(asPath).isFile()) return asPath
+    return requireThemeSource('./' + theme, cwd).entry
+  }
   return requireThemeSource(theme, cwd).entry
 }
 

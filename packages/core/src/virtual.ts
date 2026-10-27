@@ -1,6 +1,7 @@
-import { join } from 'node:path'
+import { existsSync, watch } from 'node:fs'
+import { join, sep } from 'node:path'
 import { STANDARD_SLOTS, type VuemoPlugin } from './plugin'
-import { resolveThemeSource, type ThemeSource } from './theme-source'
+import { DEFAULT_THEME_NAME, THEME_PREFIX, isExplicitThemePath, resolveThemeSource, type ThemeSource } from './theme-source'
 
 export const VIRTUAL_ID = 'virtual:vuemo/plugins'
 export const THEME_ID = 'virtual:vuemo/theme'
@@ -39,20 +40,24 @@ export const enhanceApps = [${enhance.join(', ')}]
 export interface ThemeResolver {
   resolve(id: string, importer?: string): Promise<{ id: string } | null | undefined>
   error(message: string): never
+  warn?(message: string): void
 }
 
-export const themeShapeError = (theme: string) =>
-  `[vuemo] theme "${theme}" does not default-export a VitePress theme ({ Layout, enhanceApp })`
+/** Module ids use `/` on every platform (a Windows path in `import` is also a string escape hazard for other tools). */
+const moduleId = (id: string) => id.replace(/\\/g, '/')
+
+export const themeShapeError = (theme: string, entry?: string) =>
+  `[vuemo] theme "${theme}"${entry && entry !== theme ? ` (${entry})` : ''} does not default-export a VitePress theme ({ Layout, enhanceApp })`
 
 /**
  * Source of the theme module. `theme` is what the user wrote (used in messages); `id` is what it resolved to.
  * The module throws when the default export is not a theme: it needs a `Layout`, directly or through `extends`.
  */
 export function buildThemeModule(theme: string, id: string = theme): string {
-  return `import theme from ${JSON.stringify(id)}
+  return `import theme from ${JSON.stringify(moduleId(id))}
 let t = theme
 for (let i = 0; i < 10 && t && typeof t === 'object' && !t.Layout; i++) t = t.extends
-if (!t || typeof t !== 'object' || !t.Layout) throw new Error(${JSON.stringify(themeShapeError(theme))})
+if (!t || typeof t !== 'object' || !t.Layout) throw new Error(${JSON.stringify(themeShapeError(theme, moduleId(id)))})
 export default theme
 `
 }
@@ -66,9 +71,37 @@ export async function loadThemeModule(ctx: ThemeResolver, theme: string, root: s
   const found = source(theme, root)
   if (!found.ok) ctx.error(found.error)
   const s = found as Extract<ThemeSource, { ok: true }>
+  for (const w of s.warnings ?? []) (ctx.warn ?? console.warn)(w)
   if (s.kind !== 'package') return buildThemeModule(theme, s.entry)
   const resolved = await ctx.resolve(s.packageName ?? theme, join(root, 'index.html'))
   return buildThemeModule(theme, resolved?.id ?? s.entry)
+}
+
+/** The places whose appearance or disappearance changes what `theme` resolves to (never a path: its file is in the module graph). */
+export function themeWatchPaths(theme: string, root: string): string[] {
+  if (typeof theme !== 'string' || isExplicitThemePath(theme) || !/^[A-Za-z0-9._~-]+$/.test(theme) && !theme.startsWith('@')) return []
+  const modules = join(root, 'node_modules')
+  const pkgs = theme === 'default' ? [DEFAULT_THEME_NAME] : theme.startsWith('@') || theme.startsWith(THEME_PREFIX) ? [theme] : [THEME_PREFIX + theme, theme]
+  return [...(theme.startsWith('@') ? [] : [join(root, 'themes', theme)]), ...pkgs.map((p) => join(modules, p))]
+}
+
+/** What `theme` currently resolves to, as one comparable string (`none` when it does not resolve). */
+export function themeSignature(theme: string, root: string, source: typeof resolveThemeSource = resolveThemeSource): string {
+  const r = source(theme, root)
+  return r.ok ? `${r.kind}:${r.entry}` : 'none'
+}
+
+const inside = (file: string, dir: string) => file === dir || file.startsWith(dir + sep) || file.startsWith(dir + '/')
+
+/** Whether a changed `file` can change which theme is used: something at, above (`themes/`, `node_modules/`) or in a watched place. */
+export function touchesTheme(file: string, targets: string[]): boolean {
+  return targets.some((t) => inside(file, t) || inside(t, file))
+}
+
+interface DevServerLike {
+  watcher: { add(paths: string[]): unknown; on(event: string, listener: (file: string) => void): unknown }
+  moduleGraph: { getModuleById(id: string): unknown; invalidateModule(mod: any): void }
+  ws: { send(payload: { type: 'full-reload' }): void }
 }
 
 export function virtualPlugin(plugins: VuemoPlugin[], theme: string) {
@@ -76,8 +109,42 @@ export function virtualPlugin(plugins: VuemoPlugin[], theme: string) {
   let root = process.cwd()
   return {
     name: 'vuemo:virtual',
-    configResolved(config: { root: string }) {
-      root = config.root
+    // VitePress's project root is `config.vitepress.root`; `config.root` is its srcDir (themes/ lives in the project root)
+    configResolved(config: { root: string; vitepress?: { root?: string } }) {
+      root = config.vitepress?.root ?? config.root
+    },
+    // in dev, a theme that appears (unzipped into themes/, npm installed) or disappears is picked up without a restart
+    configureServer(server: DevServerLike) {
+      const targets = themeWatchPaths(theme, root)
+      if (!targets.length) return
+      let last = themeSignature(theme, root)
+      server.watcher.add(targets)
+      const check = (file: string) => {
+        if (typeof file !== 'string' || !touchesTheme(file, targets)) return
+        const now = themeSignature(theme, root)
+        if (now === last) return
+        last = now
+        const mod = server.moduleGraph.getModuleById(prefix + THEME_ID)
+        if (mod) server.moduleGraph.invalidateModule(mod)
+        server.ws.send({ type: 'full-reload' })
+      }
+      for (const event of ['add', 'addDir', 'unlink', 'unlinkDir']) server.watcher.on(event, check)
+      // Vite's watcher ignores node_modules, so an `npm install` is watched directly (top level only; checked again a moment later,
+      // because the package's files arrive after its folder)
+      const modules = join(root, 'node_modules')
+      if (existsSync(modules)) {
+        try {
+          watch(modules, { persistent: false }, (_event, name) => {
+            if (!name) return
+            const file = join(modules, name.toString())
+            if (!touchesTheme(file, targets)) return
+            check(file)
+            setTimeout(() => check(file), 1000).unref()
+          })
+        } catch {
+          // no file system watching here (some containers); the dev server then needs a restart for a new package
+        }
+      }
     },
     resolveId: (id: string) => (id === VIRTUAL_ID || id === THEME_ID ? prefix + id : undefined),
     async load(this: ThemeResolver, id: string) {

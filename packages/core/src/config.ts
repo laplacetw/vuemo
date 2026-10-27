@@ -10,7 +10,7 @@ import { buildRss } from './rss'
 import { searchRender } from './search'
 import { isPostPath, type Post } from './schema'
 import { virtualPlugin } from './virtual'
-import { isExplicitThemePath, THEME_PREFIX } from './theme-source'
+import { DEFAULT_THEME_NAME, isExplicitThemePath, resolveThemeSource, THEME_PREFIX } from './theme-source'
 import type { FooterConfig, NavItem, SocialLink, VuemoThemeConfig } from './types'
 
 export type { FooterConfig, NavItem, SocialLink, VuemoThemeConfig }
@@ -54,9 +54,17 @@ const defined = <T extends object>(o?: T) => Object.fromEntries(Object.entries(o
 /** Site origin plus base with a trailing slash: `https://example.com/vuemo/`. */
 export const sitemapHostname = (hostname: string, base?: string) => hostname.replace(/\/+$/, '') + normalizeBase(base)
 
-/** Package names the theme can be: what was written, and `vuemo-theme-<name>` for a short name (they must be bundled, like @vuemo/*). Paths and `themes/` folders are not in node_modules and need nothing. */
-export const themePackageNames = (theme: string): string[] =>
-  isExplicitThemePath(theme) || theme.includes('/') && !theme.startsWith('@') ? [] : theme.startsWith('@') || theme.startsWith(THEME_PREFIX) ? [theme] : [theme, THEME_PREFIX + theme]
+/**
+ * The package names to bundle (they must be, like @vuemo/*): the package the theme resolves to, else `vuemo-theme-<name>` for
+ * a short name. A bare `<name>` is only added when it is what the theme resolves to. Paths and `themes/` folders are not in node_modules.
+ */
+export const themePackageNames = (theme: string, root: string = process.cwd()): string[] => {
+  if (isExplicitThemePath(theme) || (theme.includes('/') && !theme.startsWith('@'))) return []
+  const found = resolveThemeSource(theme, root)
+  if (found.ok) return found.kind === 'package' && found.packageName ? [found.packageName] : []
+  if (theme === 'default') return [DEFAULT_THEME_NAME]
+  return theme.startsWith('@') || theme.startsWith(THEME_PREFIX) ? [theme] : [THEME_PREFIX + theme]
+}
 
 export const DEFAULT_THEME = '@vuemo/theme-default'
 

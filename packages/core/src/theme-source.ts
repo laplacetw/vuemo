@@ -4,6 +4,9 @@ import { dirname, isAbsolute, join, resolve, sep } from 'node:path'
 /** Short names (`trigger`) are installed as `vuemo-theme-trigger`. */
 export const THEME_PREFIX = 'vuemo-theme-'
 
+/** `theme: 'default'` is the theme that ships with Vuemo, whose package name is `@vuemo/theme-default`. */
+export const DEFAULT_THEME_NAME = '@vuemo/theme-default'
+
 export type ThemeSourceKind = 'path' | 'local' | 'package'
 
 export type ThemeSource =
@@ -16,6 +19,8 @@ export type ThemeSource =
       tried: string[]
       /** `package` only: the installed package's name (`vuemo-theme-trigger` for `theme: 'trigger'`). */
       packageName?: string
+      /** Things worth telling the user, such as a `themes/` folder whose name differs from `theme` only in case. */
+      warnings?: string[]
     }
   | { ok: false; error: string; tried: string[] }
 
@@ -65,30 +70,54 @@ export function probeEntry(dir: string, tried: string[] = []): string | undefine
 }
 
 /** Explicit path forms: `./x`, `../x`, `.`, `..` and absolute paths (POSIX or Windows drive/UNC). Everything else is a name. */
-export const isExplicitThemePath = (theme: string) => theme.startsWith('.') || isAbsolute(theme)
+export const isExplicitThemePath = (theme: string) => theme === '.' || theme === '..' || /^\.\.?[\\/]/.test(theme) || isAbsolute(theme)
 
-const hasDotSegment = (theme: string) => theme.split(/[\\/]/).some((s) => s === '..' || s === '.')
+/** npm package name rules (lowercase, URL-safe, optional `@scope/`, at most 214 characters), the same as create-vuemo's. */
+const NPM_NAME = /^(?:@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/
+export const isPackageName = (name: string) => name.length <= 214 && NPM_NAME.test(name)
+/** A `themes/` folder name may have capitals (a downloaded folder is named by its author): the npm rules, case-insensitive, no scope. */
+const isFolderName = (name: string) => !name.startsWith('@') && isPackageName(name.toLowerCase())
 
-/** `name` or `@scope/name`. */
-const isPackageName = (theme: string) => /^(?:@[^/\\\s]+\/)?[^/\\@\s.][^/\\\s]*$/.test(theme)
+/** Dependencies of the project's package.json: a bare `<name>` package is only trusted when the project asked for it. */
+function declaredDependencies(root: string): Set<string> {
+  try {
+    const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
+    return new Set([...Object.keys(pkg.dependencies ?? {}), ...Object.keys(pkg.devDependencies ?? {})])
+  } catch {
+    return new Set()
+  }
+}
 
-const fix = (theme: string) => {
+const fix = (theme: string, root: string) => {
   const short = theme.startsWith(THEME_PREFIX) ? theme.slice(THEME_PREFIX.length) : theme
+  const folders = themeFolders(root)
   return [
+    ...(folders.length ? [`Folders in themes/: ${folders.join(', ')}. \`theme\` must be one of these names to use a folder.`] : []),
     'To fix it, do one of:',
-    `  - install the theme: npm install ${theme.startsWith('@') || theme.startsWith(THEME_PREFIX) ? theme : THEME_PREFIX + theme}`,
-    `  - download the theme and unzip it into themes/${short}/ (the theme's package.json or index.ts must sit directly inside that folder; if the zip added one more folder level, move its contents up)`,
+    `  - install the theme: npm install ${theme.startsWith('@') || theme.startsWith(THEME_PREFIX) ? theme : THEME_PREFIX + theme} (check the package name first: install only a package you trust)`,
+    `  - download the theme and unzip it into themes/${short}/ (the theme's package.json or index.ts must sit directly inside that folder; if the zip added one more folder level, move its contents up). Download the theme's release file (its attached .zip), not GitHub's "Source code (zip)": the source has no compiled files`,
     '  - correct the name in `theme` (vuemo.config.ts)'
   ].join('\n')
 }
 
-/** `node_modules` folders above the project are checked too, but listing every level would bury the message. */
-const list = (tried: string[], root: string) => {
-  const base = resolve(root)
-  const inside = (t: string) => t === base || t.startsWith(base + sep)
-  const shown = tried.filter(inside)
-  const hidden = tried.length - shown.length
-  return [...shown.map((t) => `  - ${t}`), ...(hidden ? [`  - (and ${hidden} node_modules folders above the project)`] : [])].join('\n')
+const list = (tried: string[]) => tried.map((t) => `  - ${t}`).join('\n')
+
+/** The subfolders of `<root>/themes/`, sorted (empty when there is none). */
+export function themeFolders(root: string): string[] {
+  try {
+    return readdirSync(join(root, 'themes'), { withFileTypes: true })
+      .filter((d) => (d.isDirectory() || (d.isSymbolicLink() && isDir(join(root, 'themes', d.name)))) && !d.name.startsWith('.') && d.name !== '__MACOSX')
+      .map((d) => d.name)
+      .sort()
+  } catch {
+    return []
+  }
+}
+
+/** The real name of `themes/<name>/`: the exact match, else a case-insensitive one. */
+function themeFolder(name: string, root: string): string | undefined {
+  const all = themeFolders(root)
+  return all.includes(name) ? name : all.find((f) => f.toLowerCase() === name.toLowerCase())
 }
 
 const fail = (error: string, tried: string[]): ThemeSource => ({ ok: false, error, tried })
@@ -102,14 +131,11 @@ function localEntry(dir: string, tried: string[]): string | undefined {
   return undefined
 }
 
-/** Walks `node_modules` from `root` upwards, like Node does, looking for `name`. */
+/** `<root>/node_modules/<name>`. It does not look in the folders above the project: a package found there is not the project's own. */
 function findPackageDir(name: string, root: string, tried: string[]): string | undefined {
-  for (let d = resolve(root); ; d = dirname(d)) {
-    const dir = join(d, 'node_modules', name)
-    tried.push(dir)
-    if (isDir(dir)) return dir
-    if (dirname(d) === d) return undefined
-  }
+  const dir = join(resolve(root), 'node_modules', name)
+  tried.push(dir)
+  return isDir(dir) ? dir : undefined
 }
 
 /**
@@ -133,10 +159,10 @@ export function resolveThemeSource(theme: string, root: string): ThemeSource {
     if (isFile(target)) return { ok: true, kind: 'path', entry: target, tried }
     const entry = probeEntry(target, tried)
     if (entry) return { ok: true, kind: 'path', entry, tried }
-    return fail(`[vuemo] theme folder "${theme}" has no entry file. Looked for:\n${list(tried, root)}\nPoint \`theme\` at the entry file, or add \`exports["."]\` / \`main\` to its package.json, or an index.ts.`, tried)
+    return fail(`[vuemo] theme folder "${theme}" has no entry file. Looked for:\n${list(tried)}\nPoint \`theme\` at the entry file, or add \`exports["."]\` / \`main\` to its package.json, or an index.ts.`, tried)
   }
 
-  if (hasDotSegment(theme) || !isPackageName(theme)) {
+  if (!isFolderName(theme) && !isPackageName(theme)) {
     return fail(
       `[vuemo] "${theme}" is not a valid theme name. Use a short name ('trigger'), a package name ('vuemo-theme-trigger', '@scope/name'), ` +
         `or a path that starts with './', '../' or is absolute ('./my-themes/x/src/index.ts').`,
@@ -144,33 +170,39 @@ export function resolveThemeSource(theme: string, root: string): ThemeSource {
     )
   }
 
-  // 2. themes/<name>/
+  // 2. themes/<name>/ (compared with the names the folder really has, so a case-only difference is noticed on every file system)
+  const warnings: string[] = []
   if (!theme.startsWith('@')) {
-    const dir = join(root, 'themes', theme)
-    tried.push(dir + '/')
-    if (isDir(dir)) {
-      const entry = localEntry(dir, tried)
-      if (entry) return { ok: true, kind: 'local', entry, tried }
+    const folder = themeFolder(theme, root)
+    tried.push(join(root, 'themes', theme) + sep)
+    if (folder) {
+      if (folder !== theme) warnings.push(`[vuemo] theme "${theme}" matched the folder themes/${folder}/ that differs in case; rename it to themes/${theme}/ (Linux and macOS may disagree on case)`)
+      const entry = localEntry(join(root, 'themes', folder), tried)
+      if (entry) return { ok: true, kind: 'local', entry, tried, ...(warnings.length && { warnings }) }
       return fail(
-        `[vuemo] the folder themes/${theme}/ exists but holds no theme entry. Looked for:\n${list(tried, root)}\n` +
-          `Put the theme's files directly in themes/${theme}/ (package.json or index.ts at its top level). A zip often adds one more folder level: ` +
-          `move its contents up so that themes/${theme}/package.json exists.`,
+        `[vuemo] the folder themes/${folder}/ exists but holds no theme entry. Looked for:\n${list(tried)}\n` +
+          `Put the theme's files directly in themes/${folder}/ (package.json or index.ts at its top level). A zip often adds one more folder level: ` +
+          `move its contents up so that themes/${folder}/package.json exists.`,
         tried
       )
     }
   }
 
-  // 3./4. installed packages
-  const names = [...(!theme.startsWith('@') && !theme.startsWith(THEME_PREFIX) ? [THEME_PREFIX + theme] : []), theme]
-  for (const name of names) {
-    const dir = findPackageDir(name, root, tried)
-    if (!dir) continue
-    const entry = probeEntry(dir, tried)
-    if (entry) return { ok: true, kind: 'package', entry, tried, packageName: name }
-    return fail(`[vuemo] the package "${name}" is installed (${dir}) but has no theme entry. Looked for:\n${list(tried, root)}\nReinstall it, or ask its author for an entry (exports["."], main, or index.ts).`, tried)
+  // 3./4. installed packages (package names are lowercase)
+  if (isPackageName(theme)) {
+    const short = !theme.startsWith('@') && !theme.startsWith(THEME_PREFIX)
+    // a bare short name is a package only when the project's package.json lists it (the user chose to install exactly that)
+    const names = theme === 'default' ? [DEFAULT_THEME_NAME] : [...(short ? [THEME_PREFIX + theme] : []), ...(!short || declaredDependencies(root).has(theme) ? [theme] : [])]
+    for (const name of names) {
+      const dir = findPackageDir(name, root, tried)
+      if (!dir) continue
+      const entry = probeEntry(dir, tried)
+      if (entry) return { ok: true, kind: 'package', entry, tried, packageName: name }
+      return fail(`[vuemo] the package "${name}" is installed (${dir}) but has no theme entry. Looked for:\n${list(tried)}\nReinstall it, or ask its author for an entry (exports["."], main, or index.ts).`, tried)
+    }
   }
 
-  return fail(`[vuemo] theme "${theme}" was not found. Looked in:\n${list(tried, root)}\n${fix(theme)}`, tried)
+  return fail(`[vuemo] theme "${theme}" was not found. Looked in:\n${list(tried)}\n${fix(theme, root)}`, tried)
 }
 
 /** `resolveThemeSource` for callers that just want the source or an `Error`. */

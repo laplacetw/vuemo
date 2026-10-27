@@ -9,7 +9,9 @@ Set `theme` in `vuemo.config.ts` (default `@vuemo/theme-default`). The name is l
 1. **A path**: `./x`, `../x` or an absolute path, to the theme's entry file or to its folder (handy while you develop a theme: `theme: './my-theme/src/index.ts'`). A path must start with `./`, `../` or be absolute; a name with a `/` that does not (`a/b`) is rejected, and so is a name with a `..` segment.
 2. **A folder in your project**: `themes/<name>/` next to `posts/`.
 3. **An installed package** `vuemo-theme-<name>`: the short name, so `theme: 'trigger'` finds `vuemo-theme-trigger`.
-4. **An installed package** named exactly `<name>`, a full or scoped name (`'@vuemo/theme-default'`, `'@scope/my-theme'`).
+4. **An installed package** named exactly `<name>`, a full or scoped name (`'@vuemo/theme-default'`, `'@scope/my-theme'`). For a short name this step only applies when `<name>` is listed in your `package.json` `dependencies` or `devDependencies`, so a stray package that happens to have that name is never loaded.
+
+`theme: 'default'` is the theme that ships with Vuemo (`@vuemo/theme-default`); a `themes/default/` folder of your own wins over it. Only your project's own `node_modules` is searched, never the folders above the project. A theme name follows the npm rules (lowercase letters, digits, `-`, `.`, `_`, `~`); a `themes/` folder name may also have capitals, and if it differs from `theme` only in case, Vuemo uses it and warns you to rename it.
 
 Only your files and `node_modules` are read; nothing is downloaded when the blog builds. The settings live in `vuemo.config.ts` at the project root. The files in `.vitepress/` are VitePress's own entries; `create-vuemo` writes them as one-line boilerplate (`.vitepress/config.ts` re-exports `../vuemo.config`), so you never open that folder. The theme entry is:
 
@@ -37,9 +39,9 @@ export default defineBlogConfig({
 })
 ```
 
-Update it like any package: `npm install vuemo-theme-trigger@latest`. (A theme that only has prereleases needs its tag or range: `npm install vuemo-theme-trigger@alpha`.)
+Check the package name before you install: `npm install` runs a stranger's code, so install only a theme you trust. Update it like any package: `npm install vuemo-theme-trigger@latest`. (A theme that only has prereleases needs its tag or range: `npm install vuemo-theme-trigger@alpha`.)
 
-**B. From a zip file.** Download the theme's zip (themes usually attach one to their GitHub Release), unzip it into a `themes/` folder in your project, and use the folder's name:
+**B. From a zip file.** Download the theme's zip from its GitHub Release page (the file attached under "Assets"; **not** GitHub's "Source code (zip)", which has no compiled files), unzip it into a `themes/` folder in your project, and use the folder's name:
 
 ```
 my-blog/
@@ -75,14 +77,15 @@ Your posts, the flat options (`nav`, `footer`, `search`, ...) and the plugins ke
 
 | Message or symptom | Cause and fix |
 | --- | --- |
-| `[vuemo] theme "X" was not found. Looked in: ...` | None of the four places has it. The message lists each place it looked. Install it (`npm install vuemo-theme-X`), unzip it into `themes/X/`, or fix the name. |
+| `[vuemo] theme "X" was not found. Looked in: ...` | None of the places has it. The message lists each place it looked and the existing folders of `themes/`. Install it (`npm install vuemo-theme-X`), unzip it into `themes/X/`, or fix the name. |
 | `the folder themes/X/ exists but holds no theme entry` | The folder has no `package.json` with an entry, no `index.ts` and no `src/index.ts`: the zip was unzipped one level too deep, or into the wrong place, or the folder is empty. Move the theme's files up so that `themes/X/package.json` exists. Two or more subfolders are never guessed at. |
 | `themes/X/X/package.json` (the zip nested one level too deep) | Works by itself when the inner folder is the only one. With extra folders beside it, or two levels, move the files up. |
 | `theme path "./x" does not exist` | The path starts with `.` or is absolute and nothing is there. It is relative to the project root (where `vuemo.config.ts` is). |
-| `"a/b" is not a valid theme name` | A name with a `/` (other than a scope's) or a `..` segment is not looked up. A path to a theme must start with `./`, `../` or be absolute. |
+| `"a/b" is not a valid theme name` | A name with a `/` (other than a scope's), a `..` segment or characters outside the npm rules (`x?raw`, `a:b`, a leading `.`) is not looked up. A path to a theme must start with `./`, `../` or be absolute. |
 | `the package "vuemo-theme-X" is installed but has no theme entry` | The package has no usable `exports["."]` / `main` / `index.*` (for example an unbuilt `dist/`). Reinstall it, or ask the author. |
-| ``[vuemo] theme "X" could not be resolved`` after you changed the name | Restart `vuemo dev`/`vitepress dev`: a new `themes/` folder or package is noticed on restart. |
-| `[vuemo] theme "X" does not default-export a VitePress theme ({ Layout, enhanceApp })` | The module was found, but its default export is not a theme: it has no `Layout`, not even through an `extends` chain. Check that the entry file does `export default { Layout, enhanceApp }` (or `{ extends, ... }`), and that `theme` points at that file rather than at some other module. |
+| A new `themes/X/` folder or a freshly installed package is not picked up while the dev server runs | The dev server watches `themes/X/` and `node_modules/vuemo-theme-X` and reloads when the theme starts or stops resolving. If it does not, restart `npm run dev`. A change of `theme` in `vuemo.config.ts` restarts the server by itself. |
+| `theme "X" matched the folder themes/Y/ that differs in case` (a warning) | Rename the folder to `themes/X/`; Linux and macOS may treat the two names differently. |
+| `[vuemo] theme "X" (/path/to/entry) does not default-export a VitePress theme ({ Layout, enhanceApp })` | The module (the message shows the file) was found, but its default export is not a theme: it has no `Layout`, not even through an `extends` chain. Check that the entry file does `export default { Layout, enhanceApp }` (or `{ extends, ... }`), and that `theme` points at that file rather than at some other module. |
 
 `themeConfig` keys that belong to a theme you switched away from stay in your config and are ignored by the new one.
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_THEME, VERSIONS, configTs, hasThemePrefix, themeTarget, packageJson, parseThemeSpec, quote, themePackageJson, validName, validPackageName } from '../src/generate'
+import { DEFAULT_THEME, VERSIONS, configTs, hasThemePrefix, themeTarget, themeInstall, packageJson, parseThemeSpec, quote, themePackageJson, validName, validPackageName } from '../src/generate'
 
 const base = { name: 'b', title: 'My "Blog"', comments: 'none', aiSummary: false } as const
 
@@ -132,7 +132,7 @@ describe('themePackageJson', () => {
       version: '0.0.0',
       type: 'module',
       exports: { '.': './src/index.ts' },
-      files: ['src'],
+      files: ['src', 'dist'],
       keywords: ['vuemo-theme']
     })
     expect(Object.keys(pkg.scripts)).toEqual(['dev', 'build:example', 'check', 'package', 'test'])
@@ -162,5 +162,28 @@ describe('themeTarget', () => {
     expect(themeTarget('./themes/vuemo-theme-x/')).toEqual({ name: 'vuemo-theme-x', dir: './themes/vuemo-theme-x' })
     expect(themeTarget('/abs/dir/vuemo-theme-x')).toEqual({ name: 'vuemo-theme-x', dir: '/abs/dir/vuemo-theme-x' })
     expect(validPackageName(themeTarget('./Bad Name').name)).toBe(false)
+  })
+})
+
+describe('default alias and the install notice', () => {
+  const deps = (a: Parameters<typeof packageJson>[0]) => JSON.parse(packageJson(a)).dependencies
+  it('`default` is @vuemo/theme-default, with its own version unless a range is given', () => {
+    expect(parseThemeSpec('default')).toEqual({ name: DEFAULT_THEME, range: 'latest' })
+    expect(parseThemeSpec('default@^1')).toEqual({ name: DEFAULT_THEME, range: '^1' })
+    expect(deps({ ...base, theme: 'default' })).not.toHaveProperty('vuemo-theme-default')
+    expect(deps({ ...base, theme: 'default' })[DEFAULT_THEME]).toBe(VERSIONS.theme)
+    expect(packageJson({ ...base, theme: 'default' })).toBe(packageJson(base))
+    expect(configTs({ ...base, theme: 'default' })).toBe(configTs(base))
+    expect(deps({ ...base, theme: 'default@^1' })[DEFAULT_THEME]).toBe('^1')
+  })
+  it('themeInstall names the package a short name installs, and nothing otherwise', () => {
+    expect(themeInstall('trigger')).toEqual({ name: 'trigger', pkg: 'vuemo-theme-trigger' })
+    expect(themeInstall('trigger@^2')).toEqual({ name: 'trigger', pkg: 'vuemo-theme-trigger' })
+    for (const spec of [undefined, '', 'default', 'vuemo-theme-x', '@s/n', DEFAULT_THEME]) expect(themeInstall(spec), String(spec)).toBeUndefined()
+  })
+  it('the config explains how to switch themes, also with another theme', () => {
+    const comment = '  // to switch: npm install vuemo-theme-<name> (or unzip a theme into themes/), then change this name\n'
+    expect(configTs({ ...base, theme: 'trigger' })).toContain(`  // theme\n${comment}  theme: 'trigger',\n`)
+    expect(configTs({ ...base, theme: '@s/vuemo-theme-x' })).toContain(comment)
   })
 })

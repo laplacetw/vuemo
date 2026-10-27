@@ -26,7 +26,7 @@ export default defineBlogConfig({
 
 | Option | Description |
 | --- | --- |
-| `theme` | The theme: a short name (`'trigger'` finds `themes/trigger/` in the project, else the installed `vuemo-theme-trigger`), a package name (`'@vuemo/theme-default'`, `'@scope/name'`), or a path that starts with `./`, `../` or is absolute (a file or a folder). Default `@vuemo/theme-default`. See [Themes](./themes.md) for the lookup order. A theme that cannot be resolved or is not a VitePress theme fails the build with an explanation; see [Themes](./themes.md). |
+| `theme` | The theme: a short name (`'trigger'` finds `themes/trigger/` in the project, else the installed `vuemo-theme-trigger`), a package name (`'@vuemo/theme-default'`, `'@scope/name'`), or a path that starts with `./`, `../` or is absolute (a file or a folder). Default `@vuemo/theme-default`. See [Themes](./themes.md) for the lookup order. The `themes/` folder is reserved for themes: pages under it are always excluded from the build (`themes/**` is added to `srcExclude`, also when you set your own `srcExclude`), so a theme's README.md never becomes a page. A theme that cannot be resolved or is not a VitePress theme fails the build with an explanation; see [Themes](./themes.md). |
 | `hostname` | Site origin. Used by the sitemap, the JSON-LD of posts and the RSS feed; the site `base` is added to every URL. |
 | `nav` | `{ text, link }[]` navigation links. Becomes `themeConfig.nav`. |
 | `footer` | HTML for the footer: a string (the message) or `{ message?, copyright? }`. Becomes `themeConfig.footer`, always as an object (a string turns into `{ message }`). |

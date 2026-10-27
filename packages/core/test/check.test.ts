@@ -1,4 +1,6 @@
-import { existsSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
@@ -156,5 +158,27 @@ describe.skipIf(!!process.env.VUEMO_SKIP_CHECK_E2E)('checkTheme (integration)', 
     expect(results.filter((r) => r.status === 'fail')).toEqual([])
     expect(ok).toBe(true)
     expect(existsSync(`${theme}/.vuemo-check`)).toBe(false)
+  })
+  it('accepts a bare existing folder (`src`)', { timeout: 180_000 }, async () => {
+    if (!built) throw new Error('run `pnpm build` first')
+    const { ok, results } = await checkTheme({ cwd: theme, theme: 'src' })
+    expect(results.filter((r) => r.status === 'fail')).toEqual([])
+    expect(ok).toBe(true)
+  })
+})
+
+describe('checkTheme: theme argument', () => {
+  it('a bare existing folder is a path: its problems are reported as a folder, not as an invalid name', async () => {
+    const cwd = mkdtempSync(join(tmpdir(), 'vuemo-check-'))
+    mkdirSync(join(cwd, 'themes/foo'), { recursive: true })
+    writeFileSync(join(cwd, 'themes/foo/README.md'), '')
+    const { ok, results } = await checkTheme({ cwd, theme: 'themes/foo' })
+    expect(ok).toBe(false)
+    expect(results[0].message).toContain('theme folder "./themes/foo" has no entry file')
+  })
+  it('a bare name that is not a folder still goes through the name rules', async () => {
+    const cwd = mkdtempSync(join(tmpdir(), 'vuemo-check-'))
+    const { results } = await checkTheme({ cwd, theme: 'a/b' })
+    expect(results[0].message).toContain('not a valid theme name')
   })
 })

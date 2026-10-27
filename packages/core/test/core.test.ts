@@ -122,7 +122,8 @@ describe('seo', () => {
 })
 
 import { join } from 'node:path'
-import { buildThemeModule, buildVirtualModule, loadThemeModule, virtualPlugin } from '../src/virtual'
+import { buildThemeModule, buildVirtualModule, loadThemeModule, themeShapeError, themeSignature, themeWatchPaths, touchesTheme, virtualPlugin } from '../src/virtual'
+import { themePackageNames } from '../src/config'
 import { defineBlogConfig } from '../src/config'
 
 describe('plugins', () => {
@@ -234,7 +235,7 @@ describe('defineBlogConfig', () => {
     const cfg: any = await defineBlogConfig({ theme: '@x/theme' })
     expect(cfg.vite.ssr.noExternal).toContain('@x/theme')
     // a short name may be the package vuemo-theme-<name>; a path or a themes/ folder is not a package
-    expect(((await defineBlogConfig({ theme: 'trigger' })) as any).vite.ssr.noExternal).toEqual([/^@vuemo\//, 'trigger', 'vuemo-theme-trigger'])
+    expect(((await defineBlogConfig({ theme: 'trigger' })) as any).vite.ssr.noExternal).toEqual([/^@vuemo\//, 'vuemo-theme-trigger'])
     expect(((await defineBlogConfig({ theme: 'vuemo-theme-x' })) as any).vite.ssr.noExternal).toEqual([/^@vuemo\//, 'vuemo-theme-x'])
     expect(((await defineBlogConfig({ theme: './themes/x' })) as any).vite.ssr.noExternal).toEqual([/^@vuemo\//])
     const code = buildThemeModule('@x/theme')
@@ -308,6 +309,110 @@ describe('theme module', () => {
   it('says a theme path does not exist', async () => {
     const ctx = { resolve: async () => null, error: err }
     await expect(loadThemeModule(ctx, '/abs/theme.ts', '/p')).rejects.toThrow('theme path "/abs/theme.ts" does not exist')
+  })
+  it('uses VitePress\'s project root, not its srcDir', async () => {
+    const plugin: any = virtualPlugin([], 'nope-theme')
+    plugin.configResolved({ root: '/proj/docs', vitepress: { root: '/proj' } })
+    const ctx = { resolve: async () => null, error: (m: string): never => { throw new Error(m) } }
+    const e = (await plugin.load.call(ctx, '\0virtual:vuemo/theme').catch((x: Error) => x)) as Error
+    expect(e.message).toContain(join('/proj', 'themes', 'nope-theme'))
+    expect(e.message).not.toContain(join('/proj/docs', 'themes'))
+  })
+  it('puts the resolved entry in the shape error, and writes module ids with forward slashes', () => {
+    expect(themeShapeError('trigger', '/p/themes/trigger/index.ts')).toContain('theme "trigger" (/p/themes/trigger/index.ts) does not')
+    expect(themeShapeError('x', 'x')).toBe(themeShapeError('x'))
+    const code = buildThemeModule('t', 'C:\\proj\\themes\\t\\index.ts')
+    expect(code).toContain('import theme from "C:/proj/themes/t/index.ts"')
+    expect(code).not.toContain('\\\\')
+  })
+  it('does not bundle a bare short name unless it is the resolved package', () => {
+    const root = mkdir()
+    mkdirSync(join(root, 'node_modules/trigger'), { recursive: true })
+    writeFileSync(join(root, 'node_modules/trigger/index.ts'), '')
+    expect(themePackageNames('trigger', root)).toEqual(['vuemo-theme-trigger'])
+    writeFileSync(join(root, 'package.json'), JSON.stringify({ dependencies: { trigger: '1' } }))
+    expect(themePackageNames('trigger', root)).toEqual(['trigger'])
+    expect(themePackageNames('default', root)).toEqual(['@vuemo/theme-default'])
+    expect(themePackageNames('./x', root)).toEqual([])
+  })
+  it('warns when a themes/ folder differs only in case', async () => {
+    const root = mkdir()
+    mkdirSync(join(root, 'themes/Trigger'), { recursive: true })
+    writeFileSync(join(root, 'themes/Trigger/index.ts'), '')
+    const warnings: string[] = []
+    await loadThemeModule({ resolve: async () => null, error: err, warn: (m) => warnings.push(m) }, 'trigger', root)
+    expect(warnings).toHaveLength(1)
+    expect(warnings[0]).toContain('themes/Trigger/')
+  })
+  describe('dev watching', () => {
+    it('watches themes/<name> and the packages that would satisfy the name', () => {
+      expect(themeWatchPaths('trigger', '/p')).toEqual([join('/p', 'themes', 'trigger'), join('/p', 'node_modules', 'vuemo-theme-trigger'), join('/p', 'node_modules', 'trigger')])
+      expect(themeWatchPaths('@s/n', '/p')).toEqual([join('/p', 'node_modules', '@s/n')])
+      expect(themeWatchPaths('default', '/p')).toContain(join('/p', 'node_modules', '@vuemo/theme-default'))
+      expect(themeWatchPaths('./x', '/p')).toEqual([])
+      expect(themeWatchPaths('x?raw', '/p')).toEqual([])
+    })
+    it('a change touches the theme when it is in, at or above a watched place', () => {
+      const t = [join('/p', 'themes', 'x')]
+      expect(touchesTheme(join('/p', 'themes', 'x'), t)).toBe(true)
+      expect(touchesTheme(join('/p', 'themes', 'x', 'index.ts'), t)).toBe(true)
+      expect(touchesTheme(join('/p', 'themes'), t)).toBe(true)
+      expect(touchesTheme(join('/p', 'themes', 'xy'), t)).toBe(false)
+      expect(touchesTheme(join('/p', 'posts', 'a.md'), t)).toBe(false)
+    })
+    it('the signature changes when the theme appears', () => {
+      const root = mkdir()
+      expect(themeSignature('t', root)).toBe('none')
+      mkdirSync(join(root, 'themes/t'), { recursive: true })
+      writeFileSync(join(root, 'themes/t/index.ts'), '')
+      expect(themeSignature('t', root)).toBe(`local:${join(root, 'themes/t/index.ts')}`)
+    })
+    it('configureServer invalidates the theme module and reloads only when the resolution changed', () => {
+      const root = mkdir()
+      const plugin: any = virtualPlugin([], 't')
+      plugin.configResolved({ root })
+      const listeners: Record<string, (f: string) => void> = {}
+      const added: string[][] = []
+      const invalidated: unknown[] = []
+      const sent: unknown[] = []
+      plugin.configureServer({
+        watcher: { add: (p: string[]) => added.push(p), on: (e: string, l: (f: string) => void) => (listeners[e] = l) },
+        moduleGraph: { getModuleById: (id: string) => ({ id }), invalidateModule: (m: unknown) => invalidated.push(m) },
+        ws: { send: (m: unknown) => sent.push(m) }
+      })
+      expect(added[0]).toContain(join(root, 'themes', 't'))
+      listeners.addDir(join(root, 'posts'))
+      listeners.addDir(join(root, 'themes', 't')) // exists as an event but nothing resolves yet
+      expect(sent).toHaveLength(0)
+      mkdirSync(join(root, 'themes/t'), { recursive: true })
+      writeFileSync(join(root, 'themes/t/index.ts'), '')
+      listeners.add(join(root, 'themes/t/index.ts'))
+      expect(sent).toEqual([{ type: 'full-reload' }])
+      expect(invalidated).toEqual([{ id: '\0virtual:vuemo/theme' }])
+      listeners.add(join(root, 'themes/t/other.ts'))
+      expect(sent).toHaveLength(1)
+    })
+    it('configureServer notices an installed package in node_modules', async () => {
+      const root = mkdir()
+      mkdirSync(join(root, 'node_modules'))
+      const plugin: any = virtualPlugin([], 'p')
+      plugin.configResolved({ root })
+      const sent: unknown[] = []
+      plugin.configureServer({
+        watcher: { add: () => {}, on: () => {} },
+        moduleGraph: { getModuleById: () => undefined, invalidateModule: () => {} },
+        ws: { send: (m: unknown) => sent.push(m) }
+      })
+      mkdirSync(join(root, 'node_modules/vuemo-theme-p'))
+      writeFileSync(join(root, 'node_modules/vuemo-theme-p/index.ts'), '')
+      for (let i = 0; i < 40 && !sent.length; i++) await new Promise((r) => setTimeout(r, 50))
+      expect(sent).toEqual([{ type: 'full-reload' }])
+    })
+    it('configureServer does nothing for a path theme', () => {
+      const plugin: any = virtualPlugin([], './x/index.ts')
+      plugin.configResolved({ root: '/p' })
+      expect(() => plugin.configureServer({})).not.toThrow()
+    })
   })
   it('limits the extends chain so a cycle cannot hang', () => {
     expect(buildThemeModule('x')).toContain('i < 10')

@@ -3,6 +3,5 @@ dist
 dist-zip
 .vuemo-check
 example/.vitepress/dist
-dist-zip
 example/.vitepress/cache
 .DS_Store
