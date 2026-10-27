@@ -120,6 +120,30 @@ function themeFolder(name: string, root: string): string | undefined {
   return all.includes(name) ? name : all.find((f) => f.toLowerCase() === name.toLowerCase())
 }
 
+/**
+ * A theme folder whose entry imports a build output (`../dist/style.css`) that does not exist next to it: the typical result of
+ * unzipping GitHub's "Source code (zip)" (a `*-main` / `*-master` folder, no compiled files) instead of the release asset.
+ */
+export function missingBuildOutput(entry: string, folder: string): string | undefined {
+  let code: string
+  try {
+    code = readFileSync(entry, 'utf8')
+  } catch {
+    return undefined
+  }
+  for (const m of code.matchAll(/(?:from|import)\s*\(?\s*['"](\.{1,2}\/(?:[^'"]*\/)?dist\/[^'"]*)['"]/g)) {
+    const target = resolve(dirname(entry), m[1].split('?')[0])
+    if (existsSync(target)) continue
+    const archive = /-(main|master)$/i.test(folder)
+    return (
+      `[vuemo] theme entry ${entry} imports ${m[1]}, which does not exist. ` +
+      (archive ? `The folder name "${folder}" looks like GitHub's "Source code (zip)". ` : 'This looks like GitHub\'s "Source code (zip)", which has no compiled files. ') +
+      `Download the release asset of the theme (the .zip attached under "Assets" on its Releases page) instead.`
+    )
+  }
+  return undefined
+}
+
 const fail = (error: string, tried: string[]): ThemeSource => ({ ok: false, error, tried })
 
 /** The theme folders of a project are `themes/<name>/`; a zip that wrapped its folder once more gets one level looked into. */
@@ -178,7 +202,11 @@ export function resolveThemeSource(theme: string, root: string): ThemeSource {
     if (folder) {
       if (folder !== theme) warnings.push(`[vuemo] theme "${theme}" matched the folder themes/${folder}/ that differs in case; rename it to themes/${theme}/ (Linux and macOS may disagree on case)`)
       const entry = localEntry(join(root, 'themes', folder), tried)
-      if (entry) return { ok: true, kind: 'local', entry, tried, ...(warnings.length && { warnings }) }
+      if (entry) {
+        const missing = missingBuildOutput(entry, folder)
+        if (missing) warnings.push(missing)
+        return { ok: true, kind: 'local', entry, tried, ...(warnings.length && { warnings }) }
+      }
       return fail(
         `[vuemo] the folder themes/${folder}/ exists but holds no theme entry. Looked for:\n${list(tried)}\n` +
           `Put the theme's files directly in themes/${folder}/ (package.json or index.ts at its top level). A zip often adds one more folder level: ` +

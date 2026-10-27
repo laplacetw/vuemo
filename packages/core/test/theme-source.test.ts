@@ -275,3 +275,20 @@ describe('resolveThemeSource: names', () => {
     expect(bad('zzz', project()).tried[0].endsWith(sep)).toBe(true)
   })
 })
+
+import { missingBuildOutput } from '../src/theme-source'
+import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join as pjoin } from 'node:path'
+
+describe('missingBuildOutput', () => {
+  it('hints at the source zip when ../dist is missing', () => {
+    const d = mkdtempSync(pjoin(tmpdir(), 'vm-'))
+    mkdirSync(pjoin(d, 'src'))
+    writeFileSync(pjoin(d, 'src/index.ts'), "import '../dist/style.css'\nexport default {}")
+    expect(missingBuildOutput(pjoin(d, 'src/index.ts'), 'trigger-main')).toMatch(/Source code \(zip\)/)
+    mkdirSync(pjoin(d, 'dist'))
+    writeFileSync(pjoin(d, 'dist/style.css'), '')
+    expect(missingBuildOutput(pjoin(d, 'src/index.ts'), 'trigger')).toBeUndefined()
+  })
+})

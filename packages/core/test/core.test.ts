@@ -714,3 +714,34 @@ describe('vuemo new helpers', () => {
     expect(postTemplate("it's: [odd]", new Date())).toContain('title: "It\'s: [odd]"')
   })
 })
+
+import { packageOfFile, unoptimizedPackages } from '../src/config'
+
+describe('optimizeDeps', () => {
+  it('finds the package of a file in node_modules', () => {
+    expect(packageOfFile('/p/node_modules/@x/y/src/A.vue')).toBe('@x/y')
+    expect(packageOfFile('/p/node_modules/.pnpm/a@1/node_modules/foo/src/A.vue')).toBe('foo')
+    expect(packageOfFile('C:\\p\\node_modules\\@x\\y\\a.ts')).toBe('@x/y')
+    expect(packageOfFile('/p/themes/t/a.ts')).toBeUndefined()
+  })
+  it('excludes the Vuemo packages, the theme and plugin packages', async () => {
+    const cfg: any = await defineBlogConfig({
+      theme: 'vuemo-theme-foo',
+      plugins: [{ name: 'p', slots: { 'post-comments': '/p/node_modules/third-party/C.vue' }, enhanceApp: '/p/node_modules/@a/b/e.ts' }]
+    })
+    expect(cfg.vite.optimizeDeps.exclude).toEqual(
+      expect.arrayContaining(['@vuemo/core', '@vuemo/theme-default', '@vuemo/plugin-comments', '@vuemo/plugin-ai-summary', 'vuemo-theme-foo', 'third-party', '@a/b'])
+    )
+  })
+  it('keeps the user optimizeDeps without duplicates', async () => {
+    const cfg: any = await defineBlogConfig({ vite: { optimizeDeps: { exclude: ['mine', '@vuemo/core'], include: ['dep'], force: true } } })
+    const ex: string[] = cfg.vite.optimizeDeps.exclude
+    expect(ex.slice(0, 2)).toEqual(['mine', '@vuemo/core'])
+    expect(ex.filter((n) => n === '@vuemo/core')).toHaveLength(1)
+    expect(cfg.vite.optimizeDeps.include).toEqual(['dep'])
+    expect(cfg.vite.optimizeDeps.force).toBe(true)
+  })
+  it('adds nothing for a theme folder or path', () => {
+    expect(unoptimizedPackages('./my-theme', [])).toEqual(['@vuemo/core', '@vuemo/theme-default', '@vuemo/plugin-comments', '@vuemo/plugin-ai-summary'])
+  })
+})

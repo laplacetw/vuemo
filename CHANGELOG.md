@@ -15,6 +15,10 @@
 - theme starter: `pnpm package` follows `files`, skips dotfiles and symbolic links, fails when the entry is missing from the zip, and is reproducible (`SOURCE_DATE_EPOCH`, else 1980-01-01); `files` of the starter now lists `dist` too
 - `create-vuemo`: the blog's `.gitignore` ignores `.vuemo-check`
 
+### Fixes
+- dev: `vitepress dev` showed a blank page (`Could not resolve "virtual:vuemo/theme"`, 504 on `@vuemo_theme-default.js`) when `@vuemo/*` packages were installed from a registry instead of linked in a workspace, because Vite's dependency optimizer pre-bundled them. `defineBlogConfig` now adds `@vuemo/core`, `@vuemo/theme-default`, `@vuemo/plugin-comments`, `@vuemo/plugin-ai-summary`, the installed theme package and the packages of plugin slot / `enhanceApp` files to `vite.optimizeDeps.exclude` (merged with your own, no duplicates)
+- a theme in `themes/` whose entry imports a missing `../dist/...` file now warns that it looks like GitHub's "Source code (zip)" and to download the release asset
+
 ### Changed
 - the error for a theme that cannot be found now reads `[vuemo] theme "X" was not found. Looked in: ...`; a missing path reads `theme path "X" does not exist`. Only the project's own `node_modules` is searched for theme packages (not the folders above it), and theme names follow the npm naming rules (a `themes/` folder name may have capitals)
 

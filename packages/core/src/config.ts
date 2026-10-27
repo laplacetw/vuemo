@@ -68,6 +68,22 @@ export const themePackageNames = (theme: string, root: string = process.cwd()): 
 
 export const DEFAULT_THEME = '@vuemo/theme-default'
 
+/** The package name of a file inside `node_modules` (`.../node_modules/@s/p/src/x.vue` → `@s/p`; pnpm's nested layout uses the last one). */
+export const packageOfFile = (file: string): string | undefined => {
+  const m = file.replace(/\\/g, '/').match(/.*\/node_modules\/((?:@[^/]+\/)?[^/]+)\//)
+  return m?.[1]
+}
+
+/**
+ * Packages Vite's dependency optimizer (esbuild) must leave alone: they import `virtual:` modules or ship `.vue` / `.ts`
+ * sources, which only Vite's plugin pipeline can handle. In a workspace they are linked (never optimized); installed from a
+ * registry they sit in node_modules and would be pre-bundled, which fails with `Could not resolve "virtual:vuemo/theme"`.
+ */
+export const unoptimizedPackages = (theme: string, plugins: VuemoPlugin[], root?: string): string[] => {
+  const fromPlugins = plugins.flatMap((p) => [p.enhanceApp, ...Object.values(p.slots ?? {})].map((f) => (f ? packageOfFile(f) : undefined)))
+  return [...new Set(['@vuemo/core', DEFAULT_THEME, '@vuemo/plugin-comments', '@vuemo/plugin-ai-summary', ...themePackageNames(theme, root), ...fromPlugins].filter((n): n is string => !!n))]
+}
+
 /** `importer` only exists so tests don't need real plugin packages. */
 export async function defineBlogConfig(config: BlogConfig = {}, importer?: Importer): Promise<UserConfig> {
   const { theme = DEFAULT_THEME, hostname, nav, footer, logo, socialLinks, postsPerPage, summary = 'excerpt', paths, search, lastUpdated, rss, plugins = [], ...rest } = config
@@ -88,6 +104,12 @@ export async function defineBlogConfig(config: BlogConfig = {}, importer?: Impor
     { plugins: [virtualPlugin(all, theme)], ssr: { noExternal: [/^@vuemo\//, ...themePackageNames(theme)] } } as any,
     false
   )
+  // the user's `optimizeDeps` is kept; `exclude` gets the Vuemo packages added once
+  const userOptimize = vite.optimizeDeps ?? {}
+  vite = {
+    ...vite,
+    optimizeDeps: { ...userOptimize, exclude: [...new Set([...(userOptimize.exclude ?? []), ...unoptimizedPackages(theme, all, process.cwd())])] }
+  }
 
   const themeConfig: VuemoThemeConfig = {
     ...(nav && { nav }),
