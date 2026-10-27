@@ -99,12 +99,13 @@ export async function defineBlogConfig(config: BlogConfig = {}, importer?: Impor
 
   return defineConfig({
     cleanUrls: true,
-    srcExclude: ['README.md', 'CHANGELOG.md'],
     ...(lastUpdated && { lastUpdated: true }),
     // VitePress lists page URLs relative to the site root (`posts/a`) and the sitemap library resolves them
     // against `hostname`, so the base must be part of it, with a trailing slash (else `/vuemo` is dropped).
     sitemap: hostname ? { hostname: sitemapHostname(hostname, rest.base) } : undefined,
     ...rest,
+    // a theme unzipped into `themes/` brings README.md and other Markdown that must not become pages; `themes/**` is always excluded
+    srcExclude: [...(rest.srcExclude ?? ['README.md', 'CHANGELOG.md']), 'themes/**'],
     themeConfig,
     head: [
       ...(rest.head ?? []),

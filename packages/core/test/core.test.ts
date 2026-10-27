@@ -244,6 +244,15 @@ describe('defineBlogConfig', () => {
   })
 })
 
+describe('srcExclude', () => {
+  it('excludes README.md, CHANGELOG.md and themes/ by default', async () => {
+    expect(((await defineBlogConfig({})) as any).srcExclude).toEqual(['README.md', 'CHANGELOG.md', 'themes/**'])
+  })
+  it('keeps themes/ excluded when the user sets srcExclude', async () => {
+    expect(((await defineBlogConfig({ srcExclude: ['drafts/**'] })) as any).srcExclude).toEqual(['drafts/**', 'themes/**'])
+  })
+})
+
 describe('theme module', () => {
   const run = (code: string, theme: unknown) => {
     // evaluate the generated module with `theme` as the imported default
@@ -292,7 +301,7 @@ describe('theme module', () => {
   it('explains a theme that cannot be resolved', async () => {
     const root = mkdir()
     const ctx = { resolve: async () => null, error: err }
-    const e = await loadThemeModule(ctx, 'nope', root).catch((x) => x as Error)
+    const e = (await loadThemeModule(ctx, 'nope', root).catch((x) => x)) as Error
     expect(e.message).toContain('[vuemo] theme "nope" was not found')
     expect(e.message).toContain('npm install vuemo-theme-nope')
   })

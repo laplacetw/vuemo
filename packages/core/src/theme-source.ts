@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
-import { dirname, isAbsolute, join, resolve } from 'node:path'
+import { dirname, isAbsolute, join, resolve, sep } from 'node:path'
 
 /** Short names (`trigger`) are installed as `vuemo-theme-trigger`. */
 export const THEME_PREFIX = 'vuemo-theme-'
@@ -82,7 +82,14 @@ const fix = (theme: string) => {
   ].join('\n')
 }
 
-const list = (tried: string[]) => tried.map((t) => `  - ${t}`).join('\n')
+/** `node_modules` folders above the project are checked too, but listing every level would bury the message. */
+const list = (tried: string[], root: string) => {
+  const base = resolve(root)
+  const inside = (t: string) => t === base || t.startsWith(base + sep)
+  const shown = tried.filter(inside)
+  const hidden = tried.length - shown.length
+  return [...shown.map((t) => `  - ${t}`), ...(hidden ? [`  - (and ${hidden} node_modules folders above the project)`] : [])].join('\n')
+}
 
 const fail = (error: string, tried: string[]): ThemeSource => ({ ok: false, error, tried })
 
@@ -126,7 +133,7 @@ export function resolveThemeSource(theme: string, root: string): ThemeSource {
     if (isFile(target)) return { ok: true, kind: 'path', entry: target, tried }
     const entry = probeEntry(target, tried)
     if (entry) return { ok: true, kind: 'path', entry, tried }
-    return fail(`[vuemo] theme folder "${theme}" has no entry file. Looked for:\n${list(tried)}\nPoint \`theme\` at the entry file, or add \`exports["."]\` / \`main\` to its package.json, or an index.ts.`, tried)
+    return fail(`[vuemo] theme folder "${theme}" has no entry file. Looked for:\n${list(tried, root)}\nPoint \`theme\` at the entry file, or add \`exports["."]\` / \`main\` to its package.json, or an index.ts.`, tried)
   }
 
   if (hasDotSegment(theme) || !isPackageName(theme)) {
@@ -145,7 +152,7 @@ export function resolveThemeSource(theme: string, root: string): ThemeSource {
       const entry = localEntry(dir, tried)
       if (entry) return { ok: true, kind: 'local', entry, tried }
       return fail(
-        `[vuemo] the folder themes/${theme}/ exists but holds no theme entry. Looked for:\n${list(tried)}\n` +
+        `[vuemo] the folder themes/${theme}/ exists but holds no theme entry. Looked for:\n${list(tried, root)}\n` +
           `Put the theme's files directly in themes/${theme}/ (package.json or index.ts at its top level). A zip often adds one more folder level: ` +
           `move its contents up so that themes/${theme}/package.json exists.`,
         tried
@@ -160,10 +167,10 @@ export function resolveThemeSource(theme: string, root: string): ThemeSource {
     if (!dir) continue
     const entry = probeEntry(dir, tried)
     if (entry) return { ok: true, kind: 'package', entry, tried, packageName: name }
-    return fail(`[vuemo] the package "${name}" is installed (${dir}) but has no theme entry. Looked for:\n${list(tried)}\nReinstall it, or ask its author for an entry (exports["."], main, or index.ts).`, tried)
+    return fail(`[vuemo] the package "${name}" is installed (${dir}) but has no theme entry. Looked for:\n${list(tried, root)}\nReinstall it, or ask its author for an entry (exports["."], main, or index.ts).`, tried)
   }
 
-  return fail(`[vuemo] theme "${theme}" was not found. Looked in:\n${list(tried)}\n${fix(theme)}`, tried)
+  return fail(`[vuemo] theme "${theme}" was not found. Looked in:\n${list(tried, root)}\n${fix(theme)}`, tried)
 }
 
 /** `resolveThemeSource` for callers that just want the source or an `Error`. */

@@ -55,7 +55,7 @@ my-blog/
 └── vuemo.config.ts           # theme: 'trigger'
 ```
 
-`themes/trigger/` must hold the theme's `package.json` (or `index.ts`) directly. If your unzip tool added one more folder (`themes/trigger/trigger/package.json`) and that is the only folder, Vuemo looks one level down for you; anything deeper does not work. A theme in `themes/` takes precedence over an installed package of the same name.
+`themes/trigger/` must hold the theme's `package.json` (or `index.ts`) directly. If your unzip tool added one more folder (`themes/trigger/trigger/package.json`) and that is the only folder, Vuemo looks one level down for you; anything deeper does not work. A theme in `themes/` takes precedence over an installed package of the same name. Markdown files inside `themes/` (the theme's README) are never built as pages: `themes/**` is always in VitePress's `srcExclude`.
 
 Then, for both ways, read the theme's README for its own options (they go in `themeConfig`) and check it with `npx vuemo check-theme trigger`.
 
