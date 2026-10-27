@@ -730,7 +730,7 @@ describe('optimizeDeps', () => {
       plugins: [{ name: 'p', slots: { 'post-comments': '/p/node_modules/third-party/C.vue' }, enhanceApp: '/p/node_modules/@a/b/e.ts' }]
     })
     expect(cfg.vite.optimizeDeps.exclude).toEqual(
-      expect.arrayContaining(['@vuemo/core', '@vuemo/theme-default', '@vuemo/plugin-comments', '@vuemo/plugin-ai-summary', 'vuemo-theme-foo', 'third-party', '@a/b'])
+      expect.arrayContaining(['@vuemo/core', '@vuemo/theme-default', '@vuemo/plugin-comments', '@vuemo/plugin-ai-summary', '@vuemo/plugin-gallery', 'vuemo-theme-foo', 'third-party', '@a/b'])
     )
   })
   it('keeps the user optimizeDeps without duplicates', async () => {
@@ -742,6 +742,6 @@ describe('optimizeDeps', () => {
     expect(cfg.vite.optimizeDeps.force).toBe(true)
   })
   it('adds nothing for a theme folder or path', () => {
-    expect(unoptimizedPackages('./my-theme', [])).toEqual(['@vuemo/core', '@vuemo/theme-default', '@vuemo/plugin-comments', '@vuemo/plugin-ai-summary'])
+    expect(unoptimizedPackages('./my-theme', [])).toEqual(['@vuemo/core', '@vuemo/theme-default', '@vuemo/plugin-comments', '@vuemo/plugin-ai-summary', '@vuemo/plugin-gallery'])
   })
 })

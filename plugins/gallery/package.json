@@ -1,0 +1,79 @@
+{
+  "name": "@vuemo/plugin-gallery",
+  "version": "0.1.0-alpha.2",
+  "description": "Photo gallery for Vuemo blogs: justified rows, lightbox, Cloudflare R2 storage and a CLI",
+  "type": "module",
+  "license": "MIT",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "vuemo-gallery": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "aws4fetch": "^1.0.20",
+    "exifr": "^7.1.3",
+    "photoswipe": "^5.4.4",
+    "thumbhash": "^0.1.1",
+    "yaml": "^2.6.0"
+  },
+  "peerDependencies": {
+    "@vuemo/core": "workspace:^",
+    "sharp": ">=0.33.0",
+    "vitepress": "^1.6.0",
+    "vue": "^3.5.0"
+  },
+  "peerDependenciesMeta": {
+    "sharp": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@vitejs/plugin-vue": "^5.2.0",
+    "@vuemo/core": "workspace:^",
+    "sharp": "^0.34.0",
+    "tsup": "^8.3.0",
+    "vitepress": "^1.6.4",
+    "vitest": "^3.0.0",
+    "vue": "^3.5.0"
+  },
+  "keywords": [
+    "vuemo",
+    "vitepress",
+    "plugin",
+    "gallery",
+    "photos",
+    "lightbox",
+    "cloudflare",
+    "r2"
+  ],
+  "author": "Nick Liu",
+  "homepage": "https://github.com/laplacetw/vuemo#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/laplacetw/vuemo.git",
+    "directory": "plugins/gallery"
+  },
+  "bugs": {
+    "url": "https://github.com/laplacetw/vuemo/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18.3"
+  }
+}

@@ -4,14 +4,15 @@ import { pathToFileURL } from 'node:url'
 import type { VuemoPlugin } from './plugin'
 
 /**
- * Settings of official features, keyed by feature name (`comments`, `aiSummary`).
+ * Settings of official features, keyed by feature name (`comments`, `aiSummary`, `gallery`).
  * Each official plugin package adds its own key by augmenting this interface.
  */
 export interface OfficialFeatures {}
 
 export const OFFICIAL_FEATURES: Record<string, string> = {
   comments: '@vuemo/plugin-comments',
-  aiSummary: '@vuemo/plugin-ai-summary'
+  aiSummary: '@vuemo/plugin-ai-summary',
+  gallery: '@vuemo/plugin-gallery'
 }
 
 type PluginFactory = (options: any) => VuemoPlugin

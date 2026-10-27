@@ -81,7 +81,7 @@ export const packageOfFile = (file: string): string | undefined => {
  */
 export const unoptimizedPackages = (theme: string, plugins: VuemoPlugin[], root?: string): string[] => {
   const fromPlugins = plugins.flatMap((p) => [p.enhanceApp, ...Object.values(p.slots ?? {})].map((f) => (f ? packageOfFile(f) : undefined)))
-  return [...new Set(['@vuemo/core', DEFAULT_THEME, '@vuemo/plugin-comments', '@vuemo/plugin-ai-summary', ...themePackageNames(theme, root), ...fromPlugins].filter((n): n is string => !!n))]
+  return [...new Set(['@vuemo/core', DEFAULT_THEME, '@vuemo/plugin-comments', '@vuemo/plugin-ai-summary', '@vuemo/plugin-gallery', ...themePackageNames(theme, root), ...fromPlugins].filter((n): n is string => !!n))]
 }
 
 /** `importer` only exists so tests don't need real plugin packages. */
