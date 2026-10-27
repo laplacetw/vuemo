@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useData } from 'vitepress'
 import { useQueryParam } from '@vuemo/core/client'
 import { albums } from 'virtual:vuemo-gallery'
@@ -61,14 +61,33 @@ const photoHref = (id: string) => (props.canGoBack ? `?album=${props.slug}&photo
 
 const FIRST = 6 // above the fold: not lazy, high priority
 
+// the first `perPage` photos are rendered on the server; the rest follow on scroll or on a click of "Load more"
+const shown = ref(__VUEMO_GALLERY__.perPage)
+const visible = computed(() => props.photos.slice(0, shown.value))
+const remaining = computed(() => props.photos.length - visible.value.length)
+const sentinel = ref<HTMLElement>()
+const loadMore = () => {
+  shown.value += __VUEMO_GALLERY__.perPage
+}
+let observer: IntersectionObserver | undefined
+
 // thumbhash placeholders are decoded in the browser only; SSR uses the average colour
 const placeholders = reactive<Record<string, string>>({})
-onMounted(async () => {
-  const withHash = props.photos.filter((p) => p.thumbhash)
-  if (!withHash.length) return
+async function decode() {
+  const todo = visible.value.filter((p) => p.thumbhash && !placeholders[p.id])
+  if (!todo.length) return
   const { thumbHashToDataURL } = await import('thumbhash')
-  for (const p of withHash) placeholders[p.id] = thumbHashToDataURL(Uint8Array.from(atob(p.thumbhash!), (c) => c.charCodeAt(0)))
+  for (const p of todo) placeholders[p.id] = thumbHashToDataURL(Uint8Array.from(atob(p.thumbhash!), (c) => c.charCodeAt(0)))
+}
+onMounted(() => {
+  decode()
+  if ('IntersectionObserver' in window && sentinel.value) {
+    observer = new IntersectionObserver((entries) => entries.some((e) => e.isIntersecting) && remaining.value > 0 && loadMore(), { rootMargin: '600px' })
+    observer.observe(sentinel.value)
+  }
 })
+watch(visible, decode)
+onBeforeUnmount(() => observer?.disconnect())
 
 const itemStyle = (p: Photo) => {
   const ar = aspect(p.w, p.h)
@@ -93,7 +112,7 @@ const src = (p: Photo) => photoUrl(cfg.value, p, p.variants[Math.min(1, p.varian
     </header>
     <p v-if="!photos.length" class="vuemo-gallery__empty">No photos in this album yet.</p>
     <ul v-else class="vuemo-gallery__grid" role="list">
-      <li v-for="(p, i) in photos" :key="p.id" class="vuemo-gallery__item" :data-photo-id="p.id" :style="itemStyle(p)">
+      <li v-for="(p, i) in visible" :key="p.id" class="vuemo-gallery__item" :data-photo-id="p.id" :style="itemStyle(p)">
         <a :href="photoHref(p.id)" :aria-label="label(p, i)" @click="open(p.id, $event)">
           <picture>
             <source v-for="f in sources(p)" :key="f" :type="MIME[f]" :srcset="srcset(cfg, p, f)" :sizes="sizesAttr(p.w, p.h)" />
@@ -112,5 +131,8 @@ const src = (p: Photo) => photoUrl(cfg.value, p, p.variants[Math.min(1, p.varian
         </a>
       </li>
     </ul>
+    <div v-if="remaining > 0" ref="sentinel" class="vuemo-gallery__more">
+      <button type="button" class="vuemo-gallery__more-button" @click="loadMore">Load more ({{ remaining }} left)</button>
+    </div>
   </section>
 </template>

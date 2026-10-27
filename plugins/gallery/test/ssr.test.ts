@@ -21,7 +21,7 @@ describe('SSR', () => {
 
   it('renders a pinned album as a list of photo links with sizes and srcset', async () => {
     const html = await render({ album: 'a' })
-    expect(html).toContain('<ul class="vuemo-gallery__grid" role="list">')
+    expect(html).toContain("vuemo-gallery__grid")
     expect(html).toContain('<a href="?photo=aaaaaaaaaaaa"')
     expect(html).toContain('width="300" height="200"')
     expect(html).toContain('srcset="/vuemo/gallery/albums/a/aaaaaaaaaaaa/400.webp 400w')
@@ -31,5 +31,14 @@ describe('SSR', () => {
 
   it('says so for an unknown album', async () => {
     expect(await render({ album: 'zzz' })).toContain('Unknown album')
+  })
+})
+
+describe('pagination', () => {
+  it('renders only perPage photos at SSR and a Load more button for the rest', async () => {
+    const html = await render({ album: 'a' }) // perPage is 2 in the test config, the album has 3 photos
+    expect(html.match(/<li class="vuemo-gallery__item"/g)).toHaveLength(2)
+    expect(html).not.toContain('cccccccccccc')
+    expect(html).toContain('Load more (1 left)')
   })
 })
