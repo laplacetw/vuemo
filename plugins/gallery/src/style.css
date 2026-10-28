@@ -48,3 +48,6 @@
 .vuemo-gallery__more-button { font: inherit; cursor: pointer; padding: 0.5rem 1.25rem; border-radius: var(--_radius); border: 1px solid var(--vp-c-divider, #ccc); background: var(--_bg); color: inherit; }
 .vuemo-gallery__more-button:hover { border-color: var(--_focus); }
 .vuemo-gallery__more-button:focus-visible { outline: 3px solid var(--_focus); outline-offset: 2px; }
+
+/* dark placeholder when the theme defines no --vp-c-bg-soft */
+:root.dark .vuemo-gallery { --_bg: var(--vuemo-gallery-bg, var(--vp-c-bg-soft, #27272a)); }
