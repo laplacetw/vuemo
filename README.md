@@ -14,6 +14,7 @@ Vuemo is a thin layer on top of [VitePress](https://vitepress.dev). VitePress st
 | `themes/default` | `@vuemo/theme-default` | Minimal default theme (Tailwind CSS v4) and the reference implementation of the theme contract |
 | `plugins/comments` | `@vuemo/plugin-comments` | Comments with Giscus or Utterances, synced with dark mode |
 | `plugins/ai-summary` | `@vuemo/plugin-ai-summary` | "Summarize" button backed by your own Cloudflare Worker (Workers AI + AI Gateway) |
+| `plugins/gallery` | `@vuemo/plugin-gallery` | Photo gallery: justified rows, lightbox, a CLI that makes thumbnails and uploads them to Cloudflare R2 ([guide](docs/gallery.md)) |
 | `packages/create-vuemo` | `create-vuemo` | Project scaffolding (`npm create vuemo`): a blog (any theme with `--theme`) or a theme starter (`--template theme`) |
 | `examples/blog` | — | Example blog used for development |
 
@@ -90,7 +91,7 @@ Switch themes by changing the `theme` option. `npm install vuemo-theme-trigger` 
 
 ## Plugins
 
-Official features (`comments`, `aiSummary`) are switched on in the config. Your own plugins go in `plugins: []`. A plugin is a function that returns an object; all fields are optional except `name`:
+Official features (`comments`, `aiSummary`, `gallery`) are switched on in the config. Your own plugins go in `plugins: []`. A plugin is a function that returns an object; all fields are optional except `name`:
 
 ```ts
 interface VuemoPlugin {

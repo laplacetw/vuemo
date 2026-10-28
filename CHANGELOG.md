@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Features
+- new official plugin `@vuemo/plugin-gallery`, enabled with the `gallery` key (`OFFICIAL_FEATURES` gains `gallery`; `@vuemo/plugin-gallery` is also kept out of the dependency optimizer). It registers a global `<VuemoGallery>` component (album list, CSS justified rows, `srcset`, thumbhash placeholders, `?album=` and `?photo=` deep links, lazy PhotoSwipe lightbox, pagination with Load more) and two virtual modules, `virtual:vuemo-gallery` and `virtual:vuemo-gallery/album/<slug>`. No new core hook.
+- `vuemo-gallery` CLI (bin of the plugin): `add`, `sync [--prune]`, `verify [--remote]`, `remove`. sharp is an optional peer loaded lazily; images are stripped of all metadata (no GPS); uploads to Cloudflare R2 are idempotent; `storage: 'local'` writes to `public/gallery`.
+- docs: `docs/gallery.md` with a first-time Cloudflare R2 setup guide
+- example blog: a small generated demo gallery (`scripts/make-demo-gallery.mjs`), a `/gallery` page and a nav entry
+
 ## 0.1.0-alpha.2
 
 ### Features

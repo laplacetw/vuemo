@@ -40,6 +40,7 @@ export default defineBlogConfig({
 | `rss` | RSS feed at `/feed.xml` with the newest posts (`{ limit?: number }`, default 20). On whenever `hostname` is set, because feeds need absolute links; use `rss: false` to turn it off. `rss: true` or `rss: { limit }` also asks for the feed explicitly: without `hostname` the build then warns that there is no feed. A blog that never sets `rss` or `hostname` gets no feed and no warning. |
 | `comments` | Enable comments. See below. |
 | `aiSummary` | Enable the AI summary. See below. |
+| `gallery` | Enable the photo gallery (`<VuemoGallery />`). See [Gallery](./gallery.md). |
 | `plugins` | Your own or third-party plugins. See [Plugins](./plugins.md). |
 
 `nav`, `footer`, `logo`, `socialLinks`, `postsPerPage`, `summary`, `paths`, `search` and `lastUpdated` are shortcuts for `themeConfig`. If you also set `themeConfig` yourself (VitePress's own mechanism, or a theme's own options), your `themeConfig` wins.
