@@ -14,7 +14,7 @@
 
 /* album list */
 .vuemo-gallery__albums { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-.vuemo-gallery__albums li { margin: 0; }
+.vuemo-gallery__albums li { margin: 0; padding: 0; }
 .vuemo-gallery__album a { display: block; color: inherit; text-decoration: none; }
 .vuemo-gallery__cover { display: block; aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--_radius); background: var(--_bg); }
 .vuemo-gallery__cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -26,6 +26,7 @@
 .vuemo-gallery__grid::after { content: ''; flex-grow: 999999; }
 .vuemo-gallery__item {
   margin: 0;
+  padding: 0; /* themes often pad list items (prose styles) */
   flex: calc(var(--ar) * 100) 1 calc(var(--ar) * var(--_row));
   min-width: 0;
   background-color: var(--_bg);
@@ -33,7 +34,10 @@
   border-radius: var(--_radius);
   overflow: hidden;
 }
-.vuemo-gallery__item a { display: block; line-height: 0; }
+.vuemo-gallery__item a { display: block; line-height: 0; text-decoration: none; }
+/* prose styles (Tailwind typography) put 2em margins around pictures and images */
+.vuemo-gallery picture, .vuemo-gallery img { margin: 0; }
+.vuemo-gallery picture { display: block; }
 .vuemo-gallery__item img { display: block; width: 100%; height: auto; aspect-ratio: var(--ar); object-fit: cover; }
 @media (max-width: 640px) { .vuemo-gallery { --_row: var(--vuemo-gallery-row-height-mobile, 140px); } }
 
