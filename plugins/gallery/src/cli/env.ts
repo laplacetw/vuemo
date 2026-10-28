@@ -9,7 +9,9 @@ export function loadEnv(root: string, env: Record<string, string | undefined> = 
   for (const line of readFileSync(file, 'utf8').split(/\r?\n/)) {
     const m = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/.exec(line)
     if (!m || line.trim().startsWith('#')) continue
-    const value = m[2].replace(/^(['"])(.*)\1$/, '$2')
+    // a quoted value ends at its closing quote; an unquoted one at ` #`
+    const q = /^(['"])(.*?)\1(?:\s+#.*)?$/.exec(m[2])
+    const value = q ? q[2] : m[2].replace(/\s+#.*$/, '')
     if (env[m[1]] === undefined) env[m[1]] = value
   }
   return true

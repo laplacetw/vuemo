@@ -42,8 +42,9 @@ export async function openLightbox(o: LightboxOptions): Promise<LightboxHandle> 
   pswp.addFilter('thumbBounds', (bounds, _data, index) => {
     const img = document.querySelector<HTMLElement>(`[data-photo-id="${o.photos[index]?.id}"] img`)
     if (!img) return bounds as any
+    // PhotoSwipe works in viewport coordinates (it is a fixed layer): no scroll offset
     const r = img.getBoundingClientRect()
-    return { x: r.left, y: r.top + window.scrollY, w: r.width }
+    return { x: r.left, y: r.top, w: r.width }
   })
 
   pswp.on('uiRegister', () => {

@@ -2,13 +2,13 @@
 
 A photo gallery for any Vuemo theme: album list, justified rows, a lightbox, and a CLI that makes thumbnails and uploads them to Cloudflare R2 (or into `public/`). Photos are never read from the file system by the theme: the build only sees `gallery/manifest.json` and the image URLs.
 
-Contents: [Quick start](#quick-start), [Cloudflare R2 setup](#cloudflare-r2-setup-first-time), [CLI](#cli), [Design](#design), [Config](#config), [Page and styling](#page), [Cost and limits](#cost-and-limits), [Local storage and the example](#local-storage-and-the-example).
+Contents: [Quick start](#quick-start), [Cloudflare R2 setup](#cloudflare-r2-setup-first-time), [CLI](#cli), [Design](#design), [Data](#data), [Config](#config), [Page and styling](#page-and-styling), [Layout and lightbox](#layout-and-lightbox), [Cost and limits](#cost-and-limits), [Local storage and the example](#local-storage-and-the-example).
 
 ## Quick start
 
 ```sh
 pnpm add @vuemo/plugin-gallery
-pnpm add -D sharp        # only the CLI needs it (thumbnails)
+pnpm add -D sharp        # only the CLI needs it (thumbnails); or npm i -D sharp / yarn add -D sharp
 ```
 
 ```ts
@@ -35,7 +35,7 @@ Add `{ text: 'Gallery', link: '/gallery' }` to `nav`, then follow the R2 setup b
 
 You need a free Cloudflare account. R2 asks for a payment method when you enable it, but the free tier covers a personal gallery (see [cost](#cost-and-limits)).
 
-1. **Enable R2.** Cloudflare dashboard, left sidebar, **Storage & databases** > **R2 object storage** > **Overview**. Follow the prompts to add a payment method and enable R2.
+1. **Enable R2.** Cloudflare dashboard (the menu names below are from memory: verify them against the current dashboard, they move), left sidebar, **Storage & databases** > **R2 object storage** > **Overview**. Follow the prompts to add a payment method and enable R2.
 2. **Create the bucket.** **R2 object storage** > **Create bucket**. Name it (for example `my-photos`), keep location **Automatic**, default storage class **Standard**, **Create bucket**.
 3. **Connect a custom domain.** Open the bucket > **Settings** > **Public access** > **Custom Domains** > **Connect Domain**. Enter a subdomain of a domain that is on your Cloudflare account (for example `img.example.com`) and confirm. Cloudflare adds the DNS record; wait until the status is **Active**. This is the `baseUrl`. (The **R2.dev subdomain** switch in the same section is only for trying things out: it is rate limited and has no CDN caching, so do not use it for a real site.) A custom domain also lets you add Cloudflare cache, WAF and hotlink-protection rules to it.
 4. **Allow your blog to load the images (CORS).** Bucket > **Settings** > **CORS Policy** > **Add CORS policy** and paste (replace the origin with your blog's origin; list several if you have a preview domain too):
@@ -51,7 +51,7 @@ You need a free Cloudflare account. R2 asks for a payment method when you enable
    ]
    ```
 
-   Plain `<img>` tags work without CORS; the lightbox and some browsers' preloads are what need it. For local development add `http://localhost:5173` while you work.
+   Plain `<img>` tags (and CSS backgrounds) work without CORS, and so does the lightbox, which also shows plain `<img>` elements. CORS is only needed if you (or a plugin) read the images with `fetch()` or draw them to a `<canvas>`. Adding your origin does no harm. For local development add `http://localhost:5173` while you work.
 5. **Create a least-privilege API token.** **R2 object storage** > **Overview** > **API** > **Manage API tokens** (also reachable as **Manage R2 API Tokens**) > **Create API token**. Permissions: **Object Read & Write**. Under **Specify bucket(s)** choose **Apply to specific buckets only** and pick your bucket. TTL: your choice (no expiry is fine for a personal token you can revoke). **Create API token**.
 6. **Copy the credentials now.** The next screen shows the **Access Key ID** and **Secret Access Key** once. Also note your **Account ID** (R2 **Overview** page, right column; the S3 endpoint is `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`). Do not use the "Token value" or an account-wide key.
 7. **Put them in `.env`** in your project root (the CLI reads the environment first, then `.env`), and make sure `.env` is in `.gitignore` (the CLI warns if it is not):
@@ -68,25 +68,28 @@ You need a free Cloudflare account. R2 asks for a payment method when you enable
 9. **Config and preview.** Set `gallery.baseUrl` to your custom domain (step 3) and run `pnpm dev`. Open `/gallery`.
 10. **Verify.** `pnpm vuemo-gallery verify --remote` checks the manifest, warns about photos without `alt`, and asks R2 whether every file exists. Commit `gallery/` (not `.env`) and deploy as usual.
 
+**One bucket, or one key prefix, per site.** `sync --prune` treats every object under `albums/` that the manifest does not list as garbage. If two sites (or a site and something else) share a bucket and the `albums/` prefix, pruning one deletes the other's photos. Give each site its own bucket. The CLI guards against the obvious mistakes (see `sync` below), but it cannot know what else lives in the bucket.
+
 Notes: originals are not uploaded; keep them yourself. The generated files are immutable (`Cache-Control: public, max-age=31536000, immutable`; the key contains the hash of the original), so changing a photo means a new id, not an overwrite. The gallery is for photos you are happy to publish: the bucket is public, and anyone who has a URL can fetch it. Do not use it for private photos.
 
 ## CLI
 
-`vuemo-gallery` is the plugin's bin (run it with `pnpm vuemo-gallery ...`, or `npx`). It reads the `gallery` settings from your `vuemo.config.ts`; without them use `--storage`, `--dir`, `--base-url`.
+`vuemo-gallery` is the plugin's bin (run it with `pnpm vuemo-gallery ...`, or `npx`; `--help` prints the usage). It finds the project (the nearest folder up from where you run it that has a `.vitepress` folder or a `vuemo.config.*`; `--root <dir>` names it) and resolves its VitePress config to read the `gallery` settings, the site root (where `gallery/` is) and `srcDir` (where `public/` is). If the config cannot be loaded the command fails and prints the error. If the project has no `gallery` settings, nothing is guessed: pass `--storage <r2|local>` (and `--dir`, `--base-url`), or use `--no-config` to ignore the config on purpose. When the config has settings, `--storage`, `--dir` and `--base-url` are ignored (with a warning). `storage: 'local'` writes to `<srcDir>/public` plus the path of `baseUrl` (`/gallery` gives `public/gallery`; `baseUrl` must be root-relative).
 
 | Command | What it does |
 | --- | --- |
 | `add <dir> --album <slug>` | Reads every image under `<dir>` (jpg, png, webp, avif, tiff, gif), makes `widths` x `formats` variants, uploads the missing ones, adds the photo to the manifest. A photo already in the manifest (same content) is skipped; missing files of it are restored. |
-| `sync [--prune]` | Compares the storage with the manifest: lists missing files (exit code 1, re-run `add` with the originals) and unlisted ones; `--prune` deletes the unlisted ones. |
+| `sync [--prune [--yes] [--force]]` | Compares the storage with the manifest: lists missing files (exit code 1, re-run `add` with the originals) and unlisted ones. `--prune` deletes the unlisted ones, with guards: it refuses when `manifest.json` does not exist; it asks `y/N` on a terminal (it lists the objects first) and refuses on a non-terminal unless you pass `--yes`; it refuses to delete **every** object under `albums/` (an empty manifest, or a manifest that matches nothing in the storage, for example the wrong bucket) unless you pass `--force`. The same applies to `storage: 'local'`. |
 | `verify [--remote]` | Validates the manifest and `albums.yaml`, warns about missing `alt`, and checks that files exist (always for `local`, with `--remote` for R2). |
-| `remove <id>` | Deletes a photo's files and its manifest entry. |
+| `remove <id>` | Deletes a photo's files and its manifest entry. It refuses when the photo is the `cover` of an album (change `cover` in `albums.yaml` first; exit code 1). |
+
+YAML reads an id that is only digits (or looks like `1234e5678901`) as a number. Write ids in `albums.yaml` in quotes: `cover: "123456789012"`. The CLI prints ids in quotes for that reason.
 
 Edit `alt`, `caption` and `takenAt` in `gallery/manifest.json` by hand: `add` never overwrites them. A photo without `alt` gets a warning on `add` and `verify`; write a short description of what the photo shows (a purely decorative photo can use `"alt": ""`, which silences the warning).
 
-Privacy: the generated images carry no metadata at all (no EXIF, no GPS). The manifest only keeps the allow-listed fields below, unless `exif: false`.
+Privacy: the generated images carry no metadata at all (no EXIF, no GPS). The manifest keeps only the allow-listed `exif` fields below, and none of them with `exif: false`. `takenAt` is not part of the `exif` block: it is the date the photo was taken (EXIF `DateTimeOriginal`), it orders the photos of an album, and it is kept with `exif: false` too (delete it from the manifest by hand if you do not want it). An EXIF date is a wall-clock time without a time zone: with an `OffsetTimeOriginal` in the file `takenAt` is the exact instant; without one the wall-clock time is stored as if it were UTC (`17:03:00` is `17:03:00.000Z`), so the result does not depend on the machine's time zone.
 
 ## Design
-
 
 `@vuemo/plugin-gallery` is a framework plugin: it works with any theme that follows the theme contract. It adds no core hook. It registers a global component `<VuemoGallery>` through `enhanceApp` and brings its own Vite plugin (through `vite.plugins`) with two virtual modules.
 
@@ -121,7 +124,7 @@ Two files in the gallery directory (`gallery/` by default, `gallery.dir` to chan
       "thumbhash": "3OcRJYB4d3h/iIeHeEh3eIhw+j3A", // optional
       "alt": "Torii gate at dusk",  // optional, but a warning without it
       "caption": "Fushimi Inari",   // optional
-      "takenAt": "2025-04-12T17:03:00.000Z", // optional
+      "takenAt": "2025-04-12T17:03:00.000Z", // optional (see the CLI notes on time zones)
       "exif": { "camera": "FUJIFILM X-T5", "lens": "XF23mmF2", "focal": 23, "aperture": 2, "iso": 200, "exposure": "1/250" },
       "variants": [400, 800, 1600, 2400],  // widths that exist (never larger than the original)
       "formats": ["webp"]
@@ -135,6 +138,7 @@ Rules:
 - Photo ids are `^[0-9a-f]{12}$` and unique. Slugs are `^[a-z0-9]+(-[a-z0-9]+)*$`.
 - A photo's `album` must be defined in `albums.yaml` (when that file exists; without it, albums are derived from the photos and titled by their slug).
 - `w`, `h` are positive integers; `variants` is a non-empty ascending list of positive integers; `formats` is a non-empty list of `webp`, `avif`, `jpeg`.
+- Photo keys are an allow-list too (`id`, `album`, `w`, `h`, `color`, `thumbhash`, `alt`, `caption`, `takenAt`, `exif`, `variants`, `formats`); `thumbhash` must be base64.
 - `exif` is an allow-list (`camera`, `lens`, `focal`, `aperture`, `iso`, `exposure`). GPS and every other tag are dropped, and the generated images carry no metadata.
 - Errors name the file and the field (`gallery/manifest.json: photos[3].w: expected a positive integer`).
 
@@ -164,9 +168,9 @@ gallery: {
 }
 ```
 
-## Page
+## Page and styling
 
-`gallery.md` with `layout: page` and `<VuemoGallery />` in the body. `?album=<slug>` selects an album and `?photo=<id>` opens the lightbox (both through `useQueryParam`, history replace). `<VuemoGallery album="slug" />` pins one album on a page of its own.
+`gallery.md` with `layout: page` and `<VuemoGallery />` in the body. `?album=<slug>` selects an album and `?photo=<id>` opens the lightbox (both through `useQueryParam`: choosing an album pushes a history entry so Back returns to the list; the lightbox pushes one too and closing it removes `?photo`). `<VuemoGallery album="slug" />` pins one album on a page of its own.
 
 Styling is through `--vuemo-gallery-gap`, `--vuemo-gallery-radius`, `--vuemo-gallery-bg`, `--vuemo-gallery-focus` (and `--vuemo-gallery-row-height`), with fallbacks to VitePress variables and constants.
 
@@ -178,16 +182,16 @@ Styling is through `--vuemo-gallery-gap`, `--vuemo-gallery-radius`, `--vuemo-gal
 | `formats` | `['webp']` | `webp`, `avif`, `jpeg`. With several, `<picture>` offers them in order and the last one is the fallback. |
 | `exif` | `'basic'` | `false` keeps no EXIF in the manifest. |
 | `perPage` | `60` | Photos rendered first, and per "Load more". |
-| `urlBuilder` | `'static'` | `'cloudflare'` asks Cloudflare Image Resizing (`/cdn-cgi/image/width=...,format=auto/`) to resize the largest variant on your own domain; enable Image Resizing for the zone first (it is a paid feature on some plans). Not needed for the default setup. |
+| `urlBuilder` | `'static'` | `'cloudflare'` asks Cloudflare Image Transformations (formerly Image Resizing) to resize the largest variant: the URL is `<origin of baseUrl>/cdn-cgi/image/width=...,format=auto,.../<path of baseUrl>/albums/...`, so `baseUrl: 'https://example.com/photos'` gives `https://example.com/cdn-cgi/image/.../photos/albums/...`. Transformations must be enabled for the zone (the dashboard section is called **Images** > **Transformations**; verify the name and the plan limits against the current dashboard and Cloudflare's pricing page). Not needed for the default setup. |
 | `storage` | `'r2'` | `'local'` writes to `public/gallery`. |
 
-## Page
+## Layout and lightbox
 
 The layout is CSS only (flex-grow follows the aspect ratio, so rows are justified without JavaScript and without layout shift). Every image has `width`, `height` and `aspect-ratio`, `srcset` with `w` descriptors and `sizes`; the first six are eager with `fetchpriority="high"`, the rest lazy. Before an image loads, its average colour (SSR) and then its thumbhash (decoded in the browser) fill the box. The photos are a `<ul role="list">` of links `<a href="?photo=id">`: they work as plain links and in a screen reader, and a click opens the lightbox.
 
-The lightbox is [PhotoSwipe](https://photoswipe.com) 5 (MIT), imported on the first click, so it is not in the page's initial scripts. It has keyboard control (arrows, Escape), returns focus to the photo you opened, and skips animations under `prefers-reduced-motion`. `?photo=<id>` is a deep link; closing removes it. With several albums, `?album=<slug>` selects one. With one visible album, it is shown directly. A `hidden` album is only reachable by link.
+The lightbox is [PhotoSwipe](https://photoswipe.com) 5 (MIT), imported on the first click, so it is not in the page's initial scripts. It has keyboard control (arrows, Escape), returns focus to the photo you opened, and skips animations under `prefers-reduced-motion`. `?photo=<id>` is a deep link; closing removes it. With several albums, `?album=<slug>` selects one. With one visible album, it is shown directly; `?album=<slug>` is checked first, so a `hidden` album is reachable by link even then (and only by link). Closing a lightbox that was opened by a deep link puts the focus on that photo's thumbnail.
 
-Style with CSS variables (all optional): `--vuemo-gallery-gap` (6px), `--vuemo-gallery-radius` (4px), `--vuemo-gallery-bg` (`--vp-c-bg-soft`), `--vuemo-gallery-focus` (`--vp-c-brand-1`), `--vuemo-gallery-row-height` (220px; `--vuemo-gallery-row-height-mobile`, 140px). Dark mode follows your theme's variables.
+Style with CSS variables (all optional): `--vuemo-gallery-gap` (6px), `--vuemo-gallery-radius` (4px), `--vuemo-gallery-bg` (`--vp-c-bg-soft`), `--vuemo-gallery-focus` (`--vp-c-brand-1`), `--vuemo-gallery-row-height` (220px; `--vuemo-gallery-row-height-mobile`, 140px). The `sizes` attribute follows these when they are set in pixels (read in the browser after hydration; the server renders the defaults). Dark mode follows your theme's variables.
 
 ## Cost and limits
 

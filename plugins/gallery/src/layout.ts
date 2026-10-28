@@ -11,7 +11,10 @@ export function itemFlex(w: number, h: number, rowHeight = ROW_HEIGHT) {
 }
 
 /** The `sizes` attribute: the width an item has at the target row heights. */
-export function sizesAttr(w: number, h: number) {
+export function sizesAttr(w: number, h: number, rows: { desktop: number; mobile: number } = { desktop: ROW_HEIGHT, mobile: ROW_HEIGHT_MOBILE }) {
   const ar = w / h
-  return `(max-width: 640px) ${Math.round(ar * ROW_HEIGHT_MOBILE)}px, ${Math.round(ar * ROW_HEIGHT)}px`
+  return `(max-width: 640px) ${Math.round(ar * rows.mobile)}px, ${Math.round(ar * rows.desktop)}px`
 }
+
+/** A row height from the value of `--vuemo-gallery-row-height`: pixels only (other units cannot be turned into a width here). */
+export const parseRowHeight = (value: string, fallback: number) => (/^\s*(\d+(?:\.\d+)?)px\s*$/.exec(value)?.[1] ? parseFloat(value) : fallback)

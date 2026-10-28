@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -8,7 +8,8 @@ import { add, remove, sync, verify, type Context } from '../src/cli/commands'
 import { LocalStorage, R2Storage } from '../src/cli/storage'
 import { loadEnv } from '../src/cli/env'
 import { serializeManifest } from '../src/cli/manifest'
-import { processImage } from '../src/cli/process'
+import { installHint, processImage } from '../src/cli/process'
+import { takenAtFrom } from '../src/exif'
 import { resolveConfig } from '../src/config'
 
 // a JPEG with EXIF (camera, GPS) made by sharp + a hand-written EXIF block through exifr-compatible tags
@@ -74,7 +75,7 @@ describe('add / sync / verify / remove (local storage)', () => {
     expect((await verify(ctx)).errors).toHaveLength(1)
     expect(await add(ctx, photos, 'trip')).toMatchObject({ added: 0, skipped: 0, uploaded: 1 })
     await ctx.storage.put('albums/trip/ffffffffffff/400.webp', new Uint8Array([1]), 'image/webp')
-    expect(await sync(ctx, true)).toMatchObject({ extra: ['albums/trip/ffffffffffff/400.webp'], deleted: 1 })
+    expect(await sync(ctx, { prune: true, yes: true })).toMatchObject({ extra: ['albums/trip/ffffffffffff/400.webp'], deleted: 1 })
     const id = keys[0].split('/')[2]
     expect(await remove(ctx, id)).toBe(true)
     expect(await ctx.storage.list('albums/')).toEqual([])
@@ -123,6 +124,14 @@ describe('R2 storage with a mocked fetch', () => {
   })
 })
 
+describe('R2 listing', () => {
+  it('unescapes XML in the listed keys', async () => {
+    const xml = '<ListBucketResult><Contents><Key>albums/a&amp;b/x&lt;1&gt;/it&apos;s&#x41;.webp</Key></Contents><IsTruncated>false</IsTruncated></ListBucketResult>'
+    const storage = new R2Storage({ accountId: 'a', accessKeyId: 'k', secretAccessKey: 's', bucket: 'b' }, (async () => new Response(xml)) as typeof fetch)
+    expect(await storage.list('albums/')).toEqual(["albums/a&b/x<1>/it'sA.webp"])
+  })
+})
+
 describe('manifest and env', () => {
   it('serializes stably regardless of input order', () => {
     const p = (id: string, album: string, takenAt?: string) => ({ id, album, w: 1, h: 1, color: '#000000', variants: [1], formats: ['webp'], ...(takenAt && { takenAt }) }) as any
@@ -132,11 +141,107 @@ describe('manifest and env', () => {
     expect(a.indexOf('cccccccccccc')).toBeLessThan(a.indexOf('aaaaaaaaaaaa'))
     expect(a.indexOf('aaaaaaaaaaaa')).toBeLessThan(a.indexOf('bbbbbbbbbbbb'))
   })
+  it('strips inline comments from .env values but keeps a # inside quotes', () => {
+    const root = mkdtempSync(join(tmpdir(), 'galenv-'))
+    writeFileSync(join(root, '.env'), 'A=plain # note\nB="has # inside" # note\nC=no#space\nD=\'q\'\n')
+    const env: Record<string, string | undefined> = {}
+    loadEnv(root, env)
+    expect(env).toEqual({ A: 'plain', B: 'has # inside', C: 'no#space', D: 'q' })
+  })
   it('loads .env without overriding the environment', () => {
     const root = mkdtempSync(join(tmpdir(), 'galenv-'))
     writeFileSync(join(root, '.env'), '# c\nR2_BUCKET="b"\nexport R2_ACCOUNT_ID=acct\nR2_ACCESS_KEY_ID=file\n')
     const env: Record<string, string | undefined> = { R2_ACCESS_KEY_ID: 'shell' }
     expect(loadEnv(root, env)).toBe(true)
     expect(env).toEqual({ R2_ACCESS_KEY_ID: 'shell', R2_BUCKET: 'b', R2_ACCOUNT_ID: 'acct' })
+  })
+})
+
+
+describe('albums.yaml when adding an album', () => {
+  const addTo = async (yaml: string | undefined, manifestPhotos?: string[]) => {
+    const { photos, ctx, root } = setup()
+    mkdirSync(join(root, 'gallery'))
+    if (yaml !== undefined) writeFileSync(join(root, 'gallery/albums.yaml'), yaml)
+    if (manifestPhotos)
+      writeFileSync(join(root, 'gallery/manifest.json'), JSON.stringify({ version: 1, photos: manifestPhotos.map((id, i) => ({ id, album: 'old', w: 1, h: 1, color: '#000000', variants: [400], formats: ['webp'] })) }))
+    writeFileSync(join(photos, 'a.jpg'), await fixture('#aa0000'))
+    await add(ctx, photos, 'new-one')
+    return { text: readFileSync(join(root, 'gallery/albums.yaml'), 'utf8'), ctx }
+  }
+  it('appends to the mapping form (albums:) and keeps the comments', async () => {
+    const { text, ctx } = await addTo('# my albums\nalbums:\n  - slug: old\n    title: Old # first\n')
+    expect(text).toContain('# my albums')
+    expect(text).toContain('# first')
+    expect(text).toMatch(/albums:\n {2}- slug: old\n {4}title: Old # first\n {2}- slug: new-one\n {4}title: New One\n/)
+    expect(() => readGalleryDataFor(ctx)).not.toThrow()
+  })
+  it('appends to the list form', async () => {
+    const { text } = await addTo('- slug: old\n  title: Old\n')
+    expect(text).toBe('- slug: old\n  title: Old\n- slug: new-one\n  title: New One\n')
+  })
+  it('handles an empty file and an empty albums: key', async () => {
+    expect((await addTo('')).text).toBe('- slug: new-one\n  title: New One\n')
+    expect((await addTo('albums:\n')).text).toBe('albums:\n  - slug: new-one\n    title: New One\n')
+  })
+  it('keeps the albums derived from the photos when it creates the file', async () => {
+    const { text, ctx } = await addTo(undefined, ['bbbbbbbbbbbb'])
+    expect(text).toBe('- slug: old\n  title: Old\n- slug: new-one\n  title: New One\n')
+    expect(() => readGalleryDataFor(ctx)).not.toThrow()
+  })
+})
+import { readGalleryData } from '../src/data'
+const readGalleryDataFor = (ctx: Context) => readGalleryData(ctx.root, ctx.cfg.dir)
+
+describe('remove', () => {
+  it('refuses to remove the cover of an album and removes it once the cover is changed', async () => {
+    const { photos, ctx, root } = setup()
+    writeFileSync(join(photos, 'a.jpg'), await fixture('#aa0000'))
+    await add(ctx, photos, 'trip')
+    const id = JSON.parse(readFileSync(join(root, 'gallery/manifest.json'), 'utf8')).photos[0].id
+    writeFileSync(join(root, 'gallery/albums.yaml'), `- slug: trip\n  title: Trip\n  cover: "${id}"\n`)
+    expect(await remove(ctx, id)).toBe(false)
+    expect((await ctx.storage.list('albums/')).length).toBeGreaterThan(0)
+    writeFileSync(join(root, 'gallery/albums.yaml'), '- slug: trip\n  title: Trip\n')
+    expect(await remove(ctx, id)).toBe(true)
+  })
+})
+
+describe('photo date', () => {
+  it('reads DateTimeOriginal as UTC without an offset and exactly with one, whatever the time zone', () => {
+    expect(takenAtFrom({ DateTimeOriginal: '2025:04:12 17:03:00' })).toBe('2025-04-12T17:03:00.000Z')
+    expect(takenAtFrom({ DateTimeOriginal: '2025:04:12 17:03:00', OffsetTimeOriginal: '+09:00' })).toBe('2025-04-12T08:03:00.000Z')
+    expect(takenAtFrom({ DateTimeOriginal: '2025:04:12 01:03:00', OffsetTimeOriginal: '-05:30' })).toBe('2025-04-12T06:33:00.000Z')
+    expect(takenAtFrom({ DateTimeOriginal: 'garbage' })).toBeUndefined()
+    expect(takenAtFrom({})).toBeUndefined()
+    expect(takenAtFrom(undefined)).toBeUndefined()
+  })
+  it('keeps takenAt (and a date from the file) with exif: false, and drops only the exif block', async () => {
+    const img = await sharp({ create: { width: 300, height: 200, channels: 3, background: '#445566' } })
+      .jpeg()
+      .withExif({ IFD0: { Make: 'ACME', Model: 'Cam 1' }, IFD2: { DateTimeOriginal: '2025:04:12 17:03:00' } })
+      .toBuffer()
+    const off = await processImage(img, resolveConfig({ storage: 'local', exif: false }))
+    expect(off.photo.exif).toBeUndefined()
+    expect(off.photo.takenAt).toBe('2025-04-12T17:03:00.000Z')
+    const on = await processImage(img, resolveConfig({ storage: 'local' }))
+    expect(on.photo).toMatchObject({ takenAt: '2025-04-12T17:03:00.000Z', exif: { camera: 'ACME Cam 1' } })
+  })
+  it('makes the thumbnails from one decode (sizes, grayscale colour)', async () => {
+    const gray = await sharp({ create: { width: 1000, height: 500, channels: 3, background: '#808080' } }).grayscale().png().toBuffer()
+    const r = await processImage(gray, resolveConfig({ storage: 'local', widths: [400, 800] }))
+    expect(r.photo).toMatchObject({ w: 1000, h: 500, variants: [400, 800] })
+    expect(r.photo.color).toMatch(/^#[0-9a-f]{6}$/)
+    expect((await sharp(r.variants[0].data).metadata()).width).toBe(400)
+  })
+})
+
+describe('install hint', () => {
+  it('follows the lockfile of the project', () => {
+    const root = mkdtempSync(join(tmpdir(), 'galhint-'))
+    writeFileSync(join(root, 'yarn.lock'), '')
+    expect(installHint(root)).toBe('yarn add -D sharp')
+    writeFileSync(join(root, 'pnpm-lock.yaml'), '')
+    expect(installHint(root)).toBe('pnpm add -D sharp')
   })
 })

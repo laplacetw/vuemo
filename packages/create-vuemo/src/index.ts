@@ -17,16 +17,43 @@ import {
 } from './generate'
 import { scaffoldBlog, scaffoldTheme } from './scaffold'
 
-const { values, positionals } = parseArgs({
-  allowPositionals: true,
-  options: {
-    yes: { type: 'boolean', short: 'y' },
-    template: { type: 'string' },
-    comments: { type: 'string' },
-    'ai-summary': { type: 'boolean' },
-    theme: { type: 'string' }
-  }
-})
+const USAGE = `Usage: create-vuemo [dir] [options]
+
+  npm create vuemo@latest my-blog
+
+Options:
+  --template <blog|theme>              what to create (asked when omitted)
+  --theme <name|package>               blog only: the theme (default @vuemo/theme-default)
+  --comments <none|giscus|utterances>  blog only: the comments provider
+  --ai-summary                         blog only: add the AI summary plugin
+  -y, --yes                            do not ask, use the defaults
+  -h, --help                           show this help`
+
+let parsed: ReturnType<typeof parse>
+function parse() {
+  return parseArgs({
+    allowPositionals: true,
+    options: {
+      yes: { type: 'boolean', short: 'y' },
+      template: { type: 'string' },
+      comments: { type: 'string' },
+      'ai-summary': { type: 'boolean' },
+      theme: { type: 'string' },
+      help: { type: 'boolean', short: 'h' }
+    }
+  })
+}
+try {
+  parsed = parse()
+} catch (e) {
+  console.error(`[ERROR]: ${(e as Error).message}\n\n${USAGE}`)
+  process.exit(1)
+}
+const { values, positionals } = parsed
+if (values.help) {
+  console.log(USAGE)
+  process.exit(0)
+}
 
 const PROVIDERS = ['none', 'giscus', 'utterances']
 const TEMPLATES = ['blog', 'theme']

@@ -18,9 +18,13 @@ type UrlConfig = Pick<ResolvedGalleryConfig, 'baseUrl' | 'urlBuilder'>
 export function photoUrl(cfg: UrlConfig, photo: Pick<Photo, 'album' | 'id' | 'variants'>, width: number, format: ImageFormat = 'webp'): string {
   const base = cfg.baseUrl.replace(/\/+$/, '')
   if (cfg.urlBuilder === 'cloudflare') {
-    // resize from the largest variant (originals are not uploaded); format=auto negotiates avif/webp
+    // Image Resizing lives at the root of the zone: `<origin>/cdn-cgi/image/<options>/<path of the source on that origin>`.
+    // Resize from the largest variant (originals are not uploaded); format=auto negotiates avif/webp.
+    const m = /^(https?:\/\/[^/]+)(\/.*)?$/.exec(base)
+    const origin = m ? m[1] : ''
+    const path = m ? (m[2] ?? '') : base
     const source = objectKey(photo.album, photo.id, photo.variants[photo.variants.length - 1], format)
-    return `${base}/cdn-cgi/image/width=${width},fit=scale-down,format=auto,quality=80/${source}`
+    return `${origin}/cdn-cgi/image/width=${width},fit=scale-down,format=auto,quality=80${path}/${source}`
   }
   return `${base}/${objectKey(photo.album, photo.id, width, format)}`
 }

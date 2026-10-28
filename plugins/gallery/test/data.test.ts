@@ -118,3 +118,39 @@ describe('layout and exif', () => {
     expect(pickExif({})).toBeUndefined()
   })
 })
+
+describe('cloudflare URLs', () => {
+  const p = { album: 'trip', id: '3f9a1c0d2b7e', variants: [400, 800] }
+  it('puts the options on the origin and keeps the path of baseUrl in the source path', () => {
+    expect(photoUrl({ baseUrl: 'https://img.example.com', urlBuilder: 'cloudflare' }, p, 400)).toBe(
+      'https://img.example.com/cdn-cgi/image/width=400,fit=scale-down,format=auto,quality=80/albums/trip/3f9a1c0d2b7e/800.webp'
+    )
+    expect(photoUrl({ baseUrl: 'https://example.com/photos/gallery/', urlBuilder: 'cloudflare' }, p, 800)).toBe(
+      'https://example.com/cdn-cgi/image/width=800,fit=scale-down,format=auto,quality=80/photos/gallery/albums/trip/3f9a1c0d2b7e/800.webp'
+    )
+    // a root-relative baseUrl (after the site base) stays on the page's own origin
+    expect(photoUrl({ baseUrl: '/vuemo/gallery', urlBuilder: 'cloudflare' }, p, 400)).toBe(
+      '/cdn-cgi/image/width=400,fit=scale-down,format=auto,quality=80/vuemo/gallery/albums/trip/3f9a1c0d2b7e/800.webp'
+    )
+  })
+})
+
+describe('stricter manifest checks', () => {
+  it('validates thumbhash as base64 and allows only known photo keys', () => {
+    expect(() => validateManifest({ version: 1, photos: [photo({ thumbhash: '3OcRJYB4d3h/iIeHeEh3eIhw+j3A' })] })).not.toThrow()
+    expect(() => validateManifest({ version: 1, photos: [photo({ thumbhash: 'not base64!' })] })).toThrow('photos[0].thumbhash: expected a base64 string')
+    expect(() => validateManifest({ version: 1, photos: [photo({ gps: [1, 2] })] })).toThrow('photos[0].gps: not allowed')
+  })
+  it('hints at quoting a cover id that YAML reads as a number', () => {
+    expect(() => validateAlbums([{ slug: 'a', title: 'A', cover: 123456789012 }], [photo()] as any)).toThrow('put the id in quotes')
+  })
+})
+describe('row height', () => {
+  it('reads pixel values only', async () => {
+    const { parseRowHeight } = await import('../src/layout')
+    expect(parseRowHeight(' 180px', 220)).toBe(180)
+    expect(parseRowHeight('', 220)).toBe(220)
+    expect(parseRowHeight('12rem', 220)).toBe(220)
+    expect(sizesAttr(300, 200, { desktop: 100, mobile: 50 })).toBe('(max-width: 640px) 75px, 150px')
+  })
+})

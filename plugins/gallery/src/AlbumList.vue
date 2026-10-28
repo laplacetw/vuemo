@@ -30,7 +30,7 @@ function choose(slug: string, e: MouseEvent) {
             sizes="(max-width: 640px) 100vw, 320px"
             :width="a.cover.w"
             :height="a.cover.h"
-            :alt="a.cover.alt ?? ''"
+            alt=""
             loading="lazy"
             decoding="async"
           />

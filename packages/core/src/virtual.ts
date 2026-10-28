@@ -102,13 +102,22 @@ interface DevServerLike {
   watcher: { add(paths: string[]): unknown; on(event: string, listener: (file: string) => void): unknown }
   moduleGraph: { getModuleById(id: string): unknown; invalidateModule(mod: any): void }
   ws: { send(payload: { type: 'full-reload' }): void }
+  httpServer?: { once(event: 'close', listener: () => void): unknown } | null
 }
 
-export function virtualPlugin(plugins: VuemoPlugin[], theme: string) {
+export type WatchFn = typeof watch
+
+export function virtualPlugin(plugins: VuemoPlugin[], theme: string, watchFn: WatchFn = watch) {
   const prefix = '\0'
   let root = process.cwd()
+  let nodeModulesWatcher: ReturnType<WatchFn> | undefined
   return {
     name: 'vuemo:virtual',
+    // Vite calls this when the dev server closes
+    buildEnd() {
+      nodeModulesWatcher?.close()
+      nodeModulesWatcher = undefined
+    },
     // VitePress's project root is `config.vitepress.root`; `config.root` is its srcDir (themes/ lives in the project root)
     configResolved(config: { root: string; vitepress?: { root?: string } }) {
       root = config.vitepress?.root ?? config.root
@@ -134,13 +143,17 @@ export function virtualPlugin(plugins: VuemoPlugin[], theme: string) {
       const modules = join(root, 'node_modules')
       if (existsSync(modules)) {
         try {
-          watch(modules, { persistent: false }, (_event, name) => {
+          const watcher = watchFn(modules, { persistent: false }, (_event, name) => {
             if (!name) return
             const file = join(modules, name.toString())
             if (!touchesTheme(file, targets)) return
             check(file)
             setTimeout(() => check(file), 1000).unref()
           })
+          // do not leak the watcher when the dev server restarts (a config change) or stops
+          server.httpServer?.once('close', () => watcher.close())
+          nodeModulesWatcher?.close()
+          nodeModulesWatcher = watcher
         } catch {
           // no file system watching here (some containers); the dev server then needs a restart for a new package
         }

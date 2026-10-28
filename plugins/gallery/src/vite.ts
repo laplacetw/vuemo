@@ -1,14 +1,35 @@
+import { statSync } from 'node:fs'
 import { join } from 'node:path'
-import { albumsPath, manifestPath, readGalleryData, summarize } from './data'
+import { albumsPath, manifestPath, readGalleryData, summarize, type GalleryData } from './data'
 import type { ResolvedGalleryConfig } from './types'
 
 export const LIST_ID = 'virtual:vuemo-gallery'
 const ALBUM_PREFIX = 'virtual:vuemo-gallery/album/'
 const NUL = '\0'
 
+const stamp = (file: string) => {
+  try {
+    const s = statSync(file)
+    return `${s.mtimeMs}:${s.size}`
+  } catch {
+    return '-'
+  }
+}
+const cache = new Map<string, { key: string; data: GalleryData }>()
+/** Reads and validates the files once per change: the list and every album module ask for them in one build. */
+function readCached(root: string, dir: string): GalleryData {
+  const key = `${stamp(manifestPath(root, dir))}|${stamp(albumsPath(root, dir))}`
+  const id = join(root, dir)
+  const hit = cache.get(id)
+  if (hit?.key === key) return hit.data
+  const data = readGalleryData(root, dir)
+  cache.set(id, { key, data })
+  return data
+}
+
 /** Source of `virtual:vuemo-gallery`: the album list and one dynamic import per album. */
 export function buildListModule(root: string, dir: string): string {
-  const { manifest, albums } = readGalleryData(root, dir)
+  const { manifest, albums } = readCached(root, dir)
   const list = summarize(albums, manifest.photos)
   const loaders = albums.map((a) => `${JSON.stringify(a.slug)}: () => import(${JSON.stringify(ALBUM_PREFIX + a.slug)})`)
   return `export const albums = ${JSON.stringify(list)}\nexport const loaders = { ${loaders.join(', ')} }\n`
@@ -16,7 +37,7 @@ export function buildListModule(root: string, dir: string): string {
 
 /** Source of `virtual:vuemo-gallery/album/<slug>`: the photos of one album. */
 export function buildAlbumModule(root: string, dir: string, slug: string): string {
-  const { manifest } = readGalleryData(root, dir)
+  const { manifest } = readCached(root, dir)
   const photos = manifest.photos.filter((p) => p.album === slug).map(({ album: _album, ...p }) => p)
   return `export default ${JSON.stringify(photos)}\n`
 }

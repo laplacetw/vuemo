@@ -16,6 +16,7 @@ export interface Storage {
 
 /** `public/gallery`: for local development, tests, and sites without a domain for the bucket. */
 export class LocalStorage implements Storage {
+  /** `dir` is the folder the keys live in: `<srcDir>/public` + the path of `baseUrl` (`/gallery`). */
   constructor(private dir: string) {}
   private path = (key: string) => join(this.dir, key)
   async has(key: string) {
@@ -47,6 +48,11 @@ export class LocalStorage implements Storage {
     return out.sort()
   }
 }
+
+const unescapeXml = (s: string) =>
+  s.replace(/&(#x[0-9a-fA-F]+|#\d+|amp|lt|gt|quot|apos);/g, (_, e: string) =>
+    e[0] === '#' ? String.fromCodePoint(e[1] === 'x' ? parseInt(e.slice(2), 16) : Number(e.slice(1))) : ({ amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" } as Record<string, string>)[e]
+  )
 
 export interface R2Credentials {
   accountId: string
@@ -99,7 +105,7 @@ export class R2Storage implements Storage {
       const res = await this.call('GET', `${this.endpoint}?${q}`)
       if (!res.ok) throw new Error(`R2 LIST ${prefix}: ${res.status}`)
       const xml = await res.text()
-      for (const m of xml.matchAll(/<Key>([^<]+)<\/Key>/g)) keys.push(m[1])
+      for (const m of xml.matchAll(/<Key>([^<]+)<\/Key>/g)) keys.push(unescapeXml(m[1]))
       token = /<IsTruncated>true<\/IsTruncated>/.test(xml) ? (/<NextContinuationToken>([^<]+)<\/NextContinuationToken>/.exec(xml)?.[1] ?? '') : ''
     } while (token)
     return keys.sort()

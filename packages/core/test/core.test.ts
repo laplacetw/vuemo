@@ -392,7 +392,33 @@ describe('theme module', () => {
       listeners.add(join(root, 'themes/t/other.ts'))
       expect(sent).toHaveLength(1)
     })
-    it('configureServer notices an installed package in node_modules', async () => {
+    it('configureServer notices an installed package in node_modules and closes its watcher', () => {
+      const root = mkdir()
+      mkdirSync(join(root, 'node_modules'))
+      let notify: (event: string, name: string) => void = () => {}
+      let closed = 0
+      const fakeWatch = ((_dir: string, _opts: unknown, listener: typeof notify) => {
+        notify = listener
+        return { close: () => closed++ }
+      }) as any
+      const plugin: any = virtualPlugin([], 'p', fakeWatch)
+      plugin.configResolved({ root })
+      const sent: unknown[] = []
+      plugin.configureServer({
+        watcher: { add: () => {}, on: () => {} },
+        moduleGraph: { getModuleById: () => undefined, invalidateModule: () => {} },
+        ws: { send: (m: unknown) => sent.push(m) }
+      })
+      mkdirSync(join(root, 'node_modules/vuemo-theme-p'))
+      writeFileSync(join(root, 'node_modules/vuemo-theme-p/index.ts'), '')
+      notify('rename', 'vuemo-theme-p')
+      expect(sent).toEqual([{ type: 'full-reload' }])
+      plugin.buildEnd()
+      expect(closed).toBe(1)
+      plugin.buildEnd()
+      expect(closed).toBe(1)
+    })
+    it('configureServer notices an installed package with the real fs.watch', async () => {
       const root = mkdir()
       mkdirSync(join(root, 'node_modules'))
       const plugin: any = virtualPlugin([], 'p')
@@ -405,8 +431,11 @@ describe('theme module', () => {
       })
       mkdirSync(join(root, 'node_modules/vuemo-theme-p'))
       writeFileSync(join(root, 'node_modules/vuemo-theme-p/index.ts'), '')
-      for (let i = 0; i < 40 && !sent.length; i++) await new Promise((r) => setTimeout(r, 50))
-      expect(sent).toEqual([{ type: 'full-reload' }])
+      try {
+        await vi.waitFor(() => expect(sent).toEqual([{ type: 'full-reload' }]), { timeout: 8000, interval: 100 })
+      } finally {
+        plugin.buildEnd()
+      }
     })
     it('configureServer does nothing for a path theme', () => {
       const plugin: any = virtualPlugin([], './x/index.ts')

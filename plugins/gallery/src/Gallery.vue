@@ -11,13 +11,15 @@ const props = defineProps<{ /** Show this album only (a page of its own). */ alb
 const visible = albums.filter((a) => !a.hidden)
 const selected = useQueryParam('album', { history: 'push' })
 
-// a pinned album, the only album, or the one chosen with ?album=; '' shows the album list
+// ?album= names an album (also a hidden one, even when it is the only visible one: it is checked first), else the only visible album; '' shows the album list
+const named = computed(() => !props.album && albums.some((a) => a.slug === selected.value))
 const slug = computed(() => {
   if (props.album) return props.album
-  if (visible.length === 1) return visible[0].slug
-  return albums.some((a) => a.slug === selected.value) ? selected.value : ''
+  if (named.value) return selected.value
+  return visible.length === 1 ? visible[0].slug : ''
 })
-const canGoBack = computed(() => !props.album && visible.length > 1)
+// links name the album when it was chosen with ?album=, or the URL would lead to another one
+const canGoBack = computed(() => named.value && visible.length > 0 && !(visible.length === 1 && visible[0].slug === slug.value))
 
 // One async component per album: it resolves before SSR output and before hydration, so both sides render the same photos.
 const cache = new Map<string, ReturnType<typeof defineAsyncComponent>>()
@@ -41,7 +43,7 @@ function albumComponent(name: string) {
 <template>
   <div class="vuemo-gallery">
     <p v-if="props.album && !albums.some((a) => a.slug === props.album)" class="vuemo-gallery__empty">Unknown album "{{ props.album }}".</p>
-    <component :is="albumComponent(slug)" v-else-if="slug" :key="slug" :slug="slug" :can-go-back="canGoBack" @back="selected = ''" />
+    <component :is="albumComponent(slug)" v-else-if="slug" :key="slug" :slug="slug" :can-go-back="canGoBack" :named="named" @back="selected = ''" />
     <AlbumList v-else :albums="visible" @select="selected = $event" />
   </div>
 </template>
