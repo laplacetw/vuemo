@@ -103,9 +103,11 @@ export default { extends: Theme, Layout: MyLayout }
 
 A page picks its layout with `layout:` in its frontmatter. Core gives every page under `posts/` that has no `layout` the layout `post` (in `transformPageData`, after your own `transformPageData` hook if you have one), so a theme never looks at file paths. A page outside `posts/` without a `layout` has none.
 
-The dispatch rule of the theme contract: **a theme chooses its layout from `frontmatter.layout` only, and a missing layout is rendered as `page`.** What a theme does with a value outside the six is its own choice (a theme built on plain VitePress `extends` may render nothing), so do not use unknown layout values with a theme you have not checked.
+The dispatch rule of the theme contract: **a theme chooses its layout from `frontmatter.layout` only, and a missing layout is rendered as `page`.** What a theme does with a value outside the seven is its own choice (a theme built on plain VitePress `extends` may render nothing), so do not use unknown layout values with a theme you have not checked.
 
-`home` · `post` · `archive` · `tag` · `category` · `page`
+`home` · `post` · `archive` · `tag` · `category` · `about` · `page`
+
+`about` is for the About page (`about.md` gets `layout: about` from `create-vuemo`). The default theme renders it as a plain page; another theme may add an avatar or a profile to it, so switching themes needs no change to the page.
 
 ## Writing a theme
 
@@ -113,7 +115,7 @@ The full guide, including the starter template, `vuemo check-theme` and a publis
 
 The contract, which lets framework plugins work with any theme:
 
-- implement the six layouts above, and dispatch on `frontmatter.layout` only: a missing layout is treated as `page` (unknown values are theme-defined)
+- implement the seven layouts above, and dispatch on `frontmatter.layout` only: a missing layout is treated as `page` (unknown values are theme-defined)
 - in the `post` layout provide the slots `post-before-content`, `post-after-content` and `post-comments`, and render the components plugins registered for each with `useSlots(name)`
 - put the class `vuemo-content` on the post body (the AI summary reads the article text from it)
 - call `runEnhanceApps(ctx)` in `enhanceApp`
@@ -167,6 +169,6 @@ The default theme's `archive` layout shows the post count, a count per year and 
 
 The home page renders each post's excerpt (the part before `---`) as HTML, so it keeps heading ids, anchors and relative image paths; keep excerpts to plain paragraphs. A theme that lists excerpts should do the same, or use `summary: 'description'`.
 
-`Post` is `{ title, url, date: { time, string }, category?, tags, description?, excerpt? }`; see [`schema.ts`](../packages/core/src/schema.ts).
+`Post` is `{ title, url, date: { time, string }, category?, tags, description?, excerpt?, words }` (`words` is the body length for reading time: a CJK character is one word); see [`schema.ts`](../packages/core/src/schema.ts).
 
 Themes are free to use any CSS approach. `@vuemo/theme-default` uses Tailwind CSS v4 compiled at build time to `dist/style.css`, so users don't need Tailwind.

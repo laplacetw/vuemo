@@ -90,7 +90,12 @@ describe('layouts', () => {
     for (const p of validPosts) expect(page(`posts/${p.slug}.html`), p.slug).toContain('vuemo-content')
   })
   it('renders a page without a layout as a plain page', () => {
-    expect(readFileSync(resolve(root, 'about.md'), 'utf8')).not.toMatch(/^layout:/m)
+    expect(readFileSync(resolve(root, 'album-shapes.md'), 'utf8')).not.toMatch(/^layout:/m)
+    expect(page('album-shapes.html')).not.toContain('vuemo-content')
+  })
+  it('renders the about layout (a plain page in the default theme)', () => {
+    expect(readFileSync(resolve(root, 'about.md'), 'utf8')).toMatch(/^layout: about$/m)
+    expect(page('about.html')).toContain('Hello, this is Vuemo.')
     expect(page('about.html')).not.toContain('vuemo-content')
   })
 })

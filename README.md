@@ -79,7 +79,7 @@ description: Optional summary
 
 A theme is a regular VitePress theme that consumes data from `@vuemo/core/client` (`usePosts`, `useTags`, `useCategories`, `useArchives`, `usePagination`, `usePrevNext`, `usePost`, `useTaxonomyLinks`, `useQueryParam`). To be usable with Vuemo plugins, a theme must:
 
-- implement the layouts `home`, `post`, `archive`, `tag`, `category` and `page`, chosen from `frontmatter.layout` only (a missing layout is `page`, other values are theme-defined; core gives `posts/` pages the layout `post`)
+- implement the layouts `home`, `post`, `archive`, `tag`, `category`, `about` and `page`, chosen from `frontmatter.layout` only (a missing layout is `page`, other values are theme-defined; core gives `posts/` pages the layout `post`)
 - provide these slots in the `post` layout: `post-before-content`, `post-after-content`, `post-comments`, rendered with `useSlots(name)`
 - call `runEnhanceApps(ctx)` from its `enhanceApp`
 - put the class `vuemo-content` on the post body

@@ -22,9 +22,9 @@ A theme works with every framework plugin if it does these things.
 
 ### Layouts
 
-Implement six layouts: `home`, `post`, `archive`, `tag`, `category` and `page`.
+Implement seven layouts: `home`, `post`, `archive`, `tag`, `category`, `about` and `page`. `about` is the About page (`layout: about`); rendering it as `page` is enough, but it lets a theme give that page its own look (an avatar, a profile from your theme options) without the author editing the page.
 
-**Dispatch on `frontmatter.layout` only.** A missing layout is rendered as `page`. What happens to a value outside the six (`layout: foo`) is up to the theme: the default theme renders it as `page`, but a theme built on plain VitePress `extends: DefaultTheme` may render nothing for it, because VitePress renders `<component :is="layout">` and cannot fall back. Authors should not use unknown layout values with a theme they have not checked, and `vuemo check-theme` warns (`unknown-layout`) when a theme loses the body. Never look at the file path. Core makes this possible: `defineBlogConfig` gives every page under `posts/` that has no `layout` the layout `post` (in `transformPageData`, after your own hook if you have one). A page outside `posts/` without a `layout` has none, which the theme treats as `page`.
+**Dispatch on `frontmatter.layout` only.** A missing layout is rendered as `page`. What happens to a value outside the seven (`layout: foo`) is up to the theme: the default theme renders it as `page`, but a theme built on plain VitePress `extends: DefaultTheme` may render nothing for it, because VitePress renders `<component :is="layout">` and cannot fall back. Authors should not use unknown layout values with a theme they have not checked, and `vuemo check-theme` warns (`unknown-layout`) when a theme loses the body. Never look at the file path. Core makes this possible: `defineBlogConfig` gives every page under `posts/` that has no `layout` the layout `post` (in `transformPageData`, after your own hook if you have one). A page outside `posts/` without a `layout` has none, which the theme treats as `page`.
 
 ```vue
 <script setup lang="ts">
@@ -32,7 +32,7 @@ import { computed } from 'vue'
 import { useData } from 'vitepress'
 
 const { frontmatter } = useData()
-const layouts = { home: Home, post: Post, archive: Archive, tag: Tag, category: Category, page: Page }
+const layouts = { home: Home, post: Post, archive: Archive, tag: Tag, category: Category, about: Page, page: Page }
 const current = computed(() => layouts[frontmatter.value.layout as keyof typeof layouts] ?? Page)
 </script>
 
@@ -182,7 +182,7 @@ What you get:
 | --- | --- |
 | `src/index.ts` | The theme entry; `enhanceApp` calls `runEnhanceApps(ctx)` |
 | `src/Layout.vue` | Header, footer, dark mode toggle, dispatch on `frontmatter.layout`, option validation |
-| `src/layouts/*.vue` | The six layouts, in plain CSS |
+| `src/layouts/*.vue` | The layouts, in plain CSS (`about` reuses `Page.vue`) |
 | `src/components/PluginSlot.vue` | Renders a standard slot |
 | `src/types.ts` | The typed theme options |
 | `example/` | A blog that uses the theme through the path of `src/index.ts` |

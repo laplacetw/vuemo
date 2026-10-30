@@ -15,6 +15,7 @@ export const FIXTURE = {
   tag: 'check-tag-a',
   category: 'check-cat',
   pageMarker: 'VUEMO_CHECK_PAGE',
+  aboutMarker: 'VUEMO_CHECK_ABOUT',
   /** Layout value no theme knows, and the body of the page that uses it. */
   unknownLayout: 'vuemo-check-unknown',
   unknownMarker: 'VUEMO_CHECK_UNKNOWN'
@@ -26,6 +27,7 @@ export interface PageHtml {
   tag: string
   category: string
   page: string
+  about: string
   post: string
   unknown: string
 }
@@ -82,6 +84,15 @@ export const checkPage = (html: string) =>
     `layout "page" did not render the content: "${FIXTURE.pageMarker}" is missing. A page without \`layout\` must render <Content />.`
   )
 
+export const checkAbout = (html: string) =>
+  contains(
+    'layout-about',
+    html,
+    FIXTURE.aboutMarker,
+    'about layout renders the page content',
+    `layout "about" did not render the content: "${FIXTURE.aboutMarker}" is missing. Register an \`about\` layout; rendering it as \`page\` is enough.`
+  )
+
 export const checkPost = (html: string) =>
   contains(
     'layout-post',
@@ -99,7 +110,7 @@ export function checkUnknownLayout(html: string): CheckResult {
     : {
         id,
         status: 'warn',
-        message: `a page with an unknown layout (\`layout: ${FIXTURE.unknownLayout}\`) lost its body: "${FIXTURE.unknownMarker}" is missing. The contract leaves unknown values to the theme, but a theme built on VitePress \`extends\` renders an empty element for them. Register a catch-all, or treat an unknown layout as \`page\`; otherwise tell authors not to use layout values outside the six.`
+        message: `a page with an unknown layout (\`layout: ${FIXTURE.unknownLayout}\`) lost its body: "${FIXTURE.unknownMarker}" is missing. The contract leaves unknown values to the theme, but a theme built on VitePress \`extends\` renders an empty element for them. Register a catch-all, or treat an unknown layout as \`page\`; otherwise tell authors not to use layout values outside the seven.`
       }
 }
 
@@ -177,7 +188,7 @@ export const checkEnhanceApp = (html: string) =>
     "plugins' enhanceApp did not run: call runEnhanceApps(ctx) from @vuemo/core/client in the theme's enhanceApp (and return it)."
   )
 
-/** Every build-based assertion. `post` is the HTML of a fixture post, `page` of the About page. */
+/** Every build-based assertion. `post` is the HTML of a fixture post, `page` of a page without a layout, `about` of the About page. */
 export function runAssertions(pages: PageHtml): CheckResult[] {
   const page = checkPage(pages.page)
   return [
@@ -186,11 +197,12 @@ export function runAssertions(pages: PageHtml): CheckResult[] {
     checkTag(pages.tag),
     checkCategory(pages.category),
     page,
+    checkAbout(pages.about),
     checkPost(pages.post),
     checkVuemoContent(pages.post),
     checkSlots(pages.post),
     checkUnknownLayout(pages.unknown),
-    // the probe sits in the About page: if that page did not render, the result says nothing about enhanceApp
+    // the probe sits in the page without a layout: if that page did not render, the result says nothing about enhanceApp
     page.status === 'fail' ? fail('enhance-app', 'skipped (layout-page failed)') : checkEnhanceApp(pages.page)
   ]
 }

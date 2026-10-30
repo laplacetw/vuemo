@@ -70,7 +70,7 @@ Composables provided to themes: `usePosts()`, `useTags()`, `useCategories()`, `u
 ### Theme contract
 
 - A theme is a VitePress theme that only consumes data provided by core.
-- A theme must implement these layouts: `home`, `post`, `archive`, `tag`, `category`, `page`. A theme dispatches on `frontmatter.layout` only, a missing layout is treated as `page`, and handling of a value outside the six is theme-defined (a theme built on plain VitePress `extends` may render nothing for it, so authors should not use unknown layout values with themes they have not checked); core gives pages under `posts/` without a layout the layout `post`.
+- A theme must implement these layouts: `home`, `post`, `archive`, `tag`, `category`, `about`, `page` (`about` may simply render as `page`; it exists so a theme can style the About page without the author changing it). A theme dispatches on `frontmatter.layout` only, a missing layout is treated as `page`, and handling of a value outside the seven is theme-defined (a theme built on plain VitePress `extends` may render nothing for it, so authors should not use unknown layout values with themes they have not checked); core gives pages under `posts/` without a layout the layout `post`.
 - A theme must provide these standard slots in the `post` layout, so framework plugins can inject content without knowing the theme's internals:
   - `post-before-content`: before the post content (for example an AI summary)
   - `post-after-content`: after the post content
@@ -182,7 +182,7 @@ The rewrite is `vuemo-theme-trigger` 2.0.0-alpha (outside this repo; it builds o
 | `README_CH.md`, the Pages workflow | removed; use Vuemo's deployment guide |
 | About avatar and quote (hard-coded) | theme option `themeConfig.about { avatar, quote }` |
 
-**Contract friction found by the rewrite**: a theme that does `extends: DefaultTheme` cannot fall back to `page` for an unknown `frontmatter.layout`, because VitePress renders `<component :is="layout">` (Trigger registers its layouts as global components). Resolution: the contract was adjusted, not the theme. The six layouts are required and a missing layout is `page`, but handling of other values is theme-defined; `vuemo check-theme` has a warn-level `unknown-layout` check. `vuemo-content` caused no friction in practice.
+**Contract friction found by the rewrite**: a theme that does `extends: DefaultTheme` cannot fall back to `page` for an unknown `frontmatter.layout`, because VitePress renders `<component :is="layout">` (Trigger registers its layouts as global components). Resolution: the contract was adjusted, not the theme. The required layouts (six then, seven since `about` was added) must be implemented and a missing layout is `page`, but handling of other values is theme-defined; `vuemo check-theme` has a warn-level `unknown-layout` check. `vuemo-content` caused no friction in practice.
 
 **Validation principle**: if every existing feature can be rewritten as an official plugin without friction, the plugin interface is right. When a rewrite is awkward, revisit the interface first instead of working around it inside the plugin.
 

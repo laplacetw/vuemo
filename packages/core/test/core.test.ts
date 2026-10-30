@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { parsePost } from '../src/schema'
+import { countWords, parsePost } from '../src/schema'
 import { groupByTag, groupByYear, groupByCategory } from '../src/group'
 import { findPost, findPrevNext, paginate, stripBase } from '../src/pagination'
 import { postJsonLd } from '../src/seo'
@@ -24,6 +24,19 @@ describe('parsePost', () => {
   it('reports invalid fields', () => {
     expect(parsePost({ url: '/a', frontmatter: { date: '2020-01-01' } })).toMatch(/title/)
     expect(parsePost({ url: '/a', frontmatter: { title: 't', date: 'nope' } })).toMatch(/date/)
+  })
+  it('counts the words of the source', () => {
+    expect(mk(1).words).toBe(0)
+    const src = '---\ntitle: T\n---\n\nHello world, it’s 2026.\n\n```js\nconst ignored = 1\n```\n\n中文字<br/>[link](https://x.y/z)\n'
+    expect(parsePost({ url: '/a', frontmatter: { title: 't', date: '2020-01-01' }, src }) as any).toMatchObject({ words: 4 + 3 + 1 })
+  })
+})
+
+describe('countWords', () => {
+  it('counts CJK characters one by one and other words as runs', () => {
+    expect(countWords('日本語とEnglish words')).toBe(6)
+    expect(countWords('~~~\ncode\n~~~\nafter')).toBe(1)
+    expect(countWords('')).toBe(0)
   })
 })
 

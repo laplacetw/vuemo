@@ -10,12 +10,13 @@ import Tag from './layouts/Tag.vue'
 import Category from './layouts/Category.vue'
 import Page from './layouts/Page.vue'
 
-const layouts = { home: Home, post: Post, archive: Archive, tag: Tag, category: Category, page: Page }
+const layouts = { home: Home, post: Post, archive: Archive, tag: Tag, category: Category, about: Page, page: Page }
 
 const { page, frontmatter, theme, site, isDark } = useData<VuemoThemeConfig & MyThemeConfig>()
 
 // Contract: dispatch on `frontmatter.layout` ONLY. Core gives every page under posts/ the `post` layout.
-// A missing layout is rendered as `page` (so is an unknown one, by choice of this theme), and so is the 404 page.
+// `about` is a plain page here (a theme may give it its own look). A missing layout is rendered as `page`
+// (so is an unknown one, by choice of this theme), and so is the 404 page.
 const layout = computed(() => {
   if (page.value.isNotFound) return Page
   const name = frontmatter.value.layout as keyof typeof layouts | undefined

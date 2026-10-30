@@ -57,13 +57,16 @@ export default defineBlogConfig({
     'unknown-layout.md': `${layoutPage('Unknown layout', FIXTURE.unknownLayout)}
 ${FIXTURE.unknownMarker}
 `,
-    'about.md': `---
-title: About
+    'page.md': `---
+title: Page
 ---
 
 ${FIXTURE.pageMarker}
 
 <VuemoCheckEnhance />
+`,
+    'about.md': `${layoutPage('About', 'about')}
+${FIXTURE.aboutMarker}
 `
   }
 }
@@ -83,7 +86,8 @@ export const FIXTURE_PAGES = {
   archive: 'archives.html',
   tag: 'tags.html',
   category: 'category.html',
-  page: 'about.html',
+  page: 'page.html',
+  about: 'about.html',
   unknown: 'unknown-layout.html',
   post: 'posts/check-post-1.html'
 } as const

@@ -1,6 +1,6 @@
 ---
 title: About
-layout: page
+layout: about
 ---
 
-This page uses the `page` layout.
+This page uses the `about` layout, which this theme renders as a plain page.

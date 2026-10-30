@@ -11,14 +11,14 @@ import Category from './layouts/Category.vue'
 import Page from './layouts/Page.vue'
 import SocialLinks from './components/SocialLinks.vue'
 
-const layouts = { home: Home, post: Post, archive: Archive, tag: Tag, category: Category, page: Page }
+const layouts = { home: Home, post: Post, archive: Archive, tag: Tag, category: Category, about: Page, page: Page }
 
 const { page, frontmatter, theme } = useData<VuemoThemeConfig>()
 
 // `themeConfig.footer` is `{ message, copyright }` (defineBlogConfig turns a string into the message)
 const footer = computed(() => theme.value.footer ?? {})
 
-// The contract: dispatch on `frontmatter.layout` only (core gives posts `post`); a missing layout means `page`; this theme also maps unknown values to `page` (the contract leaves them to the theme)
+// The contract: dispatch on `frontmatter.layout` only (core gives posts `post`); a missing layout means `page`; `about` is a plain page here; this theme also maps unknown values to `page` (the contract leaves them to the theme)
 const layout = computed(() => {
   if (page.value.isNotFound) return Page
   const name = frontmatter.value.layout as keyof typeof layouts | undefined

@@ -12,6 +12,8 @@ export function createPostsLoader(options: PostsLoaderOptions = {}) {
   const plugins: VuemoPlugin[] = (globalThis as any).VITEPRESS_CONFIG?.userConfig?.vuemo?.plugins ?? []
   return createContentLoader(options.pattern ?? 'posts/*.md', {
     excerpt: true,
+    // for `words`; only the transformed posts reach the client, not the source
+    includeSrc: true,
     transform(raw): Post[] {
       const posts: Post[] = []
       for (const src of raw) {

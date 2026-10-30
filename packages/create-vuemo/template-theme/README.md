@@ -8,7 +8,7 @@ A [Vuemo](https://github.com/laplacetw/vuemo) theme. A Vuemo theme is a plain Vi
 | --- | --- |
 | `src/index.ts` | The theme entry: `{ Layout, enhanceApp }`. `enhanceApp` calls `runEnhanceApps(ctx)`. |
 | `src/Layout.vue` | Header, footer, dark mode toggle and the dispatch on `frontmatter.layout`. Validates the theme options. |
-| `src/layouts/*.vue` | The six required layouts: `home`, `post`, `archive`, `tag`, `category`, `page`. |
+| `src/layouts/*.vue` | The required layouts: `home`, `post`, `archive`, `tag`, `category`, `page` (and `about`, which `Layout.vue` renders with `Page.vue`). |
 | `src/components/PluginSlot.vue` | Renders the components plugins registered for a standard slot. |
 | `src/types.ts` | The typed theme options (`MyThemeConfig`). |
 | `src/style.css` | Plain CSS. Dark mode swaps CSS variables under `html.dark`. |
@@ -18,7 +18,7 @@ A [Vuemo](https://github.com/laplacetw/vuemo) theme. A Vuemo theme is a plain Vi
 
 ## The contract in six points
 
-1. Implement the layouts `home`, `post`, `archive`, `tag`, `category` and `page`, and choose one only from `frontmatter.layout`. A missing layout is `page`; what to do with other values is up to the theme (here they also fall back to `page`). Never look at the file path (core sets `layout: post` for pages under `posts/`).
+1. Implement the layouts `home`, `post`, `archive`, `tag`, `category`, `about` and `page`, and choose one only from `frontmatter.layout`. A missing layout is `page`; what to do with other values is up to the theme (here they also fall back to `page`). Never look at the file path (core sets `layout: post` for pages under `posts/`).
 2. In the `post` layout provide the slots `post-before-content`, `post-after-content` and `post-comments`, each as a `<slot>` plus `<PluginSlot name="...">`.
 3. Put the class `vuemo-content` on the post body (`<Content class="vuemo-content" />`).
 4. Call `runEnhanceApps(ctx)` from `@vuemo/core/client` in `enhanceApp`.
