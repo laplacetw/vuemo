@@ -184,7 +184,7 @@ describe('defineBlogConfig', () => {
     })
     expect(cfg.themeConfig).toEqual({
       summary: 'excerpt',
-      paths: { tag: '/tags', category: '/category' },
+      paths: { tag: '/tags', category: '/categories' },
       nav: [{ text: 'Home', link: '/' }],
       footer: { message: 'f' },
       logo: '/logo.svg',
@@ -212,9 +212,9 @@ describe('defineBlogConfig', () => {
   })
 
   it('writes paths with defaults, user paths override per key', async () => {
-    expect(((await defineBlogConfig({})) as any).themeConfig.paths).toEqual({ tag: '/tags', category: '/category' })
+    expect(((await defineBlogConfig({})) as any).themeConfig.paths).toEqual({ tag: '/tags', category: '/categories' })
     const cfg: any = await defineBlogConfig({ paths: { tag: '/topics' } })
-    expect(cfg.themeConfig.paths).toEqual({ tag: '/topics', category: '/category' })
+    expect(cfg.themeConfig.paths).toEqual({ tag: '/topics', category: '/categories' })
     expect(cfg.paths).toBeUndefined()
   })
 
@@ -222,7 +222,7 @@ describe('defineBlogConfig', () => {
     const cfg: any = await defineBlogConfig({ paths: { tag: '/a', category: '/b' }, themeConfig: { paths: { tag: '/t' } } })
     expect(cfg.themeConfig.paths).toEqual({ tag: '/t', category: '/b' })
     const partial: any = await defineBlogConfig({ themeConfig: { paths: { tag: '/t' } } })
-    expect(partial.themeConfig.paths).toEqual({ tag: '/t', category: '/category' })
+    expect(partial.themeConfig.paths).toEqual({ tag: '/t', category: '/categories' })
   })
 
   it('enables official features by their keys and strips them from the config', async () => {
@@ -671,9 +671,9 @@ describe('defineBlogConfig lastUpdated', () => {
 describe('defineBlogConfig paths with undefined values', () => {
   it('keeps the defaults', async () => {
     const a: any = await defineBlogConfig({ paths: { tag: undefined } })
-    expect(a.themeConfig.paths).toEqual({ tag: '/tags', category: '/category' })
+    expect(a.themeConfig.paths).toEqual({ tag: '/tags', category: '/categories' })
     const b: any = await defineBlogConfig({ paths: { tag: '/t' }, themeConfig: { paths: { tag: undefined, category: undefined } } })
-    expect(b.themeConfig.paths).toEqual({ tag: '/t', category: '/category' })
+    expect(b.themeConfig.paths).toEqual({ tag: '/t', category: '/categories' })
   })
 })
 

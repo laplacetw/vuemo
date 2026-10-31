@@ -66,7 +66,7 @@ describe('home page', () => {
   })
 
   it('keeps archive lists to title and date', () => {
-    for (const file of ['archives.html', 'tags.html', 'category.html']) {
+    for (const file of ['archives.html', 'tags.html', 'categories.html']) {
       expect(page(file), file).not.toContain('vuemo-excerpt')
       expect(page(file), file).not.toContain('Read more')
     }
@@ -194,14 +194,14 @@ describe('taxonomy links', () => {
 
   it('links the tags and the category of a post to their pages', () => {
     expect(html).toContain(`href="${base}tags?tag=vuemo"`)
-    expect(html).toContain(`href="${base}category?category=Notes"`)
+    expect(html).toContain(`href="${base}categories?category=Notes"`)
   })
 
   it('has the tag and category pages', () => {
     expect(page('tags.html')).toMatch(/<h1[^>]*>Tags<\/h1>/)
-    expect(page('category.html')).toMatch(/<h1[^>]*>Categories<\/h1>/)
+    expect(page('categories.html')).toMatch(/<h1[^>]*>Categories<\/h1>/)
     expect(readFileSync(resolve(root, 'tags.md'), 'utf8')).toContain('layout: tag')
-    expect(readFileSync(resolve(root, 'category.md'), 'utf8')).toContain('layout: category')
+    expect(readFileSync(resolve(root, 'categories.md'), 'utf8')).toContain('layout: category')
   })
 })
 

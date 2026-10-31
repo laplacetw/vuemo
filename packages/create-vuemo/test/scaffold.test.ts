@@ -37,7 +37,7 @@ describe('theme starter template', () => {
       'example/vuemo.config.ts',
       'example/.vitepress/config.ts',
       'example/.vitepress/theme/index.ts',
-      ...['index', 'archives', 'tags', 'category', 'about'].map((n) => `example/${n}.md`),
+      ...['index', 'archives', 'tags', 'categories', 'about'].map((n) => `example/${n}.md`),
       'test/contract.test.ts',
       'scripts/package.mjs'
     ]) {

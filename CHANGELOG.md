@@ -2,13 +2,16 @@
 
 ## Unreleased
 
+### Changed
+- **Breaking**: the default `paths.category` is `/categories` (was `/category`), so category links on posts point to `categories.md`. A blog with a `category.md` page either renames it to `categories.md` (and its nav link) or keeps the old URL with `paths: { category: '/category' }`.
+
 ### Theme contract
 - **Breaking**: a seventh required layout, `about`, for the About page. Like `archive`, `tag` and `category`, a page asks for it with `layout: about` and every theme renders it, so a theme can give the About page its own look (an avatar, a profile) without the author editing the page. Rendering it as `page` is enough: `@vuemo/theme-default` and the theme starter do. `vuemo check-theme` gets a `layout-about` check (the fixture's page without a layout moves to `page.md`).
 - `Post` gains `words`, the length of the body for reading time (a CJK character is one word, so is a run of other letters or digits; frontmatter, code blocks, HTML tags and link targets do not count). `parsePost` reads it from the new optional `PostSource.src`; the posts loader passes the Markdown source (`includeSrc`), which stays on the server.
 
 ### Features
 - `create-vuemo`: the generated `about.md` uses `layout: about`; the example blog too
-- `create-vuemo`: the category page and its nav entry are titled `Categories` (plural, like `Tags` and `Archives`); the URL stays `/category`
+- `create-vuemo`: the category page is `categories.md` titled `Categories` (plural, like `Tags` and `Archives`), and the nav links to `/categories`; the example blog and the theme starter too
 - new official plugin `@vuemo/plugin-gallery`, enabled with the `gallery` key (`OFFICIAL_FEATURES` gains `gallery`; `@vuemo/plugin-gallery` is also kept out of the dependency optimizer). It registers a global `<VuemoGallery>` component (album list, CSS justified rows, `srcset`, thumbhash placeholders, `?album=` and `?photo=` deep links, lazy PhotoSwipe lightbox, pagination with Load more) and two virtual modules, `virtual:vuemo-gallery` and `virtual:vuemo-gallery/album/<slug>`. No new core hook.
 - `vuemo-gallery` CLI (bin of the plugin): `add`, `sync [--prune]`, `verify [--remote]`, `remove`. sharp is an optional peer loaded lazily; images are stripped of all metadata (no GPS); uploads to Cloudflare R2 are idempotent; `storage: 'local'` writes to `public/gallery`.
 - gallery review fixes: `vuemo-gallery sync --prune` now refuses when `manifest.json` is missing, asks `y/N` on a terminal (non-terminal: needs `--yes`), and refuses to delete every object unless `--force`; the CLI fails on a config error instead of silently using defaults, needs `--storage` when the project has no `gallery` settings, warns when flags are ignored, finds the project root (`--root`) and writes `storage: 'local'` files to `<srcDir>/public` + the path of `baseUrl`; `add` handles the `albums:` mapping form of `albums.yaml` and aborts once when sharp is missing; `remove` refuses a cover photo; `takenAt` is read deterministically (no offset: wall-clock as UTC); the Cloudflare URL is `<origin>/cdn-cgi/image/<options>/<path>`; the lightbox zooms from the right thumbnail after scrolling; a hidden album is reachable with `?album=` even when it is the only visible one; photo keys and `thumbhash` are validated; `--help` works for `vuemo-gallery` and `create-vuemo`

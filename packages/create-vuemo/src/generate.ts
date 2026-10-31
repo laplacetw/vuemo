@@ -148,7 +148,7 @@ ${themeLine}  postsPerPage: 5,
   nav: [
     { text: 'Home', link: '/' },
     { text: 'Archives', link: '/archives' },
-    { text: 'Categories', link: '/category' },
+    { text: 'Categories', link: '/categories' },
     { text: 'Tags', link: '/tags' },
     { text: 'About', link: '/about' }
   ],

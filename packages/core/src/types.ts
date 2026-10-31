@@ -34,7 +34,7 @@ export interface VuemoThemeConfig {
   postsPerPage?: number
   /** Always written; `'excerpt'` unless configured. */
   summary: 'excerpt' | 'description'
-  /** Always written; both keys are always set (defaults `/tags` and `/category`). */
+  /** Always written; both keys are always set (defaults `/tags` and `/categories`). */
   paths: { tag: string; category: string }
   /** Present only when search is on. */
   search?: { provider: 'local'; options?: DefaultTheme.LocalSearchOptions }

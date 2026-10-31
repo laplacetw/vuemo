@@ -34,7 +34,7 @@ export interface BlogConfig extends Omit<UserConfig, 'lastUpdated'>, Partial<Off
   socialLinks?: SocialLink[]
   /** What the home page lists under each post: its excerpt (default) or its description. → themeConfig.summary */
   summary?: 'excerpt' | 'description'
-  /** Where the tag and category layouts live. Default `/tags` and `/category`. → themeConfig.paths */
+  /** Where the tag and category layouts live. Default `/tags` and `/categories`. → themeConfig.paths */
   paths?: { tag?: string; category?: string }
   /** → themeConfig.postsPerPage */
   postsPerPage?: number
@@ -124,7 +124,7 @@ export async function defineBlogConfig(config: BlogConfig = {}, importer?: Impor
     summary,
     ...rest.themeConfig,
     // merged per key, so a partial `themeConfig.paths` keeps the other default
-    paths: { tag: '/tags', category: '/category', ...defined(paths), ...defined(rest.themeConfig?.paths) }
+    paths: { tag: '/tags', category: '/categories', ...defined(paths), ...defined(rest.themeConfig?.paths) }
   }
 
   return defineConfig({

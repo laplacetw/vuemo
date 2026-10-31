@@ -170,7 +170,7 @@ The rewrite is `vuemo-theme-trigger` 2.0.0-alpha (outside this repo; it builds o
 | Pagination (History API) | done: core gives the data (`usePagination`, `useQueryParam`), the theme renders the UI; state lives in `?page=`, `?tag=`, `?category=` so it can be linked |
 | Previous/next links | done, core |
 | Tailwind styles, layout UI | moved into the Trigger theme; Tailwind is compiled into the theme (`dist/style.css`), users install nothing |
-| `archives.md` / `tags.md` / `category.md` page bodies (`<Archives />` ...) | replaced by `layout: archive`, `tag`, `category` in the frontmatter |
+| `archives.md` / `tags.md` / `category.md` (now `categories.md`) page bodies (`<Archives />` ...) | replaced by `layout: archive`, `tag`, `category` in the frontmatter |
 | Local search | done: `search: true` in `defineBlogConfig`; the VitePress search UI shows it |
 | Footer, nav, logo, social links, last updated | done: flat options; the VitePress default theme parts render them |
 | Utterances comments (with dark mode sync) | done, plugin-comments: `comments: { provider: 'utterances', ... }`, dark mode follows `isDark` |

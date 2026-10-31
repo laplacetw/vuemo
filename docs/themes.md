@@ -143,7 +143,7 @@ const { theme } = useData<VuemoThemeConfig>()
 | `socialLinks` | `SocialLink[]` | when set |
 | `postsPerPage` | `number` | when set; the theme picks its own default |
 | `summary` | `'excerpt' \| 'description'` | always (`'excerpt'` by default) |
-| `paths` | `{ tag: string; category: string }` | always, both keys (defaults `/tags` and `/category`) |
+| `paths` | `{ tag: string; category: string }` | always, both keys (defaults `/tags` and `/categories`) |
 | `search` | `{ provider: 'local', options }` | when the `search` option is on |
 | `lastUpdated` | `{ text?: string }` | when the `lastUpdated` option is on |
 

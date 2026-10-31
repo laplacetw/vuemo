@@ -19,7 +19,7 @@ export default defineBlogConfig({
   nav: [
     { text: 'Home', link: '/' },
     { text: 'Archives', link: '/archives' },
-    { text: 'Categories', link: '/category' },
+    { text: 'Categories', link: '/categories' },
     { text: 'Tags', link: '/tags' },
     { text: 'Gallery', link: '/gallery' },
     { text: 'About', link: '/about' }

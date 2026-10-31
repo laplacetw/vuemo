@@ -106,7 +106,7 @@ Users set flat options in `defineBlogConfig`. Core maps them into VitePress's `t
 | `socialLinks` | `{ icon: string \| { svg: string }, link: string, ariaLabel?: string }[]` | when set |
 | `postsPerPage` | `number` | when set; pick your own default |
 | `summary` | `'excerpt' \| 'description'` | always, default `'excerpt'` |
-| `paths` | `{ tag: string, category: string }` | always, both keys, defaults `/tags` and `/category` |
+| `paths` | `{ tag: string, category: string }` | always, both keys, defaults `/tags` and `/categories` |
 | `search` | `{ provider: 'local', options: { _render, ... } }` | when the option is on |
 | `lastUpdated` | `{ text?: string }` | when the option is on |
 
