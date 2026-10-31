@@ -199,7 +199,7 @@ describe('taxonomy links', () => {
 
   it('has the tag and category pages', () => {
     expect(page('tags.html')).toMatch(/<h1[^>]*>Tags<\/h1>/)
-    expect(page('category.html')).toMatch(/<h1[^>]*>Category<\/h1>/)
+    expect(page('category.html')).toMatch(/<h1[^>]*>Categories<\/h1>/)
     expect(readFileSync(resolve(root, 'tags.md'), 'utf8')).toContain('layout: tag')
     expect(readFileSync(resolve(root, 'category.md'), 'utf8')).toContain('layout: category')
   })
