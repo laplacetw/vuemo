@@ -23,4 +23,4 @@ pnpm add @vuemo/plugin-gallery && pnpm add -D sharp
 pnpm vuemo-gallery add ./photos --album trip
 ```
 
-Options: `baseUrl`, `dir`, `widths`, `formats`, `exif`, `perPage`, `urlBuilder`, `storage`. The full guide, including the first-time R2 setup (bucket, custom domain, CORS, least-privilege token, `.env`), is in [docs/gallery.md](../../docs/gallery.md).
+Options: `baseUrl`, `dir`, `widths`, `longEdge`, `formats`, `exif`, `perPage`, `urlBuilder`, `storage`. The full guide, including the first-time R2 setup (bucket, custom domain, CORS, least-privilege token, `.env`), is in [docs/gallery.md](../../docs/gallery.md).

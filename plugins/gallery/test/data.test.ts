@@ -104,6 +104,13 @@ describe('urls', () => {
     expect(variantWidths(300, w)).toEqual([300])
     expect(variantWidths(800, w)).toEqual([400, 800])
   })
+
+  it('keeps the long edge within longEdge', () => {
+    expect(variantWidths(4000, [1600], 3000, 1600)).toEqual([1600])
+    expect(variantWidths(3000, [1600], 4000, 1600)).toEqual([1200])
+    expect(variantWidths(800, [1600], 600, 1600)).toEqual([800])
+    expect(variantWidths(3000, [400, 800, 1600], 4000, 1600)).toEqual([400, 800, 1200])
+  })
 })
 
 describe('layout and exif', () => {

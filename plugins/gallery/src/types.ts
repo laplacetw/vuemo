@@ -9,6 +9,8 @@ export interface GalleryConfig {
   widths?: number[]
   /** Default `['webp']`. */
   formats?: ImageFormat[]
+  /** Largest size of the long edge, in pixels: a portrait photo gets narrower variants so its height stays within it. Default: none (widths only). */
+  longEdge?: number
   /** `'basic'` keeps the allow-listed EXIF fields in the manifest, `false` keeps none. Default `'basic'`. */
   exif?: false | 'basic'
   /** Photos rendered first and per "Load more". Default 60. */
@@ -25,6 +27,7 @@ export interface ResolvedGalleryConfig {
   dir: string
   widths: number[]
   formats: ImageFormat[]
+  longEdge?: number
   exif: false | 'basic'
   perPage: number
   urlBuilder: 'static' | 'cloudflare'

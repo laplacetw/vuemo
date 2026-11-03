@@ -160,6 +160,7 @@ gallery: {
   baseUrl: 'https://img.example.com',  // required for storage 'r2'; default '/gallery' for 'local'
   dir: 'gallery',
   widths: [400, 800, 1600, 2400],
+  // longEdge: 1600,             // cap the long edge (portrait photos get narrower variants)
   formats: ['webp'],
   exif: 'basic',                       // or false: no EXIF in the manifest
   perPage: 60,
@@ -179,6 +180,7 @@ Styling is through `--vuemo-gallery-gap`, `--vuemo-gallery-radius`, `--vuemo-gal
 | `baseUrl` | `/gallery` for `local`, required for `r2` | Public URL of the files. A root-relative one follows the site `base`. |
 | `dir` | `gallery` | Folder of `albums.yaml` and `manifest.json`. |
 | `widths` | `[400, 800, 1600, 2400]` | Variant widths. Never larger than the original (the first width at or above it is replaced by its own width). |
+| `longEdge` | none | Largest long edge in pixels. A portrait photo gets narrower variants so that its height stays within it: with `widths: [1600], longEdge: 1600`, a 3000 x 4000 photo becomes 1200 x 1600 and a 4000 x 3000 one 1600 x 1200. |
 | `formats` | `['webp']` | `webp`, `avif`, `jpeg`. With several, `<picture>` offers them in order and the last one is the fallback. |
 | `exif` | `'basic'` | `false` keeps no EXIF in the manifest. |
 | `perPage` | `60` | Photos rendered first, and per "Load more". |

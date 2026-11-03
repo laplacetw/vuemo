@@ -34,7 +34,7 @@ export interface Processed {
   variants: { width: number; format: ImageFormat; data: Buffer }[]
 }
 
-export async function processImage(original: Buffer, cfg: Pick<ResolvedGalleryConfig, 'widths' | 'formats' | 'exif'>): Promise<Processed> {
+export async function processImage(original: Buffer, cfg: Pick<ResolvedGalleryConfig, 'widths' | 'formats' | 'exif' | 'longEdge'>): Promise<Processed> {
   const sharp = await loadSharp()
   // decode once (rotated by EXIF orientation, sRGB); every thumbnail below is made from these pixels
   let decoded: { data: Buffer; info: { width: number; height: number; channels: number } }
@@ -63,7 +63,7 @@ export async function processImage(original: Buffer, cfg: Pick<ResolvedGalleryCo
   const takenAt = takenAtFrom(raw)
   const exif: ExifInfo | undefined = cfg.exif ? pickExif(raw) : undefined
 
-  const widths = variantWidths(w, cfg.widths)
+  const widths = variantWidths(w, cfg.widths, h, cfg.longEdge)
   const variants: Processed['variants'] = []
   for (const format of cfg.formats) {
     for (const width of widths) {

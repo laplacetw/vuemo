@@ -33,8 +33,13 @@ export function srcset(cfg: UrlConfig, photo: Pick<Photo, 'album' | 'id' | 'vari
   return photo.variants.map((w) => `${photoUrl(cfg, photo, w, format)} ${w}w`).join(', ')
 }
 
-/** Widths to generate for an original `width` pixels wide: every configured width below it, then the first one at or above it is replaced by the original's own width. */
-export function variantWidths(width: number, widths: number[]): number[] {
+/**
+ * Widths to generate for an original `width` x `height`: every configured width below the largest usable width, then
+ * the first one at or above it is replaced by that width. The largest usable width is the original's own, or less when
+ * `longEdge` limits the long edge (a portrait photo then gets narrower variants).
+ */
+export function variantWidths(original: number, widths: number[], height = original, longEdge?: number): number[] {
+  const width = longEdge ? Math.min(original, Math.floor((longEdge * original) / Math.max(original, height))) : original
   const sorted = [...widths].sort((a, b) => a - b)
   const below = sorted.filter((w) => w < width)
   const next = sorted.find((w) => w >= width)

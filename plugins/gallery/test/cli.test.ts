@@ -46,6 +46,18 @@ describe('image pipeline', () => {
       expect((await sharp(v.data).metadata()).exif).toBeUndefined()
     }
   })
+
+  it('limits the long edge with longEdge: a portrait photo becomes 1600 high', async () => {
+    const portrait = await sharp({ create: { width: 2400, height: 3200, channels: 3, background: '#4080c0' } }).jpeg().toBuffer()
+    const { photo, variants } = await processImage(portrait, resolveConfig({ storage: 'local', widths: [1600], longEdge: 1600 }))
+    expect(photo.variants).toEqual([1200])
+    const meta = await sharp(variants[0].data).metadata()
+    expect([meta.width, meta.height, meta.format]).toEqual([1200, 1600, 'webp'])
+  })
+
+  it('rejects a longEdge that is not a positive integer', () => {
+    expect(() => resolveConfig({ storage: 'local', longEdge: 0 })).toThrow('"longEdge" must be a positive integer')
+  })
 })
 
 describe('add / sync / verify / remove (local storage)', () => {
