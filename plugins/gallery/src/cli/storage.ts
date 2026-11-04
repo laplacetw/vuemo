@@ -65,7 +65,12 @@ export function r2FromEnv(env: Record<string, string | undefined>): R2Credential
   const names = ['R2_ACCOUNT_ID', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY', 'R2_BUCKET']
   const missing = names.filter((n) => !env[n])
   if (missing.length) throw new Error(`Missing ${missing.join(', ')}. Set them in the environment or in .env (see docs/gallery.md).`)
-  return { accountId: env.R2_ACCOUNT_ID!, accessKeyId: env.R2_ACCESS_KEY_ID!, secretAccessKey: env.R2_SECRET_ACCESS_KEY!, bucket: env.R2_BUCKET! }
+  // the values are not printed: a misplaced secret (an API token in the wrong line) must not end up in a terminal log
+  if (!/^[0-9a-f]{32}$/.test(env.R2_ACCOUNT_ID!.trim()))
+    throw new Error('R2_ACCOUNT_ID must be the 32-character account ID (the part before .r2.cloudflarestorage.com in the S3 endpoint, also on the R2 overview page), not an API token or a key.')
+  if (!/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(env.R2_BUCKET!.trim()))
+    throw new Error('R2_BUCKET must be the bucket name as listed in R2 (3 to 63 lowercase letters, digits or hyphens), not its domain or URL.')
+  return { accountId: env.R2_ACCOUNT_ID!.trim(), accessKeyId: env.R2_ACCESS_KEY_ID!.trim(), secretAccessKey: env.R2_SECRET_ACCESS_KEY!.trim(), bucket: env.R2_BUCKET!.trim() }
 }
 
 /** Cloudflare R2 through its S3 API, signed with SigV4 (region `auto`). `fetchImpl` exists for tests. */
@@ -78,7 +83,13 @@ export class R2Storage implements Storage {
   }
   private async call(method: string, url: string, init: { headers?: Record<string, string>; body?: Uint8Array } = {}) {
     const signed = await this.aws.sign(url, { method, headers: init.headers, body: init.body as BodyInit | undefined })
-    return this.fetchImpl(signed)
+    try {
+      return await this.fetchImpl(signed)
+    } catch (e) {
+      // Node's fetch says only "fetch failed"; the cause names the problem (ENOTFOUND: wrong account ID, ECONNREFUSED, a proxy ...)
+      const cause = (e as { cause?: { code?: string; message?: string } }).cause
+      throw new Error(`${(e as Error).message}${cause ? ` (${cause.code ?? cause.message})` : ''} while reaching ${new URL(url).host}`)
+    }
   }
   private url = (key: string) => `${this.endpoint}/${key.split('/').map(encodeURIComponent).join('/')}`
 

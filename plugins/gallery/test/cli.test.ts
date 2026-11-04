@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import sharp from 'sharp'
 import exifr from 'exifr'
 import { add, remove, sync, verify, type Context } from '../src/cli/commands'
-import { LocalStorage, R2Storage } from '../src/cli/storage'
+import { LocalStorage, R2Storage, r2FromEnv } from '../src/cli/storage'
 import { loadEnv } from '../src/cli/env'
 import { serializeManifest } from '../src/cli/manifest'
 import { installHint, processImage } from '../src/cli/process'
@@ -255,5 +255,31 @@ describe('install hint', () => {
     expect(installHint(root)).toBe('yarn add -D sharp')
     writeFileSync(join(root, 'pnpm-lock.yaml'), '')
     expect(installHint(root)).toBe('pnpm add -D sharp')
+  })
+})
+
+describe('R2 credentials', () => {
+  const ok = { R2_ACCOUNT_ID: '3e1a93ddba71fe2c341db82b01b6b320', R2_ACCESS_KEY_ID: 'k', R2_SECRET_ACCESS_KEY: 's', R2_BUCKET: 'my-photos' }
+
+  it('accepts an account ID and a bucket name', () => {
+    expect(r2FromEnv(ok).bucket).toBe('my-photos')
+  })
+
+  it('rejects an API token as the account ID without printing it', () => {
+    expect(() => r2FromEnv({ ...ok, R2_ACCOUNT_ID: 'cfat_SECRETVALUE' })).toThrow(/R2_ACCOUNT_ID must be the 32-character account ID/)
+    expect(() => r2FromEnv({ ...ok, R2_ACCOUNT_ID: 'cfat_SECRETVALUE' })).not.toThrow(/SECRETVALUE/)
+  })
+
+  it('rejects a domain or a stray character in the bucket name', () => {
+    expect(() => r2FromEnv({ ...ok, R2_BUCKET: ':laplacetw' })).toThrow(/R2_BUCKET must be the bucket name/)
+    expect(() => r2FromEnv({ ...ok, R2_BUCKET: 'img.example.com' })).toThrow(/R2_BUCKET/)
+  })
+
+  it('names the network cause when fetch fails', async () => {
+    const failing = (async () => {
+      throw Object.assign(new TypeError('fetch failed'), { cause: { code: 'ENOTFOUND' } })
+    }) as typeof fetch
+    const storage = new R2Storage({ accountId: 'a', accessKeyId: 'k', secretAccessKey: 's', bucket: 'b' }, failing)
+    await expect(storage.has('albums/x/1/1600.webp')).rejects.toThrow(/fetch failed \(ENOTFOUND\) while reaching a\.r2\.cloudflarestorage\.com/)
   })
 })
