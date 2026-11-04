@@ -1,7 +1,5 @@
 # Deployment
 
-> Vuemo is under development. APIs may change.
-
 The output is a normal VitePress site: `pnpm build` writes it to `.vitepress/dist`.
 
 ## GitHub Pages
@@ -19,7 +17,7 @@ In the repository, set Settings → Pages → Source to **GitHub Actions**.
 
 ## AWS Amplify
 
-Untested sketch, not yet verified with Vuemo. Build with pnpm and publish `.vitepress/dist`:
+Connect the repository in the Amplify console and use this build specification (`amplify.yml`). It builds with pnpm and publishes `.vitepress/dist`. It has not been verified on Amplify yet; adjust it if the build image differs.
 
 ```yaml
 version: 1
@@ -38,4 +36,4 @@ frontend:
       - '**/*'
 ```
 
-The site is served from the domain root, so leave `base` unset.
+The site is served from the domain root, so leave `base` unset. For `lastUpdated`, the build needs the full git history; Amplify clones it by default.

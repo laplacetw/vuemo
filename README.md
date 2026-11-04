@@ -1,132 +1,108 @@
 # Vuemo
 
-A lightweight blog framework built on VitePress: pick a theme, add plugins, and write in Markdown.
+**English** · [繁體中文](./README.zh-TW.md) · [简体中文](./README.zh-CN.md)
 
-Vuemo is a thin layer on top of [VitePress](https://vitepress.dev). VitePress stays the engine (Markdown, routing, build, HMR). Vuemo adds only what VitePress doesn't have: a post model, a theme contract and a small plugin interface.
+A lightweight blog framework built on [VitePress](https://vitepress.dev). Write posts in Markdown, pick a theme, turn on plugins, all from one config file.
 
-> **Status: early development (alpha).** APIs may change. Packages are published with the `alpha` tag: `npm create vuemo@alpha my-blog`. See [docs/](./docs/README.md) for guides.
+VitePress stays the engine (Markdown, routing, build). Vuemo adds what a blog needs on top: a post model, a theme contract and a small plugin interface.
 
-## Packages
+> **Alpha.** APIs may change. Packages are published with the `alpha` tag.
 
-| Path | Package | What it does |
-| --- | --- | --- |
-| `packages/core` | `@vuemo/core` | Posts loader, tags / categories / archives, pagination, prev/next, JSON-LD, RSS, `defineBlogConfig()`, `vuemo new` and `vuemo check-theme` CLI |
-| `themes/default` | `@vuemo/theme-default` | Minimal default theme (Tailwind CSS v4) and the reference implementation of the theme contract |
-| `plugins/comments` | `@vuemo/plugin-comments` | Comments with Giscus or Utterances, synced with dark mode |
-| `plugins/ai-summary` | `@vuemo/plugin-ai-summary` | "Summarize" button backed by your own Cloudflare Worker (Workers AI + AI Gateway) |
-| `plugins/gallery` | `@vuemo/plugin-gallery` | Photo gallery: justified rows, lightbox, a CLI that makes thumbnails and uploads them to Cloudflare R2 ([guide](docs/gallery.md)) |
-| `packages/create-vuemo` | `create-vuemo` | Project scaffolding (`npm create vuemo`): a blog (any theme with `--theme`) or a theme starter (`--template theme`) |
-| `examples/blog` | — | Example blog used for development |
+## Quick start
 
-## What a blog looks like
+Requires Node.js 18.3 or later.
+
+```sh
+npm create vuemo@alpha my-blog
+cd my-blog
+npm install
+npm run dev                  # open http://localhost:5173
+npm run new my-first-post    # creates posts/my-first-post.md
+```
+
+`npm run build` writes the site to `.vitepress/dist`. See [Deployment](./docs/deployment.md) to publish it.
+
+## Your project
 
 ```
 my-blog/
-├── posts/                    # Markdown posts
-├── public/                   # static assets
-├── themes/                   # only when you unzip a theme here
-├── vuemo.config.ts           # all settings live here
-└── .vitepress/               # boilerplate, you never open it
-    ├── config.ts             # export { default } from '../vuemo.config'
-    └── theme/index.ts        # export { default } from '@vuemo/core/theme'
+├── posts/              # your posts
+├── public/             # images and other static files
+├── vuemo.config.ts     # every setting
+└── .vitepress/         # generated boilerplate, never edited
 ```
-
-All settings are in one place, `defineBlogConfig`. VitePress options keep working as usual.
 
 ```ts
 // vuemo.config.ts
 import { defineBlogConfig } from '@vuemo/core'
 
 export default defineBlogConfig({
-  // site
   title: 'My Blog',
-  description: 'Notes',
-  hostname: 'https://example.com',
-
-  // theme
-  theme: '@vuemo/theme-default',   // or a short name: 'trigger' (themes/trigger/ or vuemo-theme-trigger)
-  postsPerPage: 5,
+  hostname: 'https://example.com',   // sitemap, RSS and JSON-LD
+  theme: '@vuemo/theme-default',     // or 'trigger', after npm install vuemo-theme-trigger
   nav: [{ text: 'Home', link: '/' }],
-
-  // features: set a key to enable it, remove it or use `false` to disable it
-  comments: { provider: 'utterances', repo: 'user/comments-repo' },
+  search: true,
+  comments: { provider: 'giscus', repo: 'me/blog' /* ... */ },
   aiSummary: false
 })
 ```
 
-Notes for new users: `create-vuemo` turns on `search: true` and `markdown: { math: true }` for you (both are off in plain `defineBlogConfig`); code block line numbers are opt-in (`markdown: { lineNumbers: true }`); the RSS feed at `/feed.xml` is written whenever `hostname` is set (`rss: false` turns it off). See [Configuration](./docs/configuration.md).
-
-### Writing posts
-
-```sh
-vuemo new my-first-post   # creates posts/my-first-post.md
-```
-
-Frontmatter is defined by `@vuemo/core`; themes and plugins only depend on this:
+A post is a Markdown file with frontmatter:
 
 ```yaml
 ---
 title: My first post
-date: 2025-01-01 10:00:00
+date: 2026-01-01 10:00:00
 category: Notes
-tags:
-  - vuemo
-description: Optional summary
+tags: [vuemo]
 ---
 ```
 
-## Themes
+## Features
 
-A theme is a regular VitePress theme that consumes data from `@vuemo/core/client` (`usePosts`, `useTags`, `useCategories`, `useArchives`, `usePagination`, `usePrevNext`, `usePost`, `useTaxonomyLinks`, `useQueryParam`). To be usable with Vuemo plugins, a theme must:
+- Home with pagination, archive, tags, categories, previous and next post
+- RSS, sitemap and JSON-LD, local full-text search
+- Themes from npm or from a zip in `themes/`
+- Official plugins: comments (Giscus, Utterances), AI summary (Cloudflare Workers AI), photo gallery (Cloudflare R2)
+- Everything VitePress Markdown has: code highlighting, containers, math
 
-- implement the layouts `home`, `post`, `archive`, `tag`, `category`, `about` and `page`, chosen from `frontmatter.layout` only (a missing layout is `page`, other values are theme-defined; core gives `posts/` pages the layout `post`)
-- provide these slots in the `post` layout: `post-before-content`, `post-after-content`, `post-comments`, rendered with `useSlots(name)`
-- call `runEnhanceApps(ctx)` from its `enhanceApp`
-- put the class `vuemo-content` on the post body
-- reflect dark mode through VitePress's `isDark`
+## Documentation
 
-To customize a theme, use VitePress's own `extends` and slots.
+| Guide | Topic |
+| --- | --- |
+| [Getting started](./docs/getting-started.md) | create a blog, everyday commands |
+| [Configuration](./docs/configuration.md) | every option and the frontmatter |
+| [Markdown](./docs/markdown.md) | containers, code blocks, math, footnotes |
+| [Themes](./docs/themes.md) | install and switch themes |
+| [Theme authoring](./docs/theme-authoring.md) | build a theme, the theme contract |
+| [Plugins](./docs/plugins.md) | official features, write a plugin |
+| [Gallery](./docs/gallery.md) | photo gallery with Cloudflare R2 |
+| [Deployment](./docs/deployment.md) | GitHub Pages, AWS Amplify |
 
-Switch themes by changing the `theme` option. `npm install vuemo-theme-trigger` and `theme: 'trigger'` is the whole job; or unzip a downloaded theme into `themes/` (`theme: 'trigger'` finds `themes/trigger/` first). `create-vuemo --theme trigger` does it for a new blog. See [Themes](./docs/themes.md). To build your own, start from `npm create vuemo@alpha vuemo-theme-mine -- --template theme`, check it with `vuemo check-theme`, and read [Theme authoring](./docs/theme-authoring.md).
+## Packages
 
-## Plugins
+| Package | What it does |
+| --- | --- |
+| [`@vuemo/core`](./packages/core) | posts loader, `defineBlogConfig`, composables for themes, the `vuemo` CLI |
+| [`create-vuemo`](./packages/create-vuemo) | scaffolds a blog, or a theme with `--template theme` |
+| [`@vuemo/theme-default`](./themes/default) | minimal default theme, the reference for the theme contract |
+| [`@vuemo/plugin-comments`](./plugins/comments) | comments with Giscus or Utterances |
+| [`@vuemo/plugin-ai-summary`](./plugins/ai-summary) | "Summarize" button backed by your Cloudflare Worker |
+| [`@vuemo/plugin-gallery`](./plugins/gallery) | photo gallery and the `vuemo-gallery` upload CLI |
 
-Official features (`comments`, `aiSummary`, `gallery`) are switched on in the config. Your own plugins go in `plugins: []`. A plugin is a function that returns an object; all fields are optional except `name`:
-
-```ts
-interface VuemoPlugin {
-  name: string
-  markdown?: (md: MarkdownRenderer) => void   // → markdown.config
-  vite?: UserConfig['vite']                   // → merged into the vite config
-  head?: HeadConfig[]                         // → site head
-  transformPost?: (post: Post) => Post | void // → posts loader
-  enhanceApp?: string                         // path of a client-side enhanceApp module
-  slots?: Partial<Record<StandardSlot, string>> // component paths for the standard slots
-}
-```
-
-Plugins that work with any theme live in `plugins/`. Plugins that only make sense for one theme live in `themes/<theme>/plugins/`. Both use the same interface.
+Themes outside this repo: [vuemo-theme-trigger](https://github.com/laplacetw/vuemo-theme-trigger).
 
 ## Development
 
-Requires Node.js >= 18.3 and pnpm (enabled through [Corepack](https://nodejs.org/api/corepack.html): `corepack enable`).
-
 ```sh
+corepack enable
 pnpm install
-pnpm build                 # core, theme, plugins, then the example blog
+pnpm build      # packages, then the example blog
 pnpm test
-pnpm --filter blog dev     # run the example blog
+pnpm dev        # the example blog in examples/blog
 ```
 
-Build the packages once before starting the example (`pnpm build`); the default theme ships precompiled CSS.
-
-## Roadmap
-
-- [x] Core and default theme
-- [x] Plugin interface, comments and AI summary plugins
-- [x] `create-vuemo` scaffolding
-- [x] Documentation: see [docs/](./docs/README.md)
-- [x] RSS
+`pnpm verify` runs the build, the tests, the site test and the theme contract check.
 
 ## License
 

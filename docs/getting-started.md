@@ -1,16 +1,15 @@
 # Getting started
 
-> Vuemo is under development. APIs may change.
-
 Vuemo is published as an **alpha** release, so name the `alpha` tag:
 
 ```sh
 npm create vuemo@alpha my-blog
+cd my-blog
+npm install
+npm run dev
 ```
 
-The generated project has `posts/`, `public/` and one config file, with math (`markdown.math` and `markdown-it-mathjax3`) and local search (`search: true`) already turned on.
-
-It depends on the matching alpha versions, so `npm install` in it needs no tag.
+The generated project depends on the matching alpha versions, so `npm install` needs no tag.
 
 To work from the source instead, build the monorepo and run the scaffolder from it:
 
@@ -32,7 +31,9 @@ my-blog/
 
 Projects created before this layout keep working: a `.vitepress/config.ts` that calls `defineBlogConfig` directly is still fully supported.
 
-`create-vuemo` asks for a name, a title, whether to enable comments (Giscus or Utterances) and the AI summary. For scripts, skip the prompts: `create-vuemo my-blog --yes --comments=utterances --ai-summary`.
+`create-vuemo` asks for a name, a title, a theme, and whether to enable comments (Giscus or Utterances) and the AI summary. For scripts, skip the prompts: `create-vuemo my-blog --yes --comments=utterances --ai-summary`. `--theme trigger` installs another theme ([Themes](./themes.md)).
+
+Besides `posts/`, it writes the pages the nav links to, each with a layout in its frontmatter: `index.md` (`home`), `archives.md` (`archive`), `tags.md` (`tag`), `categories.md` (`category`) and `about.md` (`about`).
 
 ## Defaults for new blogs
 
@@ -46,14 +47,16 @@ The generated config turns on a few things that are off in plain `defineBlogConf
 ## Everyday commands
 
 ```sh
-pnpm dev                  # dev server
-pnpm build                # build to .vitepress/dist
-pnpm preview              # preview the build
-pnpm new my-first-post    # create posts/my-first-post.md (`vuemo new`)
+npm run dev                  # dev server
+npm run build                # build to .vitepress/dist
+npm run preview              # preview the build
+npm run new my-first-post    # create posts/my-first-post.md (`vuemo new`)
 ```
+
+(`pnpm dev`, `pnpm new ...` with pnpm.)
 
 `vuemo new` refuses to overwrite an existing post. To keep a post private, don't commit or push it.
 
 ## Writing posts
 
-Put Markdown files in `posts/`. The frontmatter is described in [Configuration](./configuration.md#frontmatter). Pages outside `posts/` (`about.md`, `tags.md`, ...) select a layout with `layout:` in their frontmatter; see [Themes](./themes.md#layouts).
+Put Markdown files in `posts/`. The frontmatter is described in [Configuration](./configuration.md#frontmatter). Pages outside `posts/` select a layout with `layout:` in their frontmatter; see [Themes](./themes.md#layouts).

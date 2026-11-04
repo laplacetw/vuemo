@@ -1,6 +1,6 @@
 # @vuemo/core
 
-Core of [Vuemo](https://github.com/laplacetw/vuemo), a lightweight blog framework built on VitePress: the posts loader, `defineBlogConfig()`, composables for themes (`@vuemo/core/client`) and the `vuemo` CLI (`vuemo new <filename>`).
+Core of [Vuemo](https://github.com/laplacetw/vuemo), a lightweight blog framework built on VitePress: the posts loader, `defineBlogConfig()`, composables for themes (`@vuemo/core/client`) and the `vuemo` CLI (`vuemo new <filename>`, `vuemo check-theme`).
 
 Most people start with [`create-vuemo`](https://www.npmjs.com/package/create-vuemo). See the [documentation](https://github.com/laplacetw/vuemo/tree/main/docs).
 
@@ -8,9 +8,9 @@ Most people start with [`create-vuemo`](https://www.npmjs.com/package/create-vue
 
 `vuemo check-theme [theme] [--keep]` checks that a theme follows the Vuemo theme contract. `theme` is a path to the theme entry or a package name resolvable from the current directory; by default it is the `exports["."]` (or `main`) of the `package.json` in the current directory.
 
-It writes a small fixture blog (three posts and the home, archive, tag, category and page pages) to `.vuemo-check/` in the current directory, builds it in-process with VitePress and the theme, and checks the HTML:
+It writes a small fixture blog (three posts and the home, archive, tag, category, about and page pages) to `.vuemo-check/` in the current directory, builds it in-process with VitePress and the theme, and checks the HTML:
 
-- layouts `home`, `archive`, `tag`, `category`, `page` and `post` render their data (`layout-*`)
+- layouts `home`, `archive`, `tag`, `category`, `about`, `page` and `post` render their data (`layout-*`)
 - the post body sits inside an element with class `vuemo-content` (`vuemo-content`)
 - the standard slots `post-before-content`, `post-after-content` and `post-comments` are rendered once each, in order (`slots`)
 - the theme's `enhanceApp` calls `runEnhanceApps(ctx)` (`enhance-app`)

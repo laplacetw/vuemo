@@ -1,7 +1,5 @@
 # Configuration
 
-> Vuemo is under development. APIs may change.
-
 All settings live in `vuemo.config.ts` at the project root, in a single `defineBlogConfig()` call. It accepts every VitePress option (`title`, `description`, `lang`, `base`, `head`, `markdown`, `vite`, ...) and works like `defineConfig`, plus the options below. See the config of [`examples/blog`](../examples/blog/vuemo.config.ts) for a working file.
 
 ```ts
@@ -59,22 +57,24 @@ Official features are switched on in the config and need no import: **set the ke
 comments: { provider: 'utterances', repo: 'user/comments-repo' }
 // comments: { provider: 'giscus', repo: 'user/repo', repoId: '...', category: '...', categoryId: '...' }
 aiSummary: { api: 'https://your-worker.workers.dev' }
+gallery: { baseUrl: 'https://img.example.com' }
 ```
 
 ### Types of the feature keys
 
-VitePress bundles the config with esbuild, so builds never type-check it. For `tsc`, `vue-tsc` and your editor, the types of `comments` and `aiSummary` come from the plugin packages, which TypeScript only loads when something refers to them. Put these lines at the top of `vuemo.config.ts` (`create-vuemo` writes them for you):
+VitePress bundles the config with esbuild, so builds never type-check it. For `tsc`, `vue-tsc` and your editor, the types of `comments`, `aiSummary` and `gallery` come from the plugin packages, which TypeScript only loads when something refers to them. Put these lines at the top of `vuemo.config.ts` (`create-vuemo` writes them for you):
 
 ```ts
 /// <reference types="@vuemo/plugin-comments" />
 /// <reference types="@vuemo/plugin-ai-summary" />
+/// <reference types="@vuemo/plugin-gallery" />   // only if you use the gallery
 ```
 
 If you remove a plugin package from `package.json`, also remove its `/// <reference types="..." />` line, or `tsc` fails with TS2688 ("Cannot find type definition file"). The generated `tsconfig.json` covers `vuemo.config.ts` and `.vitepress/**/*.ts`, so `npx tsc` checks the config.
 
-Without them an editor reports `comments` / `aiSummary` as unknown properties, although the build works.
+Without them an editor reports the keys as unknown properties, although the build works.
 
-Their packages (`@vuemo/plugin-comments`, `@vuemo/plugin-ai-summary`) must be installed; `create-vuemo` installs both. Options are documented in the plugin READMEs: [comments](../plugins/comments/README.md), [AI summary](../plugins/ai-summary/README.md).
+A feature's package must be installed for its key to work. `create-vuemo` installs `@vuemo/plugin-comments` and `@vuemo/plugin-ai-summary`; install `@vuemo/plugin-gallery` yourself. Options: [comments](../plugins/comments/README.md), [AI summary](../plugins/ai-summary/README.md), [gallery](./gallery.md#config).
 
 ## Frontmatter
 

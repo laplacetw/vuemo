@@ -1,7 +1,5 @@
 # Theme authoring
 
-> Vuemo is under development. APIs may change.
-
 A Vuemo theme is a regular VitePress theme (`{ Layout, enhanceApp? }`) that renders the data `@vuemo/core` provides. This page is the full guide: the contract, the options core hands to a theme, how to start, how to check your work and what to do before you publish. For using a theme, see [Themes](./themes.md).
 
 Fastest start:
@@ -228,7 +226,7 @@ Each line of the output is `<icon> <id>: <message>`, then a summary:
 
 | Id | Kind | What it checks |
 | --- | --- | --- |
-| `layout-home`, `layout-archive`, `layout-tag`, `layout-category`, `layout-page`, `layout-post` | fail | the page of that layout renders its content (home lists the newest post, archive lists every post, tag and category show their lists, page and post render the Markdown body) |
+| `layout-home`, `layout-archive`, `layout-tag`, `layout-category`, `layout-about`, `layout-page`, `layout-post` | fail | the page of that layout renders its content (home lists the newest post, archive lists every post, tag and category show their lists, about, page and post render the Markdown body) |
 | `unknown-layout` | warn | a page with a layout value no theme knows (`vuemo-check-unknown`) still renders its body; the contract leaves this to the theme, so a loss is only a warning |
 | `vuemo-content` | fail | an element with the class exists in the post layout and the post body is inside it |
 | `slots` | fail | the three standard slots are each rendered exactly once, in the order before-content < body < after-content < comments |

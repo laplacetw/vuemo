@@ -1,6 +1,6 @@
 # Vuemo documentation
 
-> Vuemo is under development. APIs may change.
+> Vuemo is in alpha. APIs may change.
 
 - [Getting started](./getting-started.md): create a blog, write posts
 - [Configuration](./configuration.md): every setting, in one place

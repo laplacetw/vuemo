@@ -1,7 +1,5 @@
 # Writing posts: Markdown features
 
-> Vuemo is under development. APIs may change.
-
 Posts are plain VitePress Markdown. The default theme styles everything VitePress adds, in light and dark mode. See `examples/blog/posts/markdown-features.md` for a post that uses every feature below.
 
 ## What is styled

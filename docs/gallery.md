@@ -2,7 +2,7 @@
 
 A photo gallery for any Vuemo theme: album list, justified rows, a lightbox, and a CLI that makes thumbnails and uploads them to Cloudflare R2 (or into `public/`). Photos are never read from the file system by the theme: the build only sees `gallery/manifest.json` and the image URLs.
 
-Contents: [Quick start](#quick-start), [Cloudflare R2 setup](#cloudflare-r2-setup-first-time), [CLI](#cli), [Design](#design), [Data](#data), [Config](#config), [Page and styling](#page-and-styling), [Layout and lightbox](#layout-and-lightbox), [Cost and limits](#cost-and-limits), [Local storage and the example](#local-storage-and-the-example).
+Contents: [Quick start](#quick-start), [Cloudflare R2 setup](#cloudflare-r2-setup-first-time), [CLI](#cli), [Design](#design), [Data](#data), [Config](#config), [Page](#page), [Layout and lightbox](#layout-and-lightbox), [Cost and limits](#cost-and-limits), [Local storage and the example](#local-storage-and-the-example).
 
 ## Quick start
 
@@ -160,20 +160,14 @@ gallery: {
   baseUrl: 'https://img.example.com',  // required for storage 'r2'; default '/gallery' for 'local'
   dir: 'gallery',
   widths: [400, 800, 1600, 2400],
-  // longEdge: 1600,             // cap the long edge (portrait photos get narrower variants)
+  // longEdge: 1600,                   // cap the long edge (portrait photos get narrower variants)
   formats: ['webp'],
   exif: 'basic',                       // or false: no EXIF in the manifest
   perPage: 60,
-  urlBuilder: 'static',                // or 'cloudflare' (Image Resizing, see below)
+  urlBuilder: 'static',                // or 'cloudflare' (Image Transformations, see the table)
   storage: 'r2'                        // or 'local': variants go to public/gallery
 }
 ```
-
-## Page and styling
-
-`gallery.md` with `layout: page` and `<VuemoGallery />` in the body. It opens on the album list (covers and titles), also when there is a single album; `?album=<slug>` selects an album and `?photo=<id>` opens the lightbox (both through `useQueryParam`: choosing an album pushes a history entry so Back returns to the list; the lightbox pushes one too and closing it removes `?photo`). `<VuemoGallery album="slug" />` pins one album on a page of its own.
-
-Styling is through `--vuemo-gallery-gap`, `--vuemo-gallery-radius`, `--vuemo-gallery-bg`, `--vuemo-gallery-focus` (and `--vuemo-gallery-row-height`), with fallbacks to VitePress variables and constants.
 
 | Option | Default | Meaning |
 | --- | --- | --- |
@@ -187,11 +181,15 @@ Styling is through `--vuemo-gallery-gap`, `--vuemo-gallery-radius`, `--vuemo-gal
 | `urlBuilder` | `'static'` | `'cloudflare'` asks Cloudflare Image Transformations (formerly Image Resizing) to resize the largest variant: the URL is `<origin of baseUrl>/cdn-cgi/image/width=...,format=auto,.../<path of baseUrl>/albums/...`, so `baseUrl: 'https://example.com/photos'` gives `https://example.com/cdn-cgi/image/.../photos/albums/...`. Transformations must be enabled for the zone (the dashboard section is called **Images** > **Transformations**; verify the name and the plan limits against the current dashboard and Cloudflare's pricing page). Not needed for the default setup. |
 | `storage` | `'r2'` | `'local'` writes to `public/gallery`. |
 
+## Page
+
+`gallery.md` with `layout: page` and `<VuemoGallery />` in the body. It opens on the album list (covers and titles), also when there is a single album; `?album=<slug>` selects an album and `?photo=<id>` opens the lightbox (both through `useQueryParam`: choosing an album pushes a history entry so Back returns to the list; the lightbox pushes one too and closing it removes `?photo`). `<VuemoGallery album="slug" />` pins one album on a page of its own.
+
 ## Layout and lightbox
 
 The layout is CSS only (flex-grow follows the aspect ratio, so rows are justified without JavaScript and without layout shift). Every image has `width`, `height` and `aspect-ratio`, `srcset` with `w` descriptors and `sizes`; the first six are eager with `fetchpriority="high"`, the rest lazy. Before an image loads, its average colour (SSR) and then its thumbhash (decoded in the browser) fill the box. The photos are a `<ul role="list">` of links `<a href="?photo=id">`: they work as plain links and in a screen reader, and a click opens the lightbox.
 
-The lightbox is [PhotoSwipe](https://photoswipe.com) 5 (MIT), imported on the first click, so it is not in the page's initial scripts. It has keyboard control (arrows, Escape), returns focus to the photo you opened, and skips animations under `prefers-reduced-motion`. `?photo=<id>` is a deep link; closing removes it. With several albums, `?album=<slug>` selects one. With one visible album, it is shown directly; `?album=<slug>` is checked first, so a `hidden` album is reachable by link even then (and only by link). Closing a lightbox that was opened by a deep link puts the focus on that photo's thumbnail.
+The lightbox is [PhotoSwipe](https://photoswipe.com) 5 (MIT), imported on the first click, so it is not in the page's initial scripts. It has keyboard control (arrows, Escape), returns focus to the photo you opened, and skips animations under `prefers-reduced-motion`. `?photo=<id>` is a deep link; closing removes it. A `hidden` album is not in the list but opens with `?album=<slug>`. Closing a lightbox that was opened by a deep link puts the focus on that photo's thumbnail.
 
 Style with CSS variables (all optional): `--vuemo-gallery-gap` (6px), `--vuemo-gallery-radius` (4px), `--vuemo-gallery-bg` (`--vp-c-bg-soft`), `--vuemo-gallery-focus` (`--vp-c-brand-1`), `--vuemo-gallery-row-height` (220px; `--vuemo-gallery-row-height-mobile`, 140px). The `sizes` attribute follows these when they are set in pixels (read in the browser after hydration; the server renders the defaults). Dark mode follows your theme's variables.
 

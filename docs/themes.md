@@ -1,7 +1,5 @@
 # Themes
 
-> Vuemo is under development. APIs may change.
-
 ## Using a theme
 
 Set `theme` in `vuemo.config.ts` (default `@vuemo/theme-default`). The name is looked up in this order, and the first match wins:

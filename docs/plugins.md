@@ -1,10 +1,8 @@
 # Plugins
 
-> Vuemo is under development. APIs may change.
-
 ## Official features
 
-`comments` and `aiSummary` are official plugins switched on from the config, see [Configuration](./configuration.md#features). They render in the theme's standard slots, so they work with any theme that follows the [theme contract](./themes.md#writing-a-theme).
+`comments`, `aiSummary` and `gallery` are official plugins switched on from the config, see [Configuration](./configuration.md#features) and [Gallery](./gallery.md). They render in the theme's standard slots, so they work with any theme that follows the [theme contract](./themes.md#writing-a-theme).
 
 ## Your own plugins
 
@@ -46,7 +44,7 @@ export default function banner(options: { text: string }): VuemoPlugin {
 }
 ```
 
-`Banner.vue` reads `__BANNER__` and renders it. The two official plugins, [`plugins/comments`](../plugins/comments) and [`plugins/ai-summary`](../plugins/ai-summary), use exactly this interface and are good references. Plugin packages ship `.vue`/`.ts` sources next to their built entry; `@vuemo/*` packages are processed by Vite automatically.
+`Banner.vue` reads `__BANNER__` and renders it. The official plugins ([`plugins/comments`](../plugins/comments), [`plugins/ai-summary`](../plugins/ai-summary), [`plugins/gallery`](../plugins/gallery)) use exactly this interface and are good references. Plugin packages ship `.vue`/`.ts` sources next to their built entry; `@vuemo/*` packages are processed by Vite automatically.
 
 ## Framework plugins and theme plugins
 
