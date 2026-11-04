@@ -26,11 +26,18 @@ describe('?album=', () => {
     expect(html).toContain('href="?album=secret&amp;photo=bbbbbbbbbbbb"') // links keep naming the album
     expect(html).toContain('All albums') // back to the visible one
   })
-  it('still shows the only visible album without a param, and its links stay short', async () => {
+  it('shows the album list without a param, even for a single visible album', async () => {
     const html = await render([album('open'), album('secret', true)], '')
+    expect(html).toContain('vuemo-gallery__albums')
     expect(html).toContain('Album open')
-    expect(html).toContain('href="?photo=aaaaaaaaaaaa"')
-    expect(html).not.toContain('All albums')
+    expect(html).not.toContain('Album secret')
+    expect(html).not.toContain('vuemo-gallery__grid')
+  })
+  it('opens the only album when it is named, with a way back to the list', async () => {
+    const html = await render([album('open')], 'open')
+    expect(html).toContain('vuemo-gallery__grid')
+    expect(html).toContain('href="?album=open&amp;photo=aaaaaaaaaaaa"')
+    expect(html).toContain('All albums')
   })
   it('ignores an unknown value', async () => {
     const html = await render([album('open'), album('other')], 'nope')

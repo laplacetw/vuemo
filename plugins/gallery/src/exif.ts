@@ -42,3 +42,18 @@ export function takenAtFrom(raw: Record<string, any> | undefined | null): string
   }
   return d && !Number.isNaN(+d) && d.getUTCFullYear() > 1 ? d.toISOString() : undefined
 }
+
+/** One line for the lightbox: camera, lens, focal length, aperture, shutter, ISO and the date (`takenAt` is wall-clock time). */
+export function exifLine(photo: { exif?: ExifInfo; takenAt?: string }): string {
+  const e = photo.exif ?? {}
+  const parts = [
+    e.camera,
+    e.lens,
+    e.focal !== undefined ? `${e.focal}mm` : undefined,
+    e.aperture !== undefined ? `f/${e.aperture}` : undefined,
+    e.exposure !== undefined ? `${e.exposure}s` : undefined,
+    e.iso !== undefined ? `ISO ${e.iso}` : undefined,
+    photo.takenAt?.slice(0, 10)
+  ]
+  return parts.filter((p): p is string => !!p).join(' · ')
+}

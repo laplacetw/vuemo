@@ -10,7 +10,9 @@ import { LocalStorage, R2Storage, r2FromEnv } from './storage'
 export const HELP = `vuemo-gallery: manage the photos of @vuemo/plugin-gallery
 
 Usage:
-  vuemo-gallery add <dir> --album <slug>   make thumbnails and upload the photos in <dir>
+  vuemo-gallery add <dir> --album <slug> [--alt-from-filename]
+                                           make thumbnails and upload the photos in <dir>; with --alt-from-filename
+                                           the file name (without extension) becomes the alt text of photos that have none
   vuemo-gallery sync [--prune [--yes] [--force]]
                                            compare the storage with the manifest; --prune deletes the unlisted objects
   vuemo-gallery verify [--remote]          check the manifest, alt texts and (with --remote or storage 'local') the files
@@ -116,7 +118,7 @@ export async function run(argv: string[], deps: RunDeps): Promise<number> {
     switch (command) {
       case 'add': {
         if (!arg || !values.album) throw new Error('usage: vuemo-gallery add <dir> --album <slug>')
-        const r = await add(ctx, resolve(deps.cwd, arg), values.album)
+        const r = await add(ctx, resolve(deps.cwd, arg), values.album, { altFromFilename: values['alt-from-filename'] })
         deps.out(`${r.added} added, ${r.skipped} unchanged, ${r.uploaded} files written${r.failed ? `, ${r.failed} failed` : ''}`)
         if (r.failed) code = 1
         break
@@ -165,6 +167,7 @@ function parse(args: string[]) {
     allowPositionals: true,
     options: {
       album: { type: 'string' },
+      'alt-from-filename': { type: 'boolean' },
       prune: { type: 'boolean' },
       yes: { type: 'boolean', short: 'y' },
       force: { type: 'boolean' },

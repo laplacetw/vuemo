@@ -58,12 +58,21 @@ function addAlbumToFile(file: string, slug: string, derived: Album[]) {
 export interface AddResult { added: number; skipped: number; uploaded: number; failed: number }
 
 /** Idempotent: a photo already in the manifest whose files all exist is skipped; missing files are uploaded again. */
-export async function add(ctx: Context, dir: string, album: string): Promise<AddResult> {
+export interface AddOptions {
+  /** Use the file name without its extension as `alt` for new photos and for listed photos that have none. */
+  altFromFilename?: boolean
+}
+
+const altOf = (file: string) => basename(file, extname(file))
+
+/** Idempotent: a photo already in the manifest whose files all exist is skipped; missing files are uploaded again. */
+export async function add(ctx: Context, dir: string, album: string, opts: AddOptions = {}): Promise<AddResult> {
   if (!SLUG_RE.test(album)) throw new Error(`"${album}" is not a valid album slug (a-z, 0-9, -)`)
   if (!existsSync(dir)) throw new Error(`${dir} does not exist`)
   await loadSharp(ctx.root) // one clear failure before anything is written
   const { manifest, albums } = readGalleryData(ctx.root, ctx.cfg.dir)
   const result: AddResult = { added: 0, skipped: 0, uploaded: 0, failed: 0 }
+  let altsSet = 0
   if (!albums.some((a) => a.slug === album)) {
     addAlbumToFile(albumsPath(ctx.root, ctx.cfg.dir), album, albums)
     ctx.log.info(`added album "${album}" to ${ctx.cfg.dir}/albums.yaml`)
@@ -76,6 +85,7 @@ export async function add(ctx: Context, dir: string, album: string): Promise<Add
       const existing = manifest.photos.find((p) => p.id === id)
       if (existing) {
         if (existing.album !== album) ctx.log.warn(`${name} is already in album "${existing.album}"; left there`)
+        if (opts.altFromFilename && !existing.alt) (existing.alt = altOf(file), altsSet++)
         const missing: string[] = []
         for (const k of keyOf(existing)) if (!(await ctx.storage.has(k))) missing.push(k)
         if (!missing.length) {
@@ -91,7 +101,7 @@ export async function add(ctx: Context, dir: string, album: string): Promise<Add
         continue
       }
       const { photo, variants } = await processImage(original, ctx.cfg)
-      const full: Photo = { ...photo, album }
+      const full: Photo = { ...photo, album, ...(opts.altFromFilename && { alt: altOf(file) }) }
       for (const v of variants) {
         const k = objectKey(album, id, v.width, v.format)
         if (!(await ctx.storage.has(k))) (await ctx.storage.put(k, v.data, MIME[v.format]), result.uploaded++)
@@ -99,13 +109,14 @@ export async function add(ctx: Context, dir: string, album: string): Promise<Add
       manifest.photos.push(full)
       result.added++
       ctx.log.info(`${name} -> "${id}"`)
-      noAlt(ctx, id, name)
+      if (!full.alt) noAlt(ctx, id, name)
     } catch (e) {
       result.failed++
       ctx.log.warn(`${name}: ${(e as Error).message}`)
     }
   }
-  if (result.added) writeManifest(manifestPath(ctx.root, ctx.cfg.dir), manifest)
+  if (altsSet) ctx.log.info(`alt text set from the file name for ${altsSet} listed photo(s)`)
+  if (result.added || altsSet) writeManifest(manifestPath(ctx.root, ctx.cfg.dir), manifest)
   return result
 }
 

@@ -78,7 +78,7 @@ Notes: originals are not uploaded; keep them yourself. The generated files are i
 
 | Command | What it does |
 | --- | --- |
-| `add <dir> --album <slug>` | Reads every image under `<dir>` (jpg, png, webp, avif, tiff, gif), makes `widths` x `formats` variants, uploads the missing ones, adds the photo to the manifest. A photo already in the manifest (same content) is skipped; missing files of it are restored. |
+| `add <dir> --album <slug> [--alt-from-filename]` | Reads every image under `<dir>` (jpg, png, webp, avif, tiff, gif), makes `widths` x `formats` variants, uploads the missing ones, adds the photo to the manifest. A photo already in the manifest (same content) is skipped; missing files of it are restored. `--alt-from-filename` uses the file name without its extension (`DSC01131`) as the alt text of new photos and of listed photos that have none, so it can be run again on photos already uploaded (nothing is uploaded twice). |
 | `sync [--prune [--yes] [--force]]` | Compares the storage with the manifest: lists missing files (exit code 1, re-run `add` with the originals) and unlisted ones. `--prune` deletes the unlisted ones, with guards: it refuses when `manifest.json` does not exist; it asks `y/N` on a terminal (it lists the objects first) and refuses on a non-terminal unless you pass `--yes`; it refuses to delete **every** object under `albums/` (an empty manifest, or a manifest that matches nothing in the storage, for example the wrong bucket) unless you pass `--force`. The same applies to `storage: 'local'`. |
 | `verify [--remote]` | Validates the manifest and `albums.yaml`, warns about missing `alt`, and checks that files exist (always for `local`, with `--remote` for R2). |
 | `remove <id>` | Deletes a photo's files and its manifest entry. It refuses when the photo is the `cover` of an album (change `cover` in `albums.yaml` first; exit code 1). |
@@ -171,7 +171,7 @@ gallery: {
 
 ## Page and styling
 
-`gallery.md` with `layout: page` and `<VuemoGallery />` in the body. `?album=<slug>` selects an album and `?photo=<id>` opens the lightbox (both through `useQueryParam`: choosing an album pushes a history entry so Back returns to the list; the lightbox pushes one too and closing it removes `?photo`). `<VuemoGallery album="slug" />` pins one album on a page of its own.
+`gallery.md` with `layout: page` and `<VuemoGallery />` in the body. It opens on the album list (covers and titles), also when there is a single album; `?album=<slug>` selects an album and `?photo=<id>` opens the lightbox (both through `useQueryParam`: choosing an album pushes a history entry so Back returns to the list; the lightbox pushes one too and closing it removes `?photo`). `<VuemoGallery album="slug" />` pins one album on a page of its own.
 
 Styling is through `--vuemo-gallery-gap`, `--vuemo-gallery-radius`, `--vuemo-gallery-bg`, `--vuemo-gallery-focus` (and `--vuemo-gallery-row-height`), with fallbacks to VitePress variables and constants.
 
@@ -194,6 +194,8 @@ The layout is CSS only (flex-grow follows the aspect ratio, so rows are justifie
 The lightbox is [PhotoSwipe](https://photoswipe.com) 5 (MIT), imported on the first click, so it is not in the page's initial scripts. It has keyboard control (arrows, Escape), returns focus to the photo you opened, and skips animations under `prefers-reduced-motion`. `?photo=<id>` is a deep link; closing removes it. With several albums, `?album=<slug>` selects one. With one visible album, it is shown directly; `?album=<slug>` is checked first, so a `hidden` album is reachable by link even then (and only by link). Closing a lightbox that was opened by a deep link puts the focus on that photo's thumbnail.
 
 Style with CSS variables (all optional): `--vuemo-gallery-gap` (6px), `--vuemo-gallery-radius` (4px), `--vuemo-gallery-bg` (`--vp-c-bg-soft`), `--vuemo-gallery-focus` (`--vp-c-brand-1`), `--vuemo-gallery-row-height` (220px; `--vuemo-gallery-row-height-mobile`, 140px). The `sizes` attribute follows these when they are set in pixels (read in the browser after hydration; the server renders the defaults). Dark mode follows your theme's variables.
+
+The lightbox shows the photo's `caption` (if you wrote one; `alt` is for screen readers and is not shown) and a line with the camera data from the manifest: camera, lens, focal length, aperture, shutter, ISO and the date (`SONY DSC-RX100M7 · Sony 24-200mm F2.8-4.5 · 26.9mm · f/4 · 1/125s · ISO 640 · 2026-09-17`). With `exif: false` only the date is shown.
 
 ## Cost and limits
 

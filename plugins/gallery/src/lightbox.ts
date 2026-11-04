@@ -1,5 +1,6 @@
 import type { ImageFormat, Photo, ResolvedGalleryConfig } from './types'
 import { photoUrl, srcset } from './urls'
+import { exifLine } from './exif'
 
 export interface LightboxOptions {
   photos: Photo[]
@@ -30,7 +31,9 @@ export async function openLightbox(o: LightboxOptions): Promise<LightboxHandle> 
       width: p.w,
       height: p.h,
       alt: p.alt ?? '',
-      caption: p.caption ?? p.alt ?? ''
+      // the caption is what the author wrote (alt is for screen readers and may be a file name); the second line is the camera data
+      caption: p.caption ?? '',
+      meta: exifLine(p)
     })),
     index: o.index,
     returnFocus: true,
@@ -56,7 +59,19 @@ export async function openLightbox(o: LightboxOptions): Promise<LightboxHandle> 
       onInit(el) {
         el.className = 'vuemo-gallery__caption'
         pswp.on('change', () => {
-          el.textContent = (pswp.currSlide?.data as { caption?: string } | undefined)?.caption ?? ''
+          const data = (pswp.currSlide?.data ?? {}) as { caption?: string; meta?: string }
+          const lines = [
+            [data.caption, 'vuemo-gallery__caption-text'],
+            [data.meta, 'vuemo-gallery__caption-meta']
+          ].flatMap(([text, cls]) => {
+            if (!text) return []
+            const p = document.createElement('p')
+            p.className = cls!
+            p.textContent = text
+            return [p]
+          })
+          el.replaceChildren(...lines)
+          el.hidden = !lines.length
         })
       }
     })

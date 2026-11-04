@@ -283,3 +283,18 @@ describe('R2 credentials', () => {
     await expect(storage.has('albums/x/1/1600.webp')).rejects.toThrow(/fetch failed \(ENOTFOUND\) while reaching a\.r2\.cloudflarestorage\.com/)
   })
 })
+
+describe('--alt-from-filename', () => {
+  it('uses the file name as alt for new photos and for listed photos without one, without uploading again', async () => {
+    const { root, photos, ctx, logs } = setup()
+    writeFileSync(join(photos, 'DSC01131.JPG'), await fixture('#aa0000'))
+    await add(ctx, photos, 'trip')
+    const manifest = () => JSON.parse(readFileSync(join(root, 'gallery/manifest.json'), 'utf8'))
+    expect(manifest().photos[0].alt).toBeUndefined()
+    writeFileSync(join(photos, 'IMG_2.jpeg'), await fixture('#00aa00'))
+    const r = await add(ctx, photos, 'trip', { altFromFilename: true })
+    expect(manifest().photos.map((p: any) => p.alt).sort()).toEqual(['DSC01131', 'IMG_2'])
+    expect([r.added, r.skipped]).toEqual([1, 1])
+    expect(logs.join('\n')).toContain('alt text set from the file name for 1 listed photo(s)')
+  })
+})

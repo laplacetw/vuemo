@@ -11,15 +11,11 @@ const props = defineProps<{ /** Show this album only (a page of its own). */ alb
 const visible = albums.filter((a) => !a.hidden)
 const selected = useQueryParam('album', { history: 'push' })
 
-// ?album= names an album (also a hidden one, even when it is the only visible one: it is checked first), else the only visible album; '' shows the album list
+// ?album= names an album (also a hidden one); without it the page shows the album list, even for a single album
 const named = computed(() => !props.album && albums.some((a) => a.slug === selected.value))
-const slug = computed(() => {
-  if (props.album) return props.album
-  if (named.value) return selected.value
-  return visible.length === 1 ? visible[0].slug : ''
-})
-// links name the album when it was chosen with ?album=, or the URL would lead to another one
-const canGoBack = computed(() => named.value && visible.length > 0 && !(visible.length === 1 && visible[0].slug === slug.value))
+const slug = computed(() => props.album ?? (named.value ? selected.value : ''))
+// "All albums" leads back to the list, unless the list would be empty (only hidden albums)
+const canGoBack = computed(() => named.value && visible.length > 0)
 
 // One async component per album: it resolves before SSR output and before hydration, so both sides render the same photos.
 const cache = new Map<string, ReturnType<typeof defineAsyncComponent>>()

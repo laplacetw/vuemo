@@ -161,3 +161,12 @@ describe('row height', () => {
     expect(sizesAttr(300, 200, { desktop: 100, mobile: 50 })).toBe('(max-width: 640px) 75px, 150px')
   })
 })
+
+describe('exifLine', () => {
+  it('joins what is known, in a fixed order', async () => {
+    const { exifLine } = await import('../src/exif')
+    expect(exifLine({ exif: { camera: 'SONY DSC-RX100M7', lens: 'Sony 24-200mm F2.8-4.5', focal: 26.9, aperture: 4, iso: 640, exposure: '1/125' }, takenAt: '2026-09-17T22:08:59.000Z' }))
+      .toBe('SONY DSC-RX100M7 · Sony 24-200mm F2.8-4.5 · 26.9mm · f/4 · 1/125s · ISO 640 · 2026-09-17')
+    expect(exifLine({})).toBe('')
+  })
+})
