@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-alpha.3
 
 ### Changed
 - **Breaking**: the default `paths.category` is `/categories` (was `/category`), so category links on posts point to `categories.md`. A blog with a `category.md` page either renames it to `categories.md` (and its nav link) or keeps the old URL with `paths: { category: '/category' }`.

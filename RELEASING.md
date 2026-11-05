@@ -84,7 +84,7 @@ Alpha peer ranges such as `@vuemo/core: ^0.1.0-alpha.0` accept every later `0.1.
 
 All packages share one version. During the alpha, bump the prerelease number (`0.1.0-alpha.1`, `0.1.0-alpha.2`, ...) for every release, breaking or not.
 
-1. Set the new version in all five `package.json` files: `pnpm -r exec npm version 0.1.0-alpha.1 --no-git-tag-version`. (`create-vuemo` reads the other versions when it is built, so the projects it generates always depend on the matching release.)
+1. Set the new version in every package's `package.json`: `pnpm -r exec npm version 0.1.0-alpha.1 --no-git-tag-version`. (`create-vuemo` reads the other versions when it is built, so the projects it generates always depend on the matching release.)
 2. Move the "Unreleased" entries of `CHANGELOG.md` under the new version.
 3. Commit, push, and run `pnpm release`.
 4. Tag (`git tag v0.1.0-alpha.1 && git push --tags`) and create the GitHub Release.
