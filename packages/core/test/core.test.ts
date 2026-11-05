@@ -449,7 +449,7 @@ describe('theme module', () => {
       } finally {
         plugin.buildEnd()
       }
-    })
+    }, 15000) // longer than the waitFor: a real fs.watch event can take seconds on a busy machine
     it('configureServer does nothing for a path theme', () => {
       const plugin: any = virtualPlugin([], './x/index.ts')
       plugin.configResolved({ root: '/p' })
