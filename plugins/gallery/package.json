@@ -1,6 +1,6 @@
 {
   "name": "@vuemo/plugin-gallery",
-  "version": "0.1.0-alpha.3",
+  "version": "0.1.0-alpha.4",
   "description": "Photo gallery for Vuemo blogs: justified rows, lightbox, Cloudflare R2 storage and a CLI",
   "type": "module",
   "license": "MIT",

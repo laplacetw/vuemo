@@ -1,6 +1,6 @@
 # Releasing
 
-How to publish Vuemo's packages to npm. The five packages are released together with the same version:
+How to publish Vuemo's packages to npm. The six packages are released together with the same version:
 
 | Package | Path |
 | --- | --- |
@@ -8,6 +8,7 @@ How to publish Vuemo's packages to npm. The five packages are released together 
 | `@vuemo/theme-default` | `themes/default` |
 | `@vuemo/plugin-comments` | `plugins/comments` |
 | `@vuemo/plugin-ai-summary` | `plugins/ai-summary` |
+| `@vuemo/plugin-gallery` | `plugins/gallery` |
 | `create-vuemo` | `packages/create-vuemo` |
 
 ## One-time setup (on npmjs.com)

@@ -1,6 +1,6 @@
 {
   "name": "@vuemo/theme-default",
-  "version": "0.1.0-alpha.3",
+  "version": "0.1.0-alpha.4",
   "description": "Minimal default theme for Vuemo (Tailwind CSS)",
   "type": "module",
   "license": "MIT",
