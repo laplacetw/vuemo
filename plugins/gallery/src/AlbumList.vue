@@ -21,7 +21,7 @@ function choose(slug: string, e: MouseEvent) {
   <p v-if="!albums.length" class="vuemo-gallery__empty">No albums yet.</p>
   <ul v-else class="vuemo-gallery__albums" role="list">
     <li v-for="a in albums" :key="a.slug" class="vuemo-gallery__album">
-      <a :href="`?album=${a.slug}`" @click="choose(a.slug, $event)">
+      <a :href="`?album=${a.slug}`" target="_self" @click="choose(a.slug, $event)">
         <span class="vuemo-gallery__cover" :style="{ backgroundColor: a.cover?.color }">
           <img
             v-if="a.cover"

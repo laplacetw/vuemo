@@ -37,6 +37,7 @@ describe('?album=', () => {
     const html = await render([album('open')], 'open')
     expect(html).toContain('vuemo-gallery__grid')
     expect(html).toContain('href="?album=open&amp;photo=aaaaaaaaaaaa"')
+    expect(html).toContain('href="?" target="_self"')
     expect(html).toContain('All albums')
   })
   it('ignores an unknown value', async () => {

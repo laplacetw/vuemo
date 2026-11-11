@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Fixes
+- gallery: opening a photo no longer scrolls the page to the top (on mobile it stayed there after closing). VitePress's router caught the photo, album and "All albums" links before the gallery did and reloaded the page; the links now carry `target="_self"`, which the router skips. Choosing an album also no longer adds two history entries.
+
 ## 0.1.0-alpha.3
 
 ### Changed

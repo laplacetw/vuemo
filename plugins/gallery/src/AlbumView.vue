@@ -140,14 +140,15 @@ const src = (p: Photo) => photoUrl(cfg.value, p, p.variants[Math.min(1, p.varian
 <template>
   <section class="vuemo-gallery__album-view" :aria-labelledby="album ? titleId : undefined">
     <header v-if="album" class="vuemo-gallery__header">
-      <a v-if="canGoBack" class="vuemo-gallery__back" href="?" @click.prevent="emit('back')">← All albums</a>
+      <a v-if="canGoBack" class="vuemo-gallery__back" href="?" target="_self" @click.prevent="emit('back')">← All albums</a>
       <h2 :id="titleId" class="vuemo-gallery__title">{{ album.title }}</h2>
       <p v-if="album.description" class="vuemo-gallery__desc">{{ album.description }}</p>
     </header>
     <p v-if="!photos.length" class="vuemo-gallery__empty">No photos in this album yet.</p>
     <ul v-else ref="grid" class="vuemo-gallery__grid" role="list">
       <li v-for="(p, i) in visible" :key="p.id" class="vuemo-gallery__item" :data-photo-id="p.id" :style="itemStyle(p)">
-        <a :href="photoHref(p.id)" :aria-label="label(p, i)" @click="open(p.id, $event)">
+        <!-- target keeps VitePress's router off the link: it catches clicks before ours and would reload the page and scroll to the top -->
+        <a :href="photoHref(p.id)" target="_self" :aria-label="label(p, i)" @click="open(p.id, $event)">
           <picture>
             <source v-for="f in sources(p)" :key="f" :type="MIME[f]" :srcset="srcset(cfg, p, f)" :sizes="sizes(p)" />
             <img

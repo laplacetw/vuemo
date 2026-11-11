@@ -14,7 +14,7 @@ describe('SSR', () => {
   it('renders the album list with links and covers', async () => {
     const html = await render({})
     expect(html).toContain('role="list"')
-    expect(html).toContain('href="?album=a"')
+    expect(html).toContain('href="?album=a" target="_self"') // target keeps VitePress's router (scroll to top) off the link
     expect(html).toContain('Album A')
     expect(html).toContain('/vuemo/gallery/albums/a/aaaaaaaaaaaa/800.webp')
   })
@@ -22,7 +22,7 @@ describe('SSR', () => {
   it('renders a pinned album as a list of photo links with sizes and srcset', async () => {
     const html = await render({ album: 'a' })
     expect(html).toContain("vuemo-gallery__grid")
-    expect(html).toContain('<a href="?photo=aaaaaaaaaaaa"')
+    expect(html).toContain('<a href="?photo=aaaaaaaaaaaa" target="_self"')
     expect(html).toContain('width="300" height="200"')
     expect(html).toContain('srcset="/vuemo/gallery/albums/a/aaaaaaaaaaaa/400.webp 400w')
     expect(html).toContain('fetchpriority="high"')
