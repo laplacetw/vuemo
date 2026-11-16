@@ -8,7 +8,7 @@ import { postJsonLd } from '../src/seo'
 import { localDateTime, postTemplate, validPostName, yamlString } from '../src/newpost'
 import { isPostPath } from '../src/schema'
 import { taxonomyHref } from '../src/taxonomy'
-import { searchRender } from '../src/search'
+import { searchRender, searchTokenize } from '../src/search'
 import { normalizeBase } from '../src/base'
 import { onAfterRouteChange, readQueryParam, withQueryParam } from '../src/query'
 
@@ -599,21 +599,47 @@ describe('defineBlogConfig search', () => {
     expect(off.themeConfig.search).toBeUndefined()
     expect('search' in off).toBe(false)
   })
-  it('true turns the local provider on with searchRender', async () => {
+  it('true turns the local provider on with searchRender, the matching text, CJK tokenizing and AND', async () => {
     const cfg: any = await defineBlogConfig({ search: true })
-    expect(cfg.themeConfig.search).toEqual({ provider: 'local', options: { _render: searchRender } })
+    expect(cfg.themeConfig.search).toEqual({
+      provider: 'local',
+      options: { _render: searchRender, detailedView: true, miniSearch: { options: { tokenize: searchTokenize }, searchOptions: { combineWith: 'AND' } } }
+    })
     expect('search' in cfg).toBe(false)
   })
   it('passes VitePress options through and lets the user override _render', async () => {
-    const cfg: any = await defineBlogConfig({ search: { detailedView: true, miniSearch: { searchOptions: { fuzzy: 0.5 } } } })
-    expect(cfg.themeConfig.search.options).toMatchObject({ detailedView: true, _render: searchRender })
-    expect(cfg.themeConfig.search.options.miniSearch.searchOptions.fuzzy).toBe(0.5)
+    const cfg: any = await defineBlogConfig({ search: { detailedView: false, miniSearch: { searchOptions: { fuzzy: 0.5 } } } })
+    expect(cfg.themeConfig.search.options).toMatchObject({ detailedView: false, _render: searchRender })
+    // one MiniSearch option does not drop Vuemo's others
+    expect(cfg.themeConfig.search.options.miniSearch).toEqual({ options: { tokenize: searchTokenize }, searchOptions: { combineWith: 'AND', fuzzy: 0.5 } })
+    const tokenize = (t: string) => t.split(' ')
+    const own: any = await defineBlogConfig({ search: { miniSearch: { options: { tokenize }, searchOptions: { combineWith: 'OR' } } } })
+    expect(own.themeConfig.search.options.miniSearch).toEqual({ options: { tokenize }, searchOptions: { combineWith: 'OR' } })
     const _render = () => 'x'
     expect(((await defineBlogConfig({ search: { _render } })) as any).themeConfig.search.options._render).toBe(_render)
   })
   it('lets an explicit themeConfig.search win', async () => {
     const cfg: any = await defineBlogConfig({ search: true, themeConfig: { search: { provider: 'local', options: { detailedView: true } } } })
     expect(cfg.themeConfig.search).toEqual({ provider: 'local', options: { detailedView: true } })
+  })
+})
+
+describe('searchTokenize', () => {
+  it('splits like MiniSearch on spaces and punctuation', () => {
+    expect(searchTokenize('Hello, world! c++ is v1.2')).toEqual(['Hello', 'world', 'c++', 'is', 'v1', '2'])
+    expect(searchTokenize('')).toEqual([])
+  })
+  it('turns CJK runs into overlapping pairs, also next to other letters', () => {
+    expect(searchTokenize('一卡通')).toEqual(['一卡', '卡通'])
+    expect(searchTokenize('到全家FamiPort完成')).toEqual(['到全', '全家', 'FamiPort', '完成'])
+    expect(searchTokenize('用了，好')).toEqual(['用了', '好'])
+    expect(searchTokenize('カメラで撮る')).toEqual(['カメ', 'メラ', 'ラで', 'で撮', '撮る'])
+    expect(searchTokenize('한국어')).toEqual(['한국', '국어'])
+  })
+  it('survives VitePress serializing it into the site data (toString, then new Function)', () => {
+    const revived = new Function(`return ${searchTokenize.toString()}`)()
+    const text = '自從改用icash 2.0搭台鐵以來，在感應進站的時候'
+    expect(revived(text)).toEqual(searchTokenize(text))
   })
 })
 

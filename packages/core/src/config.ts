@@ -7,7 +7,7 @@ import { loadFeatures, OFFICIAL_FEATURES, type Importer, type OfficialFeatures }
 import { createPostsLoader } from './loader'
 import { normalizeBase } from './base'
 import { buildRss } from './rss'
-import { searchRender } from './search'
+import { searchOptions } from './search'
 import { isPostPath, type Post } from './schema'
 import { virtualPlugin } from './virtual'
 import { DEFAULT_THEME_NAME, isExplicitThemePath, resolveThemeSource, THEME_PREFIX } from './theme-source'
@@ -118,9 +118,7 @@ export async function defineBlogConfig(config: BlogConfig = {}, importer?: Impor
     ...(socialLinks && { socialLinks }),
     ...(postsPerPage && { postsPerPage }),
     ...(lastUpdated && { lastUpdated: { ...(lastUpdated !== true && lastUpdated.text && { text: lastUpdated.text }) } }),
-    ...(search && {
-      search: { provider: 'local' as const, options: { _render: searchRender, ...(search === true ? {} : search) } }
-    }),
+    ...(search && { search: { provider: 'local' as const, options: searchOptions(search === true ? {} : search) } }),
     summary,
     ...rest.themeConfig,
     // merged per key, so a partial `themeConfig.paths` keeps the other default
