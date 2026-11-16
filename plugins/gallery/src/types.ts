@@ -13,6 +13,11 @@ export interface GalleryConfig {
   longEdge?: number
   /** `'basic'` keeps the allow-listed EXIF fields in the manifest, `false` keeps none. Default `'basic'`. */
   exif?: false | 'basic'
+  /**
+   * Display names for camera and lens names from EXIF, matched exactly, e.g. a compact camera that writes its real
+   * focal range as the lens: `{ '9.0-72.0 mm f/2.8-4.5': 'Sony 24-200mm F2.8-4.5' }`. The manifest keeps the original.
+   */
+  exifNames?: Record<string, string>
   /** Photos rendered first and per "Load more". Default 60. */
   perPage?: number
   /** `'static'` (default): the generated variants. `'cloudflare'`: Cloudflare Image Resizing (`/cdn-cgi/image/`) on your domain. */
@@ -29,6 +34,7 @@ export interface ResolvedGalleryConfig {
   formats: ImageFormat[]
   longEdge?: number
   exif: false | 'basic'
+  exifNames?: Record<string, string>
   perPage: number
   urlBuilder: 'static' | 'cloudflare'
   storage: 'r2' | 'local'

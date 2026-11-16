@@ -35,10 +35,13 @@ export function buildListModule(root: string, dir: string): string {
   return `export const albums = ${JSON.stringify(list)}\nexport const loaders = { ${loaders.join(', ')} }\n`
 }
 
-/** Source of `virtual:vuemo-gallery/album/<slug>`: the photos of one album. */
-export function buildAlbumModule(root: string, dir: string, slug: string): string {
+/** Source of `virtual:vuemo-gallery/album/<slug>`: the photos of one album, with `exifNames` applied to camera and lens. */
+export function buildAlbumModule(root: string, dir: string, slug: string, names: Record<string, string> = {}): string {
   const { manifest } = readCached(root, dir)
-  const photos = manifest.photos.filter((p) => p.album === slug).map(({ album: _album, ...p }) => p)
+  const rename = (v?: string) => (v !== undefined && Object.hasOwn(names, v) ? names[v] : v)
+  const photos = manifest.photos
+    .filter((p) => p.album === slug)
+    .map(({ album: _album, ...p }) => (p.exif ? { ...p, exif: { ...p.exif, camera: rename(p.exif.camera), lens: rename(p.exif.lens) } } : p))
   return `export default ${JSON.stringify(photos)}\n`
 }
 
@@ -71,7 +74,7 @@ export function galleryVitePlugin(cfg: ResolvedGalleryConfig) {
       this.addWatchFile(manifestPath(root, cfg.dir))
       this.addWatchFile(albumsPath(root, cfg.dir))
       try {
-        return id === NUL + LIST_ID ? buildListModule(root, cfg.dir) : buildAlbumModule(root, cfg.dir, id.slice((NUL + ALBUM_PREFIX).length))
+        return id === NUL + LIST_ID ? buildListModule(root, cfg.dir) : buildAlbumModule(root, cfg.dir, id.slice((NUL + ALBUM_PREFIX).length), cfg.exifNames)
       } catch (e) {
         this.error(`[vuemo-gallery] ${(e as Error).message}`)
       }

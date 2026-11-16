@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Features
+- gallery option `exifNames`: display names for the camera and lens names from EXIF, matched exactly and applied when the site is built (the manifest keeps the original). A compact camera writes its real focal range as the lens name, e.g. `9.0-72.0 mm f/2.8-4.5` for the RX100 VII.
+
 ## 0.1.0-alpha.5
 
 ### Features

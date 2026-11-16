@@ -177,6 +177,7 @@ gallery: {
 | `longEdge` | none | Largest long edge in pixels. A portrait photo gets narrower variants so that its height stays within it: with `widths: [1600], longEdge: 1600`, a 3000 x 4000 photo becomes 1200 x 1600 and a 4000 x 3000 one 1600 x 1200. |
 | `formats` | `['webp']` | `webp`, `avif`, `jpeg`. With several, `<picture>` offers them in order and the last one is the fallback. |
 | `exif` | `'basic'` | `false` keeps no EXIF in the manifest. |
+| `exifNames` | none | Display names for the camera and lens names from EXIF, matched exactly. A compact camera writes its real focal range as the lens (the RX100 VII writes `9.0-72.0 mm f/2.8-4.5`): `{ '9.0-72.0 mm f/2.8-4.5': 'Sony 24-200mm F2.8-4.5' }` shows the name you know. Applied when the site is built; the manifest keeps the original. |
 | `perPage` | `60` | Photos rendered first, and per "Load more". |
 | `urlBuilder` | `'static'` | `'cloudflare'` asks Cloudflare Image Transformations (formerly Image Resizing) to resize the largest variant: the URL is `<origin of baseUrl>/cdn-cgi/image/width=...,format=auto,.../<path of baseUrl>/albums/...`, so `baseUrl: 'https://example.com/photos'` gives `https://example.com/cdn-cgi/image/.../photos/albums/...`. Transformations must be enabled for the zone (the dashboard section is called **Images** > **Transformations**; verify the name and the plan limits against the current dashboard and Cloudflare's pricing page). Not needed for the default setup. |
 | `storage` | `'r2'` | `'local'` writes to `public/gallery`. |

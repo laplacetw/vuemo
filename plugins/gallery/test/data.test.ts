@@ -46,7 +46,8 @@ describe('virtual modules', () => {
   const root = mkdtempSync(join(tmpdir(), 'gal-'))
   mkdirSync(join(root, 'gallery'))
   writeFileSync(join(root, 'gallery/albums.yaml'), '- slug: a\n  title: A\n  date: 2025-01-02\n- slug: b\n  title: B\n  hidden: true\n')
-  writeFileSync(join(root, 'gallery/manifest.json'), JSON.stringify({ version: 1, photos: [photo(), photo({ id: 'aaaaaaaaaaaa', album: 'b' })] }))
+  const exif = { camera: 'SONY DSC-RX100M7', lens: '9.0-72.0 mm f/2.8-4.5', iso: 100 }
+  writeFileSync(join(root, 'gallery/manifest.json'), JSON.stringify({ version: 1, photos: [photo(), photo({ id: 'aaaaaaaaaaaa', album: 'b', exif })] }))
   it('lists albums with covers and loaders', () => {
     const src = buildListModule(root, 'gallery')
     expect(src).toContain('"slug":"a"')
@@ -57,6 +58,13 @@ describe('virtual modules', () => {
     const src = buildAlbumModule(root, 'gallery', 'b')
     expect(src).toContain('aaaaaaaaaaaa')
     expect(src).not.toContain('3f9a1c0d2b7e')
+    expect(src).toContain('"lens":"9.0-72.0 mm f/2.8-4.5"')
+  })
+  it('shows exifNames instead of the EXIF camera and lens names, matched exactly', () => {
+    const src = buildAlbumModule(root, 'gallery', 'b', { '9.0-72.0 mm f/2.8-4.5': 'Sony 24-200mm F2.8-4.5', 'SONY DSC': 'x', toString: 'y' })
+    expect(src).toContain('"lens":"Sony 24-200mm F2.8-4.5"')
+    expect(src).toContain('"camera":"SONY DSC-RX100M7"')
+    expect(src).toContain('"iso":100')
   })
   it('missing files mean empty', () => {
     expect(readGalleryData(root, 'nope').albums).toEqual([])
@@ -71,6 +79,12 @@ describe('config and plugin', () => {
   it('requires baseUrl for r2, defaults local', () => {
     expect(() => resolveConfig({})).toThrow('baseUrl')
     expect(resolveConfig({ storage: 'local' }).baseUrl).toBe('/gallery')
+  })
+  it('checks exifNames', () => {
+    expect(resolveConfig({ storage: 'local', exifNames: { a: 'b' } }).exifNames).toEqual({ a: 'b' })
+    expect(resolveConfig({ storage: 'local', exifNames: {} }).exifNames).toBeUndefined()
+    expect(() => resolveConfig({ storage: 'local', exifNames: { a: 1 } as any })).toThrow('"exifNames"')
+    expect(() => resolveConfig({ storage: 'local', exifNames: ['a'] as any })).toThrow('"exifNames"')
   })
   it('returns a plugin with a Vite plugin and a client define', () => {
     const p = gallery({ storage: 'local' })
