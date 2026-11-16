@@ -43,17 +43,34 @@ export function takenAtFrom(raw: Record<string, any> | undefined | null): string
   return d && !Number.isNaN(+d) && d.getUTCFullYear() > 1 ? d.toISOString() : undefined
 }
 
-/** One line for the lightbox: camera, lens, focal length, aperture, shutter, ISO and the date (`takenAt` is wall-clock time). */
-export function exifLine(photo: { exif?: ExifInfo; takenAt?: string }): string {
+export interface ExifFrame {
+  camera?: string
+  lens?: string
+  /** Focal length, aperture, shutter and ISO, in that order. */
+  settings: string[]
+  date?: string
+}
+
+/** The camera data of a photo, in display form (`takenAt` is wall-clock time). */
+export function exifParts(photo: { exif?: ExifInfo; takenAt?: string }): ExifFrame {
   const e = photo.exif ?? {}
-  const parts = [
-    e.camera,
-    e.lens,
+  const settings = [
     e.focal !== undefined ? `${e.focal}mm` : undefined,
     e.aperture !== undefined ? `f/${e.aperture}` : undefined,
     e.exposure !== undefined ? `${e.exposure}s` : undefined,
-    e.iso !== undefined ? `ISO ${e.iso}` : undefined,
-    photo.takenAt?.slice(0, 10)
-  ]
-  return parts.filter((p): p is string => !!p).join(' · ')
+    e.iso !== undefined ? `ISO ${e.iso}` : undefined
+  ].filter((p): p is string => !!p)
+  return { camera: e.camera, lens: e.lens, settings, date: photo.takenAt?.slice(0, 10) }
+}
+
+/** What the lightbox frame shows, or `undefined` when there is no camera data (a date alone stays in the caption line). */
+export function exifFrame(photo: { exif?: ExifInfo; takenAt?: string }): ExifFrame | undefined {
+  const parts = exifParts(photo)
+  return parts.camera || parts.lens || parts.settings.length ? parts : undefined
+}
+
+/** One line: camera, lens, focal length, aperture, shutter, ISO and the date. */
+export function exifLine(photo: { exif?: ExifInfo; takenAt?: string }): string {
+  const { camera, lens, settings, date } = exifParts(photo)
+  return [camera, lens, ...settings, date].filter((p): p is string => !!p).join(' · ')
 }

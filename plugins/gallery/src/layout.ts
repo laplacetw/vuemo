@@ -1,6 +1,6 @@
 /** CSS-only justified rows: each item grows in proportion to its aspect ratio. */
 export const ROW_HEIGHT = 220
-export const ROW_HEIGHT_MOBILE = 140
+export const ROW_HEIGHT_MOBILE = 100 // two 3:2 photos side by side from a 306px wide column
 
 export const aspect = (w: number, h: number) => Math.round((w / h) * 10000) / 10000
 

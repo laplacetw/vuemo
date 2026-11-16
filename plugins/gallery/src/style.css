@@ -39,12 +39,52 @@
 .vuemo-gallery picture, .vuemo-gallery img { margin: 0; }
 .vuemo-gallery picture { display: block; }
 .vuemo-gallery__item img { display: block; width: 100%; height: auto; aspect-ratio: var(--ar); object-fit: cover; }
-@media (max-width: 640px) { .vuemo-gallery { --_row: var(--vuemo-gallery-row-height-mobile, 140px); } }
+@media (max-width: 640px) { .vuemo-gallery { --_row: var(--vuemo-gallery-row-height-mobile, 100px); } }
 
 /* lightbox caption (PhotoSwipe's own CSS is loaded with it) */
 .vuemo-gallery__caption { position: absolute; left: 0; right: 0; bottom: 0; padding: 0.75rem 1rem; text-align: center; color: #fff; font-size: 0.9rem; background: linear-gradient(transparent, rgba(0, 0, 0, 0.6)); pointer-events: none; }
 .vuemo-gallery__caption p { margin: 0; }
 .vuemo-gallery__caption-meta { margin-top: 0.25rem; font-size: 0.8rem; opacity: 0.85; font-variant-numeric: tabular-nums; }
+.vuemo-gallery__caption--bare { background: none; padding: 0; }
+.vuemo-gallery__sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* camera-data frame around the photo in the lightbox (it sits on PhotoSwipe's dark backdrop, outside .vuemo-gallery:
+   themes set these variables on :root) */
+.vuemo-gallery__frame {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background: var(--vuemo-gallery-frame-bg, #fff);
+  color: var(--vuemo-gallery-frame-text, #111);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.vuemo-gallery--open .vuemo-gallery__frame { opacity: 1; }
+.pswp--zoomed-in .vuemo-gallery__frame { opacity: 0; }
+.vuemo-gallery__frame-bar {
+  height: var(--_bar, 64px);
+  box-sizing: border-box;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-family: var(--vp-font-family-base, system-ui, sans-serif);
+  font-size: 13px;
+  line-height: 1.35;
+}
+.vuemo-gallery__frame-start, .vuemo-gallery__frame-end { display: flex; flex-direction: column; min-width: 0; }
+.vuemo-gallery__frame-end { align-items: flex-end; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.vuemo-gallery__frame-main { font-weight: 600; white-space: pre; overflow: hidden; text-overflow: ellipsis; }
+.vuemo-gallery__frame-sub { color: var(--vuemo-gallery-frame-muted, #666); font-size: 0.85em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 640px) {
+  .vuemo-gallery__frame-bar { padding: 0 10px; gap: 10px; font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) { .vuemo-gallery__frame { transition: none; } }
 
 .vuemo-gallery__more { display: flex; justify-content: center; margin-top: 1.25rem; }
 .vuemo-gallery__more-button { font: inherit; cursor: pointer; padding: 0.5rem 1.25rem; border-radius: var(--_radius); border: 1px solid var(--vp-c-divider, #ccc); background: var(--_bg); color: inherit; }

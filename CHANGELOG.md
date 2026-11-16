@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Features
+- gallery: the lightbox shows a photo with camera data in a white frame, like a print: camera and lens on the left of the bar under the photo, focal length, aperture, shutter, ISO and the date on the right (the same data stays in the caption for screen readers). Photos without camera data keep the caption line. Colours: `--vuemo-gallery-frame-bg`, `--vuemo-gallery-frame-text`, `--vuemo-gallery-frame-muted`.
+- gallery: the default mobile row height is 100px (was 140px), so two 3:2 photos fit side by side on a phone instead of one per row. `--vuemo-gallery-row-height-mobile` still overrides it.
+
 ## 0.1.0-alpha.4
 
 ### Fixes

@@ -116,7 +116,7 @@ describe('urls', () => {
 describe('layout and exif', () => {
   it('justified math', () => {
     expect(itemFlex(300, 200, 200)).toEqual({ grow: 150, basis: 300 })
-    expect(sizesAttr(300, 200)).toBe('(max-width: 640px) 210px, 330px')
+    expect(sizesAttr(300, 200)).toBe('(max-width: 640px) 150px, 330px')
   })
   it('exif allow-list drops gps and unknown tags', () => {
     const out = pickExif({ Make: 'FUJIFILM', Model: 'X-T5', LensModel: 'XF23', FocalLength: 23, FNumber: 2, ISO: 200, ExposureTime: 0.004, latitude: 1, GPSLatitude: 2, Software: 'x' })
@@ -168,5 +168,23 @@ describe('exifLine', () => {
     expect(exifLine({ exif: { camera: 'SONY DSC-RX100M7', lens: 'Sony 24-200mm F2.8-4.5', focal: 26.9, aperture: 4, iso: 640, exposure: '1/125' }, takenAt: '2026-09-17T22:08:59.000Z' }))
       .toBe('SONY DSC-RX100M7 · Sony 24-200mm F2.8-4.5 · 26.9mm · f/4 · 1/125s · ISO 640 · 2026-09-17')
     expect(exifLine({})).toBe('')
+  })
+})
+
+describe('exifFrame', () => {
+  it('splits the camera data for the lightbox frame', async () => {
+    const { exifFrame } = await import('../src/exif')
+    expect(exifFrame({ exif: { camera: 'SONY DSC-RX100M7', lens: 'Sony 24-200mm F2.8-4.5', focal: 26.9, aperture: 4, iso: 640, exposure: '1/125' }, takenAt: '2026-09-17T22:08:59.000Z' })).toEqual({
+      camera: 'SONY DSC-RX100M7',
+      lens: 'Sony 24-200mm F2.8-4.5',
+      settings: ['26.9mm', 'f/4', '1/125s', 'ISO 640'],
+      date: '2026-09-17'
+    })
+    expect(exifFrame({ exif: { iso: 100 } })).toEqual({ camera: undefined, lens: undefined, settings: ['ISO 100'], date: undefined })
+  })
+  it('has no frame without camera data, also when there is a date', async () => {
+    const { exifFrame } = await import('../src/exif')
+    expect(exifFrame({})).toBeUndefined()
+    expect(exifFrame({ takenAt: '2026-09-17T22:08:59.000Z' })).toBeUndefined()
   })
 })
