@@ -1,6 +1,6 @@
 {
   "name": "@vuemo/core",
-  "version": "0.1.0-alpha.4",
+  "version": "0.1.0-alpha.5",
   "description": "Core of Vuemo: posts loader, composables, defineBlogConfig and the vuemo CLI",
   "type": "module",
   "license": "MIT",
