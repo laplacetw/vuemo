@@ -4,6 +4,8 @@
 
 ### Features
 - gallery option `exifNames`: display names for the camera and lens names from EXIF, matched exactly and applied when the site is built (the manifest keeps the original). A compact camera writes its real focal range as the lens name, e.g. `9.0-72.0 mm f/2.8-4.5` for the RX100 VII.
+- gallery: the lightbox frame shows the camera centred over its settings (focal length, aperture, shutter, ISO), without the lens and the date; `--vuemo-gallery-frame-muted` is gone. The focal length is the 35mm equivalent when the camera wrote one: the manifest gains `exif.focal35` (`FocalLengthIn35mmFormat`), and the caption line uses it too.
+- `vuemo-gallery add` reads the date and camera data of photos already in the manifest again from their files (nothing is processed or uploaded again), so running it again fills `focal35` for existing photos. Camera data edited by hand in the manifest is replaced.
 
 ## 0.1.0-alpha.5
 

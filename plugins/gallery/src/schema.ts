@@ -5,7 +5,7 @@ export const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/
 const FORMATS: ImageFormat[] = ['webp', 'avif', 'jpeg']
 const PHOTO_KEYS = ['id', 'album', 'w', 'h', 'color', 'thumbhash', 'alt', 'caption', 'takenAt', 'exif', 'variants', 'formats']
 const BASE64_RE = /^[A-Za-z0-9+/]+={0,2}$/
-const EXIF_KEYS = ['camera', 'lens', 'focal', 'aperture', 'iso', 'exposure'] as const
+const EXIF_KEYS = ['camera', 'lens', 'focal', 'focal35', 'aperture', 'iso', 'exposure'] as const
 
 /** Thrown for any problem in the gallery files; the message names the file and the field. */
 export class GalleryDataError extends Error {

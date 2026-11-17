@@ -16,6 +16,7 @@ const photo = (o: object = {}) => ({ id: '3f9a1c0d2b7e', album: 'a', w: 400, h: 
 describe('manifest validation', () => {
   it('accepts a valid manifest', () => {
     expect(validateManifest({ version: 1, photos: [photo()] }).photos).toHaveLength(1)
+    expect(validateManifest({ version: 1, photos: [photo({ exif: { focal: 12.25, focal35: 33 } })] }).photos[0].exif?.focal35).toBe(33)
   })
   it.each([
     [{ version: 2, photos: [] }, 'gallery/manifest.json: version: expected 1'],
@@ -138,6 +139,10 @@ describe('layout and exif', () => {
     expect(JSON.stringify(out)).not.toMatch(/lat|GPS|Software/i)
     expect(pickExif({})).toBeUndefined()
   })
+  it('keeps the 35mm-equivalent focal length the camera wrote', () => {
+    expect(pickExif({ FocalLength: 12.25, FocalLengthIn35mmFormat: 33 })).toEqual({ focal: 12.25, focal35: 33 })
+    expect(pickExif({ FocalLength: 23, FocalLengthIn35mmFormat: 0 })).toEqual({ focal: 23 }) // 0 means unknown
+  })
 })
 
 describe('cloudflare URLs', () => {
@@ -188,13 +193,19 @@ describe('exifLine', () => {
 describe('exifFrame', () => {
   it('splits the camera data for the lightbox frame', async () => {
     const { exifFrame } = await import('../src/exif')
+    // the camera over its settings: no lens, no date
     expect(exifFrame({ exif: { camera: 'SONY DSC-RX100M7', lens: 'Sony 24-200mm F2.8-4.5', focal: 26.9, aperture: 4, iso: 640, exposure: '1/125' }, takenAt: '2026-09-17T22:08:59.000Z' })).toEqual({
       camera: 'SONY DSC-RX100M7',
-      lens: 'Sony 24-200mm F2.8-4.5',
-      settings: ['26.9mm', 'f/4', '1/125s', 'ISO 640'],
-      date: '2026-09-17'
+      settings: ['26.9mm', 'f/4', '1/125s', 'ISO 640']
     })
-    expect(exifFrame({ exif: { iso: 100 } })).toEqual({ camera: undefined, lens: undefined, settings: ['ISO 100'], date: undefined })
+    expect(exifFrame({ exif: { iso: 100 } })).toEqual({ camera: undefined, settings: ['ISO 100'] })
+    expect(exifFrame({ exif: { lens: 'XF23' } })).toBeUndefined()
+  })
+  it('shows the 35mm-equivalent focal length when there is one', async () => {
+    const { exifFrame, exifLine } = await import('../src/exif')
+    const photo = { exif: { camera: 'SONY DSC-RX100M7', focal: 12.25, focal35: 33, aperture: 4 } }
+    expect(exifFrame(photo)?.settings).toEqual(['33mm', 'f/4'])
+    expect(exifLine(photo)).toBe('SONY DSC-RX100M7 · 33mm · f/4')
   })
   it('has no frame without camera data, also when there is a date', async () => {
     const { exifFrame } = await import('../src/exif')

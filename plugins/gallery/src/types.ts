@@ -44,6 +44,8 @@ export interface ExifInfo {
   camera?: string
   lens?: string
   focal?: number
+  /** The 35mm-equivalent focal length the camera wrote (`FocalLengthIn35mmFormat`). */
+  focal35?: number
   aperture?: number
   iso?: number
   exposure?: string

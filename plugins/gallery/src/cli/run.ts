@@ -119,7 +119,7 @@ export async function run(argv: string[], deps: RunDeps): Promise<number> {
       case 'add': {
         if (!arg || !values.album) throw new Error('usage: vuemo-gallery add <dir> --album <slug>')
         const r = await add(ctx, resolve(deps.cwd, arg), values.album, { altFromFilename: values['alt-from-filename'] })
-        deps.out(`${r.added} added, ${r.skipped} unchanged, ${r.uploaded} files written${r.failed ? `, ${r.failed} failed` : ''}`)
+        deps.out(`${r.added} added, ${r.skipped} unchanged, ${r.uploaded} files written${r.updated ? `, camera data updated for ${r.updated}` : ''}${r.failed ? `, ${r.failed} failed` : ''}`)
         if (r.failed) code = 1
         break
       }

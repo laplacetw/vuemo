@@ -8,26 +8,20 @@ const TOP_BAR = 60 // PhotoSwipe's buttons: white icons must not sit on the whit
 const CAPTION = 44 // one line of caption below the frame
 
 function frameElement(f: ExifFrame): HTMLElement {
-  const line = (cls: string, text?: string) => {
+  const line = (cls: string, text: string) => {
     const el = document.createElement('span')
     el.className = cls
-    el.textContent = text ?? ''
-    return el
-  }
-  const col = (cls: string, ...children: HTMLElement[]) => {
-    const el = document.createElement('div')
-    el.className = cls
-    el.append(...children)
+    el.textContent = text
     return el
   }
   const frame = document.createElement('div')
   frame.className = 'vuemo-gallery__frame'
   frame.setAttribute('aria-hidden', 'true') // the caption element carries the same data for screen readers
-  const bar = col(
-    'vuemo-gallery__frame-bar',
-    col('vuemo-gallery__frame-start', line('vuemo-gallery__frame-main', f.camera), line('vuemo-gallery__frame-sub', f.lens)),
-    col('vuemo-gallery__frame-end', line('vuemo-gallery__frame-main', f.settings.join('  ')), line('vuemo-gallery__frame-sub', f.date))
-  )
+  // the camera over its settings, centred
+  const bar = document.createElement('div')
+  bar.className = 'vuemo-gallery__frame-bar'
+  if (f.camera) bar.append(line('vuemo-gallery__frame-main', f.camera))
+  if (f.settings.length) bar.append(line('vuemo-gallery__frame-sub', f.settings.join('  ')))
   frame.append(bar)
   return frame
 }

@@ -77,6 +77,19 @@ describe('add / sync / verify / remove (local storage)', () => {
     expect(await sync(ctx)).toMatchObject({ missing: [], extra: [] })
   })
 
+  it('reads the camera data of a listed photo again from its file, without uploading', async () => {
+    const { photos, ctx, root } = setup()
+    writeFileSync(join(photos, 'a.jpg'), await fixture('#aa0000'))
+    await add(ctx, photos, 'trip')
+    const file = join(root, 'gallery/manifest.json')
+    const m = JSON.parse(readFileSync(file, 'utf8'))
+    m.photos[0].exif = { camera: 'edited by hand', focal: 1 }
+    writeFileSync(file, JSON.stringify(m))
+    expect(await add(ctx, photos, 'trip')).toMatchObject({ added: 0, skipped: 1, uploaded: 0, updated: 1 })
+    expect(JSON.parse(readFileSync(file, 'utf8')).photos[0].exif).toEqual({ camera: 'ACME Cam 1' })
+    expect(await add(ctx, photos, 'trip')).toMatchObject({ updated: 0 })
+  })
+
   it('restores deleted files, prunes unlisted ones and removes a photo', async () => {
     const { photos, ctx } = setup()
     writeFileSync(join(photos, 'a.jpg'), await fixture('#aa0000'))

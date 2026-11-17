@@ -70,19 +70,20 @@
   box-sizing: border-box;
   padding: 0 16px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  justify-content: center;
+  gap: 2px;
+  text-align: center;
   font-family: var(--vp-font-family-base, system-ui, sans-serif);
   font-size: 13px;
   line-height: 1.35;
 }
-.vuemo-gallery__frame-start, .vuemo-gallery__frame-end { display: flex; flex-direction: column; min-width: 0; }
-.vuemo-gallery__frame-end { align-items: flex-end; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; }
-.vuemo-gallery__frame-main { font-weight: 600; white-space: pre; overflow: hidden; text-overflow: ellipsis; }
-.vuemo-gallery__frame-sub { color: var(--vuemo-gallery-frame-muted, #666); font-size: 0.85em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vuemo-gallery__frame-main, .vuemo-gallery__frame-sub { max-width: 100%; white-space: pre; overflow: hidden; text-overflow: ellipsis; }
+.vuemo-gallery__frame-main { font-weight: 600; letter-spacing: 0.02em; }
+.vuemo-gallery__frame-sub { font-size: 0.9em; font-variant-numeric: tabular-nums; }
 @media (max-width: 640px) {
-  .vuemo-gallery__frame-bar { padding: 0 10px; gap: 10px; font-size: 11px; }
+  .vuemo-gallery__frame-bar { padding: 0 10px; font-size: 11px; }
 }
 @media (prefers-reduced-motion: reduce) { .vuemo-gallery__frame { transition: none; } }
 

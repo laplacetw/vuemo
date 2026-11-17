@@ -6,7 +6,7 @@ import { SLUG_RE } from '../schema'
 import type { Album, Photo, ResolvedGalleryConfig } from '../types'
 import { MIME, objectKey } from '../urls'
 import { keysOf, writeManifest } from './manifest'
-import { loadSharp, processImage, photoId } from './process'
+import { loadSharp, processImage, photoId, readExif } from './process'
 import type { Storage } from './storage'
 
 export interface Context {
@@ -55,7 +55,18 @@ function addAlbumToFile(file: string, slug: string, derived: Album[]) {
   writeFileSync(file, doc.toString({ lineWidth: 0 }))
 }
 
-export interface AddResult { added: number; skipped: number; uploaded: number; failed: number }
+export interface AddResult { added: number; skipped: number; uploaded: number; failed: number; updated: number }
+
+/** Reads the date and camera data of a listed photo again from its original; true when they changed. */
+async function refreshExif(photo: Photo, original: Uint8Array, cfg: ResolvedGalleryConfig): Promise<boolean> {
+  const { takenAt, exif } = await readExif(original, cfg)
+  if (JSON.stringify([photo.takenAt, photo.exif]) === JSON.stringify([takenAt, exif])) return false
+  if (takenAt) photo.takenAt = takenAt
+  else delete photo.takenAt
+  if (exif) photo.exif = exif
+  else delete photo.exif
+  return true
+}
 
 /** Idempotent: a photo already in the manifest whose files all exist is skipped; missing files are uploaded again. */
 export interface AddOptions {
@@ -71,7 +82,7 @@ export async function add(ctx: Context, dir: string, album: string, opts: AddOpt
   if (!existsSync(dir)) throw new Error(`${dir} does not exist`)
   await loadSharp(ctx.root) // one clear failure before anything is written
   const { manifest, albums } = readGalleryData(ctx.root, ctx.cfg.dir)
-  const result: AddResult = { added: 0, skipped: 0, uploaded: 0, failed: 0 }
+  const result: AddResult = { added: 0, skipped: 0, uploaded: 0, failed: 0, updated: 0 }
   let altsSet = 0
   if (!albums.some((a) => a.slug === album)) {
     addAlbumToFile(albumsPath(ctx.root, ctx.cfg.dir), album, albums)
@@ -86,6 +97,8 @@ export async function add(ctx: Context, dir: string, album: string, opts: AddOpt
       if (existing) {
         if (existing.album !== album) ctx.log.warn(`${name} is already in album "${existing.album}"; left there`)
         if (opts.altFromFilename && !existing.alt) (existing.alt = altOf(file), altsSet++)
+        // the original is the source of the camera data: fields a newer version reads (focal35) are filled in
+        if (await refreshExif(existing, original, ctx.cfg)) result.updated++
         const missing: string[] = []
         for (const k of keyOf(existing)) if (!(await ctx.storage.has(k))) missing.push(k)
         if (!missing.length) {
@@ -116,7 +129,8 @@ export async function add(ctx: Context, dir: string, album: string, opts: AddOpt
     }
   }
   if (altsSet) ctx.log.info(`alt text set from the file name for ${altsSet} listed photo(s)`)
-  if (result.added || altsSet) writeManifest(manifestPath(ctx.root, ctx.cfg.dir), manifest)
+  if (result.updated) ctx.log.info(`updated the camera data of ${result.updated} listed photo(s) from their files`)
+  if (result.added || altsSet || result.updated) writeManifest(manifestPath(ctx.root, ctx.cfg.dir), manifest)
   return result
 }
 

@@ -13,6 +13,7 @@ export function pickExif(raw: Record<string, any> | undefined | null): ExifInfo 
     camera: camera || undefined,
     lens: typeof raw.LensModel === 'string' && raw.LensModel.trim() ? raw.LensModel.trim() : undefined,
     focal: num(raw.FocalLength),
+    focal35: typeof raw.FocalLengthIn35mmFormat === 'number' && raw.FocalLengthIn35mmFormat > 0 ? num(raw.FocalLengthIn35mmFormat) : undefined,
     aperture: num(raw.FNumber),
     iso: num(raw.ISO),
     exposure: t ? (t >= 1 ? `${t}s` : `1/${Math.round(1 / t)}`) : undefined
@@ -43,19 +44,26 @@ export function takenAtFrom(raw: Record<string, any> | undefined | null): string
   return d && !Number.isNaN(+d) && d.getUTCFullYear() > 1 ? d.toISOString() : undefined
 }
 
-export interface ExifFrame {
+export interface ExifParts {
   camera?: string
   lens?: string
-  /** Focal length, aperture, shutter and ISO, in that order. */
+  /** Focal length (35mm-equivalent when the camera wrote it), aperture, shutter and ISO, in that order. */
   settings: string[]
   date?: string
 }
 
+/** What the lightbox frame shows: the camera over its settings. */
+export interface ExifFrame {
+  camera?: string
+  settings: string[]
+}
+
 /** The camera data of a photo, in display form (`takenAt` is wall-clock time). */
-export function exifParts(photo: { exif?: ExifInfo; takenAt?: string }): ExifFrame {
+export function exifParts(photo: { exif?: ExifInfo; takenAt?: string }): ExifParts {
   const e = photo.exif ?? {}
+  const focal = e.focal35 ?? e.focal
   const settings = [
-    e.focal !== undefined ? `${e.focal}mm` : undefined,
+    focal !== undefined ? `${focal}mm` : undefined,
     e.aperture !== undefined ? `f/${e.aperture}` : undefined,
     e.exposure !== undefined ? `${e.exposure}s` : undefined,
     e.iso !== undefined ? `ISO ${e.iso}` : undefined
@@ -63,10 +71,10 @@ export function exifParts(photo: { exif?: ExifInfo; takenAt?: string }): ExifFra
   return { camera: e.camera, lens: e.lens, settings, date: photo.takenAt?.slice(0, 10) }
 }
 
-/** What the lightbox frame shows, or `undefined` when there is no camera data (a date alone stays in the caption line). */
+/** What the lightbox frame shows, or `undefined` when there is no camera or setting (the caption line keeps the rest). */
 export function exifFrame(photo: { exif?: ExifInfo; takenAt?: string }): ExifFrame | undefined {
-  const parts = exifParts(photo)
-  return parts.camera || parts.lens || parts.settings.length ? parts : undefined
+  const { camera, settings } = exifParts(photo)
+  return camera || settings.length ? { camera, settings } : undefined
 }
 
 /** One line: camera, lens, focal length, aperture, shutter, ISO and the date. */

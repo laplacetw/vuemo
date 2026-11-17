@@ -29,6 +29,18 @@ export async function loadSharp(root = process.cwd()): Promise<typeof import('sh
 
 export const photoId = (original: Uint8Array) => createHash('sha256').update(original).digest('hex').slice(0, 12)
 
+/** The date and the allow-listed camera data of an original. The date is kept even with `exif: false` (it orders the photos). */
+export async function readExif(original: Uint8Array, cfg: Pick<ResolvedGalleryConfig, 'exif'>): Promise<{ takenAt?: string; exif?: ExifInfo }> {
+  let raw: Record<string, any> | undefined
+  try {
+    // gps: false: the GPS block is not even parsed; reviveValues: false keeps dates as the strings in the file
+    raw = (await exifr.parse(original, { tiff: true, ifd0: true, exif: true, gps: false, xmp: false, icc: false, iptc: false, reviveValues: false } as any)) ?? undefined
+  } catch {
+    raw = undefined
+  }
+  return { takenAt: takenAtFrom(raw), exif: cfg.exif ? pickExif(raw) : undefined }
+}
+
 export interface Processed {
   photo: Omit<Photo, 'album'>
   variants: { width: number; format: ImageFormat; data: Buffer }[]
@@ -52,16 +64,7 @@ export async function processImage(original: Buffer, cfg: Pick<ResolvedGalleryCo
   const small = await base().resize(100, 100, { fit: 'inside' }).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
   const thumbhash = Buffer.from(rgbaToThumbHash(small.info.width, small.info.height, small.data)).toString('base64')
 
-  let raw: Record<string, any> | undefined
-  try {
-    // gps: false: the GPS block is not even parsed; reviveValues: false keeps dates as the strings in the file
-    raw = (await exifr.parse(original, { tiff: true, ifd0: true, exif: true, gps: false, xmp: false, icc: false, iptc: false, reviveValues: false } as any)) ?? undefined
-  } catch {
-    raw = undefined
-  }
-  // the date is kept even with `exif: false` (it orders the photos); the EXIF block is what `exif: false` drops
-  const takenAt = takenAtFrom(raw)
-  const exif: ExifInfo | undefined = cfg.exif ? pickExif(raw) : undefined
+  const { takenAt, exif } = await readExif(original, cfg)
 
   const widths = variantWidths(w, cfg.widths, h, cfg.longEdge)
   const variants: Processed['variants'] = []
